@@ -209,3 +209,24 @@ preparePreviewOfFile(url)
 - Тесты: `Tests/QuickLookersPreviewKitTests/CodeTrimTests.swift`, `Tests/QuickLookersPreviewKitTests/HTMLCacheTests.swift`, расширить `PreviewPageTests.swift`.
 </content>
 </invoke>
+
+---
+
+## Реализационные отклонения (по живым спайкам в Finder)
+
+Три вещи, выясненные только при показе в Finder (см.
+`docs/superpowers/notes/2026-06-29-preview-runtime-spikes.md`); дизайн выше их
+не предвидел:
+
+1. **Кэш — НЕ в групповом контейнере App Group, а в собственном контейнере
+   расширения.** Песочница превью-расширения запрещает запись в групповой
+   контейнер (только чтение). Папка кэша — `FileManager .cachesDirectory`
+   (`~/Library/Containers/…PreviewExtension/Data/Library/Caches/QuickLookersHTML`).
+   Ключ, LRU и потолок 5 МБ — как в дизайне; инвалидация по теме работает через
+   ключ, общий доступ с приложением не нужен.
+2. **Тёплый вебвью — не один общий, а ПУЛ.** Finder показывает превью
+   параллельно; один общий `WKWebView` обслужить два показа сразу не может
+   (континуация первого висит спиннером). Пул выдаёт каждому показу свой вебвью,
+   освободившиеся переиспользуются.
+3. **`WKPreferences.inactiveSchedulingPolicy = .none`** на вебвью — чтобы WebKit
+   не усыплял WebContent вне окна (иначе выброс ~1,4 с после простоя).
