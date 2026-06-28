@@ -42,13 +42,14 @@ macOS-приложение, возвращающее превью кода по 
 ## Структура
 
 ```
-Package.swift                          # SwiftPM-пакет: QuickLookersEngine + QuickLookersPreviewKit, macOS 13+
+Package.swift                          # SwiftPM-пакет: QuickLookersEngine + QuickLookersPreviewKit + QuickLookersSettingsKit, macOS 13+
 Sources/QuickLookersEngine/
   HighlightEngine.swift                # протокол HighlightEngine + HighlightRequest + EngineError
   JSCoreRuntime.swift                  # обёртка над JavaScriptCore
   Providers.swift                      # GrammarProvider / ThemeProvider
   ShikiEngine.swift                    # реализация HighlightEngine
   EngineFactory.swift                  # сборка из Bundle.module
+  EngineResources.swift                 # публичный доступ к каталогам ресурсов (grammars/themes)
   Resources/
     shiki-bundle.js                    # СОБИРАЕТСЯ из js/, не править вручную
     grammars/*.json                    # грамматики Shiki (имя файла = id = поле name)
@@ -67,6 +68,7 @@ js/                                    # шаг сборки JS-бандла (No
   test/smoke.mjs                       # node-смоук готового бандла
 Tests/QuickLookersEngineTests/         # XCTest, TDD (движок)
 Tests/QuickLookersPreviewKitTests/     # XCTest, TDD (PreviewKit)
+Tests/QuickLookersSettingsKitTests/    # XCTest, TDD (SettingsKit)
 
 # Xcode-часть (генерируется XcodeGen, .xcodeproj в .gitignore)
 project.yml                            # спека XcodeGen: хост-приложение + расширение Preview
