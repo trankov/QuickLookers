@@ -3,15 +3,17 @@ import JavaScriptCore
 
 public final class JSCoreRuntime {
     private let context: JSContext
+    private var lastException: JSValue?
 
     public init(bundleScript: String) throws {
         guard let ctx = JSContext() else { throw EngineError.contextCreationFailed }
         self.context = ctx
 
-        var thrown: JSValue?
-        ctx.exceptionHandler = { _, exc in thrown = exc }
+        // Обработчик исключений ставится один раз; JSC вызывает его синхронно
+        // во время evaluate/call, поэтому lastException актуален сразу после.
+        ctx.exceptionHandler = { [weak self] _, exc in self?.lastException = exc }
         ctx.evaluateScript(bundleScript)
-        if let exc = thrown {
+        if let exc = lastException {
             throw EngineError.scriptEvaluation(exc.toString() ?? "unknown")
         }
     }
@@ -38,12 +40,11 @@ public final class JSCoreRuntime {
         guard let fn = context.objectForKeyedSubscript(functionName), !fn.isUndefined else {
             throw EngineError.missingFunction(functionName)
         }
-        var thrown: JSValue?
-        context.exceptionHandler = { _, exc in thrown = exc }
+        lastException = nil
         guard let result = fn.call(withArguments: args) else {
             throw EngineError.callFailed(functionName)
         }
-        if let exc = thrown {
+        if let exc = lastException {
             throw EngineError.jsException(exc.toString() ?? "unknown")
         }
         return result

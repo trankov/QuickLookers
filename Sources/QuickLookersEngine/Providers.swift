@@ -10,8 +10,7 @@ public protocol ThemeProvider {
 
 private func readJSON(_ directory: URL, _ id: String) throws -> String {
     let url = directory.appendingPathComponent("\(id).json")
-    guard let data = try? Data(contentsOf: url),
-          let string = String(data: data, encoding: .utf8) else {
+    guard let string = try? String(contentsOf: url, encoding: .utf8) else {
         throw EngineError.resourceNotFound(id)
     }
     return string
