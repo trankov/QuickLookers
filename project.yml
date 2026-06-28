@@ -51,7 +51,11 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.files.user-selected.read-only: true
-        com.apple.security.application-groups: [group.com.quicklookers]
+        # Префикс Team ID (5FVC5YT2B5), а не «group.». macOS сверяет префикс с
+        # подписью кода → доступ к контейнеру группы без профиля и без запроса
+        # «доступ к данным других приложений». «group.»-идентификатор на
+        # ненотаризованной сборке этот запрос вызывает на каждое обращение.
+        com.apple.security.application-groups: [5FVC5YT2B5.com.quicklookers]
     dependencies:
       - target: QuickLookersPreview
         embed: true
@@ -77,7 +81,8 @@ targets:
         # GPU, Network) через защищённые соединения. Без network.client они
         # падают при запуске — даже если HTML грузится из строки, без сети.
         com.apple.security.network.client: true
-        com.apple.security.application-groups: [group.com.quicklookers]
+        # См. комментарий у хоста: Team-ID-префикс убирает запрос доступа.
+        com.apple.security.application-groups: [5FVC5YT2B5.com.quicklookers]
     info:
       path: PreviewExtension/Info.plist
       properties:

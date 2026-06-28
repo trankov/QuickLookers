@@ -38,8 +38,10 @@ public func resolvedThemeId(_ theme: ThemeSelection,
     return appearanceIsDark ? DefaultThemeIds.dark : DefaultThemeIds.light
 }
 
-/// Идентификатор общего контейнера App Group.
-public let quickLookersAppGroupId = "group.com.quicklookers"
+/// Идентификатор общего контейнера App Group. Префикс — Team ID (5FVC5YT2B5),
+/// а не «group.»: macOS сверяет его с подписью кода и пускает в контейнер без
+/// провижн-профиля и без запроса «доступ к данным других приложений».
+public let quickLookersAppGroupId = "5FVC5YT2B5.com.quicklookers"
 
 /// URL общего контейнера App Group (nil, если entitlement не настроен).
 public func quickLookersContainerURL() -> URL? {
