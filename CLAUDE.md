@@ -10,26 +10,27 @@ macOS-приложение, возвращающее превью кода по 
 
 ## Архитектура (целевая)
 
-Три части + общий контейнер:
+Две части + общий контейнер:
 
 - **Главное приложение** — GUI с настройками. Имеет сеть, читает конфиг VS Code/Cursor, управляет библиотекой тем/грамматик, импортом (`.vsix`), кэшем. **Менеджер**: скачивает/импортирует/нормализует.
 - **Расширение QuickLook Preview** — полноразмерное превью по пробелу. В песочнице, без сети. **Потребитель**: берёт готовое и рисует.
-- **Расширение Thumbnail** — иконки в Finder, нативный рендер без WebView. **Потребитель**.
 - **App Group** — общий контейнер: темы, грамматики, кэш HTML, настройки. Единственное, что видит песочница расширений.
+
+Третья часть — **расширение Thumbnail** (иконки в Finder) — **отложена** до решения о целесообразности (раздел «Отложено…» в дизайн-документе).
 
 Подробности: `docs/superpowers/specs/2026-06-27-quicklookers-design.md`.
 
 ## Текущее состояние
 
-Сделаны три подсистемы (фазы 1–2 в ветке `feat/rendering-engine`, фаза 3 — `feat/manager-app-window`):
+Сделаны три подсистемы (все влиты в `main`: фазы 1–2 — ветка `feat/rendering-engine`, фаза 3 — `feat/manager-app-window`):
 
 **1. Движок рендеринга** (Swift-пакет `QuickLookersEngine`) — **реализован** (план `docs/superpowers/plans/2026-06-27-quicklookers-rendering-engine.md`, все 6 задач + cleanup). Движок: `код + язык + тема → готовый HTML` через **Shiki** в **JavaScriptCore**. Shiki выбран потому, что использует те же TextMate-грамматики и VS Code-темы → совпадение с VS Code, а не «похоже». Точка входа — `QuickLookersEngineFactory.makeDefault() -> HighlightEngine`.
 
 **2. Расширение Preview — тонкий вертикальный срез** — **работает end-to-end** (спека `docs/superpowers/specs/2026-06-28-preview-extension-thin-slice-design.md`, план `docs/superpowers/plans/2026-06-28-preview-extension-thin-slice.md`, все 5 задач). Пробел в Finder на `.swift`/`.json`/`.js` → полноразмерное превью с подсветкой VS Code Dark+. Xcode-проект на **XcodeGen** (`project.yml`): хост-приложение-заглушка + расширение QuickLook Preview, линкующее `QuickLookersEngine` и `QuickLookersPreviewKit`.
 
-**3. Окно приложения-менеджера (фаза 3)** — **реализовано** (спека `docs/superpowers/specs/2026-06-28-manager-app-window-design.md`, все 9 задач). Новый пакетный таргет **`QuickLookersSettingsKit`**: модель настроек (`ManagerSettings`, opt-out по языкам), каталог языков/тем (`Catalog` + `FileCatalogSource`), хранилище `settings.json` (`SettingsStore`, атомарная запись, разрешение темы с откатом). Заведён **App Group** `group.com.quicklookers` у обоих таргетов; расширение Preview читает язык и тему из общего контейнера (хардкод `dark-plus` убран). Окно приложения — три вкладки SwiftUI: «Форматы подсветки», «Темы», «Сопоставление с типами файлов»; любое изменение сразу пишется в `settings.json`.
+**3. Окно приложения-менеджера (фаза 3)** — **реализовано** (спека `docs/superpowers/specs/2026-06-28-manager-app-window-design.md`, все 9 задач). Новый пакетный таргет **`QuickLookersSettingsKit`**: модель настроек (`ManagerSettings`, opt-out по языкам), каталог языков/тем (`Catalog` + `FileCatalogSource`), хранилище `settings.json` (`SettingsStore`, атомарная запись, разрешение темы с откатом). Заведён **App Group** `5FVC5YT2B5.com.quicklookers` (префикс — Team ID, а не `group.`: убирает системный запрос «доступ к данным других приложений» на ненотаризованной сборке) у обоих таргетов; расширение Preview читает язык и тему из общего контейнера (хардкод `dark-plus` убран). Окно приложения — три вкладки SwiftUI: «Форматы подсветки», «Темы», «Сопоставление с типами файлов»; любое изменение сразу пишется в `settings.json`.
 
-Дальше: расширение Thumbnail, кэш HTML и прочие оптимизации показа.
+Дальше: оптимизации показа (тёплый WebView, перенос строк, обрезка первого экрана, кэш HTML). Расширение **Thumbnail отложено** до решения о целесообразности.
 
 В фазе оптимизации показа обязательны независимые от App Group вещи (группа A): тёплый WebView, обрезка первого экрана и **перенос по строкам** (сейчас минифицированный JSON одной строкой уезжает за край). Кэш HTML — после App Group. Список — в `docs/superpowers/notes/2026-06-28-preview-thin-slice-spikes.md`.
 
@@ -133,6 +134,7 @@ xcodebuild -project QuickLookers.xcodeproj -scheme QuickLookers \
 4. **Ждать `didFinish` навигации WKWebView** перед возвратом из `preparePreviewOfFile`, иначе QuickLook снимает пустой вебвью.
 5. **Регистрация — запуском хоста из Xcode** (⌘R), не из командной строки.
 6. **Конфликт провайдеров:** несколько расширений (sbarex, FluxMarkdown) могут объявлять один UTI; выбор — только галочками в «Системных настройках → Быстрый просмотр».
+7. **App Group — префикс Team ID, не `group.`.** Идентификатор `group.com.quicklookers` на ненотаризованной dev-сборке вызывает системный запрос «доступ к данным других приложений» на каждое обращение к контейнеру. Префикс Team ID (`5FVC5YT2B5.com.quicklookers`) macOS сверяет с подписью кода → доступ без провижн-профиля и без запроса. Так в `project.yml` (оба таргета) и в `quickLookersAppGroupId`. Подтверждено доками Apple («Use app groups that you don't provision»).
 
 ## Версии (зафиксированы)
 
