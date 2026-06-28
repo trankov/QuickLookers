@@ -21,6 +21,20 @@ packages:
   QuickLookersEngine:
     path: .
 
+# Общая схема хоста: запуск (⌘R) поднимает приложение QuickLookers и
+# регистрирует встроенное расширение Preview у демона pkd. Без явной схемы
+# Xcode автосоздаёт их сам, и активной может оказаться схема расширения —
+# тогда на ⌘R он спрашивает «Choose an App to run» (расширение само не
+# запускается). Закрепляем здесь, чтобы переживало xcodegen generate.
+schemes:
+  QuickLookers:
+    build:
+      targets:
+        QuickLookers: all
+    run:
+      config: Debug
+      executable: QuickLookers
+
 targets:
   QuickLookers:
     type: application
