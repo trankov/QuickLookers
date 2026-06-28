@@ -56,4 +56,34 @@ final class HTMLCacheTests: XCTestCase {
         try Data([0xFF, 0xFE]).write(to: dir.appendingPathComponent(key.fileName))
         XCTAssertNil(cache.lookup(key))
     }
+
+    func test_evictKeepsUnderCapAndDropsOldest() throws {
+        let dir = try makeTempDir()
+        // Потолок мал: вмещает примерно одну запись по 1000 байт.
+        let cache = HTMLCache(directory: dir, maxBytes: 1500)
+        let oldKey = sampleKey(path: "/old.swift")
+        let newKey = sampleKey(path: "/new.swift")
+        let html = String(repeating: "x", count: 1000)
+
+        cache.store(oldKey, html: html)
+        // Старую запись помечаем давно использованной.
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date(timeIntervalSince1970: 1)],
+            ofItemAtPath: dir.appendingPathComponent(oldKey.fileName).path)
+        cache.store(newKey, html: html)   // свежая отметка — сейчас
+
+        cache.evictIfNeeded()
+
+        XCTAssertNil(cache.lookup(oldKey), "давняя запись вытеснена")
+        XCTAssertNotNil(cache.lookup(newKey), "свежая запись осталась")
+    }
+
+    func test_evictNoopWhenUnderCap() throws {
+        let dir = try makeTempDir()
+        let cache = HTMLCache(directory: dir, maxBytes: 5 * 1024 * 1024)
+        let key = sampleKey()
+        cache.store(key, html: "small")
+        cache.evictIfNeeded()
+        XCTAssertNotNil(cache.lookup(key), "под потолком ничего не удаляется")
+    }
 }

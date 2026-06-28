@@ -60,4 +60,32 @@ public struct HTMLCache {
         let url = directory.appendingPathComponent(key.fileName)
         try? Data(html.utf8).write(to: url, options: .atomic)
     }
+
+    /// Если суммарный размер кэша больше `maxBytes` — удаляет давно не
+    /// использованные записи (по возрастанию mtime), пока не уложится.
+    public func evictIfNeeded() {
+        guard let urls = try? fm.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey],
+            options: [.skipsHiddenFiles]) else { return }
+
+        var files: [(url: URL, size: Int, mtime: Date)] = []
+        var total = 0
+        for url in urls {
+            let vals = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+            let size = vals?.fileSize ?? 0
+            let mtime = vals?.contentModificationDate ?? .distantPast
+            files.append((url, size, mtime))
+            total += size
+        }
+        guard total > maxBytes else { return }
+
+        files.sort { $0.mtime < $1.mtime }   // давно использованные — первыми
+        for f in files {
+            if total <= maxBytes { break }
+            if (try? fm.removeItem(at: f.url)) != nil {
+                total -= f.size
+            }
+        }
+    }
 }
