@@ -26,4 +26,34 @@ final class HTMLCacheTests: XCTestCase {
         XCTAssertNotEqual(base, sampleKey(maxLines: 1000).fileName)
         XCTAssertNotEqual(base, sampleKey(bundleVersion: "2").fileName)
     }
+
+    private func makeTempDir() throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ql-htmlcache-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+
+    func test_storeThenLookupReturnsSameHtml() throws {
+        let dir = try makeTempDir()
+        let cache = HTMLCache(directory: dir, maxBytes: 5 * 1024 * 1024)
+        let key = sampleKey()
+        cache.store(key, html: "<html>hi</html>")
+        XCTAssertEqual(cache.lookup(key), "<html>hi</html>")
+    }
+
+    func test_lookupMissOnEmptyDir() throws {
+        let dir = try makeTempDir()
+        let cache = HTMLCache(directory: dir, maxBytes: 5 * 1024 * 1024)
+        XCTAssertNil(cache.lookup(sampleKey()))
+    }
+
+    func test_corruptEntryIsMiss() throws {
+        let dir = try makeTempDir()
+        let cache = HTMLCache(directory: dir, maxBytes: 5 * 1024 * 1024)
+        let key = sampleKey()
+        // Невалидный UTF-8 в файле записи → lookup должен дать nil, не упасть.
+        try Data([0xFF, 0xFE]).write(to: dir.appendingPathComponent(key.fileName))
+        XCTAssertNil(cache.lookup(key))
+    }
 }
