@@ -8,10 +8,14 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     CODE_SIGN_STYLE: Automatic
+    # Xcode 16+ собирает Debug через стуб-загрузчик (debug dylib). Для
+    # app-расширения это ломает загрузку провайдера: бандл виден в настройках,
+    # но QuickLook не может его поднять и откатывается к дефолту. Выключаем.
+    ENABLE_DEBUG_DYLIB: NO
     # Впиши сюда свой Team ID (Xcode → Settings → Accounts → твой аккаунт → Team ID).
     # Для ручного запуска в Finder подпись обязательна; для xcodebuild-проверки
     # компиляции подпись отключается флагом в команде (CODE_SIGNING_ALLOWED=NO).
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: "5FVC5YT2B5"
 
 packages:
   QuickLookersEngine:
@@ -28,6 +32,11 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
+    entitlements:
+      path: App/QuickLookers.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-only: true
     dependencies:
       - target: QuickLookersPreview
         embed: true
@@ -41,6 +50,10 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.quicklookers.QuickLookers.PreviewExtension
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
+    entitlements:
+      path: PreviewExtension/QuickLookersPreview.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
     info:
       path: PreviewExtension/Info.plist
       properties:
