@@ -54,6 +54,10 @@ targets:
       path: PreviewExtension/QuickLookersPreview.entitlements
       properties:
         com.apple.security.app-sandbox: true
+        # WKWebView в песочнице поднимает вспомогательные процессы (WebContent,
+        # GPU, Network) через защищённые соединения. Без network.client они
+        # падают при запуске — даже если HTML грузится из строки, без сети.
+        com.apple.security.network.client: true
     info:
       path: PreviewExtension/Info.plist
       properties:

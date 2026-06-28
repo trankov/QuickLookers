@@ -5,7 +5,7 @@ import os
 import QuickLookersEngine
 import QuickLookersPreviewKit
 
-final class PreviewViewController: NSViewController, QLPreviewingController {
+final class PreviewViewController: NSViewController, QLPreviewingController, WKNavigationDelegate {
     private static let log = Logger(subsystem: "com.quicklookers.preview", category: "preview")
 
     // Тёплый процесс: движок строится один раз на жизнь процесса расширения.
@@ -13,11 +13,15 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     private static var cachedEngine: HighlightEngine?
 
     private var webView: WKWebView!
+    // QuickLook снимает картинку с вебвью сразу после возврата из
+    // preparePreviewOfFile. Поэтому держим возврат до окончания загрузки HTML.
+    private var loadContinuation: CheckedContinuation<Void, Error>?
 
     override func loadView() {
         let config = WKWebViewConfiguration()
         config.defaultWebpagePreferences.allowsContentJavaScript = false
         webView = WKWebView(frame: .zero, configuration: config)
+        webView.navigationDelegate = self
         self.view = webView
     }
 
@@ -36,13 +40,36 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
             HighlightRequest(code: code, languageId: lang, themeId: "dark-plus")
         )
         let page = previewPageHTML(highlighted: fragment)
-        webView.loadHTMLString(page, baseURL: nil)
+
+        // Ждём, пока WebView дорисует HTML, иначе QuickLook снимет пустой экран.
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            self.loadContinuation = cont
+            webView.loadHTMLString(page, baseURL: nil)
+        }
 
         let ms = Date().timeIntervalSince(start) * 1000
         Self.log.info("""
             preview pid=\(getpid()) warm=\(wasWarm, privacy: .public) \
             lang=\(lang, privacy: .public) ms=\(ms, format: .fixed(precision: 1), privacy: .public)
             """)
+    }
+
+    private func finishLoad(_ result: Result<Void, Error>) {
+        guard let cont = loadContinuation else { return }
+        loadContinuation = nil
+        cont.resume(with: result)
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        finishLoad(.success(()))
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        finishLoad(.failure(error))
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        finishLoad(.failure(error))
     }
 
     private static func engine() throws -> HighlightEngine {
