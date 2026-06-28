@@ -21,13 +21,15 @@ macOS-приложение, возвращающее превью кода по 
 
 ## Текущее состояние
 
-Сделаны две подсистемы (всё в ветке `feat/rendering-engine`):
+Сделаны три подсистемы (фазы 1–2 в ветке `feat/rendering-engine`, фаза 3 — `feat/manager-app-window`):
 
 **1. Движок рендеринга** (Swift-пакет `QuickLookersEngine`) — **реализован** (план `docs/superpowers/plans/2026-06-27-quicklookers-rendering-engine.md`, все 6 задач + cleanup). Движок: `код + язык + тема → готовый HTML` через **Shiki** в **JavaScriptCore**. Shiki выбран потому, что использует те же TextMate-грамматики и VS Code-темы → совпадение с VS Code, а не «похоже». Точка входа — `QuickLookersEngineFactory.makeDefault() -> HighlightEngine`.
 
-**2. Расширение Preview — тонкий вертикальный срез** — **работает end-to-end** (спека `docs/superpowers/specs/2026-06-28-preview-extension-thin-slice-design.md`, план `docs/superpowers/plans/2026-06-28-preview-extension-thin-slice.md`, все 5 задач). Пробел в Finder на `.swift`/`.json`/`.js` → полноразмерное превью с подсветкой VS Code Dark+. Xcode-проект на **XcodeGen** (`project.yml`): хост-приложение-заглушка + расширение QuickLook Preview, линкующее `QuickLookersEngine` и `QuickLookersPreviewKit`. App Group и настройки **отложены** до фазы менеджера.
+**2. Расширение Preview — тонкий вертикальный срез** — **работает end-to-end** (спека `docs/superpowers/specs/2026-06-28-preview-extension-thin-slice-design.md`, план `docs/superpowers/plans/2026-06-28-preview-extension-thin-slice.md`, все 5 задач). Пробел в Finder на `.swift`/`.json`/`.js` → полноразмерное превью с подсветкой VS Code Dark+. Xcode-проект на **XcodeGen** (`project.yml`): хост-приложение-заглушка + расширение QuickLook Preview, линкующее `QuickLookersEngine` и `QuickLookersPreviewKit`.
 
-Дальше: App Group + главное приложение-менеджер, расширение Thumbnail, кэш HTML и прочие оптимизации показа.
+**3. Окно приложения-менеджера (фаза 3)** — **реализовано** (спека `docs/superpowers/specs/2026-06-28-manager-app-window-design.md`, все 9 задач). Новый пакетный таргет **`QuickLookersSettingsKit`**: модель настроек (`ManagerSettings`, opt-out по языкам), каталог языков/тем (`Catalog` + `FileCatalogSource`), хранилище `settings.json` (`SettingsStore`, атомарная запись, разрешение темы с откатом). Заведён **App Group** `group.com.quicklookers` у обоих таргетов; расширение Preview читает язык и тему из общего контейнера (хардкод `dark-plus` убран). Окно приложения — три вкладки SwiftUI: «Форматы подсветки», «Темы», «Сопоставление с типами файлов»; любое изменение сразу пишется в `settings.json`.
+
+Дальше: расширение Thumbnail, кэш HTML и прочие оптимизации показа.
 
 В фазе оптимизации показа обязательны независимые от App Group вещи (группа A): тёплый WebView, обрезка первого экрана и **перенос по строкам** (сейчас минифицированный JSON одной строкой уезжает за край). Кэш HTML — после App Group. Список — в `docs/superpowers/notes/2026-06-28-preview-thin-slice-spikes.md`.
 
@@ -52,8 +54,13 @@ Sources/QuickLookersEngine/
     grammars/*.json                    # грамматики Shiki (имя файла = id = поле name)
     themes/*.json                      # темы Shiki
 Sources/QuickLookersPreviewKit/        # тестируемая presentation-логика расширения
-  LanguageMap.swift                    # languageId(forPathExtension:) — язык по расширению файла
   PreviewPage.swift                    # previewPageHTML(highlighted:) — обёртка в HTML-страницу
+Sources/QuickLookersSettingsKit/       # настройки, каталог языков/тем, App Group
+  ManagerSettings.swift                # модель настроек (opt-out: выключенные языки + выбор темы)
+  DeclaredTypes.swift                  # объявленные типы файлов, разрешение языка и признака просмотра
+  Catalog.swift                        # каталог языков и тем из JSON-дескрипторов
+  CatalogSource.swift                  # FileCatalogSource: читает grammars/ и themes/ из пакета
+  SettingsStore.swift                  # атомарная запись settings.json, разрешение темы, App Group
 js/                                    # шаг сборки JS-бандла (Node, только для сборки)
   src/highlight.mjs                    # точка входа: вешает globalThis.ql*
   build.mjs                            # esbuild → Resources/shiki-bundle.js
@@ -63,8 +70,13 @@ Tests/QuickLookersPreviewKitTests/     # XCTest, TDD (PreviewKit)
 
 # Xcode-часть (генерируется XcodeGen, .xcodeproj в .gitignore)
 project.yml                            # спека XcodeGen: хост-приложение + расширение Preview
-App/QuickLookersApp.swift              # хост-приложение (заглушка-окно)
-App/QuickLookers.entitlements          # App Sandbox хоста
+App/QuickLookersApp.swift              # точка входа SwiftUI-приложения
+App/SettingsModel.swift                # @Observable модель, связывающая SettingsStore с UI
+App/ContentView.swift                  # три вкладки: Форматы / Темы / Сопоставление
+App/FormatsTab.swift                   # вкладка «Форматы подсветки» (Слой 1)
+App/ThemesTab.swift                    # вкладка «Темы» (следовать за системой / фиксированная)
+App/FileTypesTab.swift                 # вкладка «Сопоставление с типами файлов» (Слой 2)
+App/QuickLookers.entitlements          # App Sandbox + App Group хоста
 PreviewExtension/
   PreviewViewController.swift          # QLPreviewingController: читает файл → движок → WKWebView
   Info.plist                           # NSExtension + QLSupportedContentTypes (генерит XcodeGen)
