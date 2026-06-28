@@ -4,7 +4,9 @@
 
 ## Что это
 
-macOS-приложение, возвращающее превью кода и Markdown по пробелу в Finder (взамен сломавшихся старых QuickLook-плагинов `.qlgenerator`). Главное требование — **визуально один-в-один как в VS Code/Cursor**: тот же движок подсветки, те же грамматики и темы.
+macOS-приложение, возвращающее превью кода по пробелу в Finder (взамен сломавшихся старых QuickLook-плагинов `.qlgenerator`). Главное требование — **визуально один-в-один как в VS Code/Cursor**: тот же движок подсветки, те же грамматики и темы.
+
+**Markdown — вне области продукта** (для него есть FluxMarkdown). Мы занимаемся только подсветкой кода.
 
 ## Архитектура (целевая)
 
@@ -19,46 +21,82 @@ macOS-приложение, возвращающее превью кода и Ma
 
 ## Текущее состояние
 
-Первая подсистема — **движок рендеринга** (Swift-пакет `QuickLookersEngine`) — **реализована** (план `docs/superpowers/plans/2026-06-27-quicklookers-rendering-engine.md`, все 6 задач + cleanup, ветка `feat/rendering-engine`). Расширения QuickLook, App Group и приложение — отдельные будущие планы.
+Сделаны две подсистемы (всё в ветке `feat/rendering-engine`):
 
-Движок: `код + язык + тема → готовый HTML` через **Shiki** в **JavaScriptCore**. Shiki выбран потому, что использует те же TextMate-грамматики и VS Code-темы → совпадение с VS Code, а не «похоже». Точка входа — `QuickLookersEngineFactory.makeDefault() -> HighlightEngine`.
+**1. Движок рендеринга** (Swift-пакет `QuickLookersEngine`) — **реализован** (план `docs/superpowers/plans/2026-06-27-quicklookers-rendering-engine.md`, все 6 задач + cleanup). Движок: `код + язык + тема → готовый HTML` через **Shiki** в **JavaScriptCore**. Shiki выбран потому, что использует те же TextMate-грамматики и VS Code-темы → совпадение с VS Code, а не «похоже». Точка входа — `QuickLookersEngineFactory.makeDefault() -> HighlightEngine`.
 
-**Замер производительности (важно для следующих подсистем):** голый движок на 200 строках Swift даёт холодный показ ≈440 мс, тёплый ≈190 мс (release ≈ debug — стоимость в JS-слое JSC). Это **над** ориентиром ~100 мс. Бюджет добираем не в движке, а оптимизациями показа в подсистеме Preview: кэш готового HTML, обрезка первого экрана, при необходимости свап на WASM-движок регулярок. Полный нативный порт (Oniguruma + Swift) **отложен**. Детали и решение — `docs/superpowers/notes/2026-06-28-engine-benchmark.md`.
+**2. Расширение Preview — тонкий вертикальный срез** — **работает end-to-end** (спека `docs/superpowers/specs/2026-06-28-preview-extension-thin-slice-design.md`, план `docs/superpowers/plans/2026-06-28-preview-extension-thin-slice.md`, все 5 задач). Пробел в Finder на `.swift`/`.json`/`.js` → полноразмерное превью с подсветкой VS Code Dark+. Xcode-проект на **XcodeGen** (`project.yml`): хост-приложение-заглушка + расширение QuickLook Preview, линкующее `QuickLookersEngine` и `QuickLookersPreviewKit`. App Group и настройки **отложены** до фазы менеджера.
+
+Дальше: App Group + главное приложение-менеджер, расширение Thumbnail, кэш HTML и прочие оптимизации показа.
+
+**Замеры производительности:**
+- Голый движок на 200 строках Swift: холодный ≈440 мс, тёплый ≈190 мс (release ≈ debug — стоимость в JS-слое JSC). Детали — `docs/superpowers/notes/2026-06-28-engine-benchmark.md`.
+- Полный конвейер показа в расширении (движок + WKWebView), тёплый: **~85–175 мс** на коротких файлах, около ориентира ~100 мс. Тёплый процесс между показами **подтверждён**. Выбросы 1–2,6 с — холодный старт WebContent (рычаг: держать вебвью тёплым). Детали — `docs/superpowers/notes/2026-06-28-preview-thin-slice-spikes.md`.
+
+Бюджет добираем не в движке, а оптимизациями показа (кэш HTML, тёплый WebView, обрезка первого экрана). Полный нативный порт (Oniguruma + Swift) **отложен**.
 
 ## Структура
 
 ```
-Package.swift                          # SwiftPM-пакет QuickLookersEngine, macOS 13+
+Package.swift                          # SwiftPM-пакет: QuickLookersEngine + QuickLookersPreviewKit, macOS 13+
 Sources/QuickLookersEngine/
   HighlightEngine.swift                # протокол HighlightEngine + HighlightRequest + EngineError
-  JSCoreRuntime.swift                  # обёртка над JavaScriptCore (Task 3)
-  Providers.swift                      # GrammarProvider / ThemeProvider (Task 4)
-  ShikiEngine.swift                    # реализация HighlightEngine (Task 5)
-  EngineFactory.swift                  # сборка из Bundle.module (Task 5)
+  JSCoreRuntime.swift                  # обёртка над JavaScriptCore
+  Providers.swift                      # GrammarProvider / ThemeProvider
+  ShikiEngine.swift                    # реализация HighlightEngine
+  EngineFactory.swift                  # сборка из Bundle.module
   Resources/
     shiki-bundle.js                    # СОБИРАЕТСЯ из js/, не править вручную
     grammars/*.json                    # грамматики Shiki (имя файла = id = поле name)
     themes/*.json                      # темы Shiki
+Sources/QuickLookersPreviewKit/        # тестируемая presentation-логика расширения
+  LanguageMap.swift                    # languageId(forPathExtension:) — язык по расширению файла
+  PreviewPage.swift                    # previewPageHTML(highlighted:) — обёртка в HTML-страницу
 js/                                    # шаг сборки JS-бандла (Node, только для сборки)
   src/highlight.mjs                    # точка входа: вешает globalThis.ql*
   build.mjs                            # esbuild → Resources/shiki-bundle.js
   test/smoke.mjs                       # node-смоук готового бандла
-Tests/QuickLookersEngineTests/         # XCTest, TDD
-docs/superpowers/                      # specs/ (дизайн) и plans/ (планы реализации)
+Tests/QuickLookersEngineTests/         # XCTest, TDD (движок)
+Tests/QuickLookersPreviewKitTests/     # XCTest, TDD (PreviewKit)
+
+# Xcode-часть (генерируется XcodeGen, .xcodeproj в .gitignore)
+project.yml                            # спека XcodeGen: хост-приложение + расширение Preview
+App/QuickLookersApp.swift              # хост-приложение (заглушка-окно)
+App/QuickLookers.entitlements          # App Sandbox хоста
+PreviewExtension/
+  PreviewViewController.swift          # QLPreviewingController: читает файл → движок → WKWebView
+  Info.plist                           # NSExtension + QLSupportedContentTypes (генерит XcodeGen)
+  QuickLookersPreview.entitlements     # App Sandbox + network.client
+
+docs/superpowers/                      # specs/ (дизайн), plans/ (планы), notes/ (замеры)
 ```
 
 ## Команды
 
 ```bash
-# Тесты пакета
+# Тесты пакета (движок + PreviewKit)
 swift test
 swift test --filter RuntimeTests
 
 # Пересборка JS-бандла Shiki (после правок js/src/*)
 cd js && npm install && npm run build && npm test
+
+# Xcode-проект: сгенерировать из project.yml (нужен `brew install xcodegen`)
+xcodegen generate
+
+# Проверка компиляции приложения + расширения без подписи
+xcodebuild -project QuickLookers.xcodeproj -scheme QuickLookers \
+  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+
+# Чтобы расширение РЕАЛЬНО заработало в Finder — запустить хост из Xcode (⌘R).
+# Только это надёжно регистрирует расширение у демона pkd; CLI-сборки/lsregister
+# для регистрации недостаточно.
+
+# Логи расширения (pid, warm, ms показа). ВАЖНО: полный путь — в zsh `log` встроенный!
+/usr/bin/log stream --info --predicate 'subsystem == "com.quicklookers.preview"'
 ```
 
-`shiki-bundle.js` — **артефакт сборки**, лежит в ресурсах и коммитится, но руками его не редактируют: меняют `js/src/highlight.mjs` и пересобирают.
+`shiki-bundle.js` — **артефакт сборки**, лежит в ресурсах и коммитится, но руками его не редактируют: меняют `js/src/highlight.mjs` и пересобирают. `.xcodeproj` и `*.entitlements`/`Info.plist` расширения — тоже артефакты XcodeGen, правят `project.yml` и перегенерируют.
 
 ## Принципы и договорённости
 
@@ -69,9 +107,20 @@ cd js && npm install && npm run build && npm test
 - **Вывод — готовая HTML-строка** для статичного показа в WKWebView с выключенным JS (WebView не выполняет код).
 - **Паритет с VS Code** держится на настоящих грамматиках/темах из `@shikijs/langs` и `@shikijs/themes`, не самописных.
 
+## QuickLook-расширение: грабли (дорого добыты, см. заметку spike)
+
+Если расширение не показывается или показывает пустоту — почти всегда одно из:
+
+1. **App Sandbox обязателен.** Без `com.apple.security.app-sandbox` демон `pkd` молча не берёт расширение в провайдеры. Бандл виден в «Системных настройках», но не вызывается. Отказавшись от App Group, песочницу выкидывать нельзя.
+2. **WKWebView в песочнице требует `com.apple.security.network.client`** — даже для HTML из строки. Иначе WebContent/GPU падают (`errno=34`), показ вешается спиннером.
+3. **`ENABLE_DEBUG_DYLIB = NO`** в `project.yml`: стуб-загрузчик Xcode 16+ ломает загрузку app-расширения.
+4. **Ждать `didFinish` навигации WKWebView** перед возвратом из `preparePreviewOfFile`, иначе QuickLook снимает пустой вебвью.
+5. **Регистрация — запуском хоста из Xcode** (⌘R), не из командной строки.
+6. **Конфликт провайдеров:** несколько расширений (sbarex, FluxMarkdown) могут объявлять один UTI; выбор — только галочками в «Системных настройках → Быстрый просмотр».
+
 ## Версии (зафиксированы)
 
-- Swift 6.3 / SwiftPM (tools 5.9), цель macOS 13+.
+- Swift 6.3 / SwiftPM (tools 5.9), цель macOS 13+. Xcode 26, XcodeGen 2.45.
 - shiki **1.29.2**, esbuild **0.20.2** (см. `js/package-lock.json`).
 - Метод `codeToHtml` у `createHighlighterCoreSync` в этой версии **есть** (подтверждено смоук-тестом).
 
@@ -84,4 +133,6 @@ cd js && npm install && npm run build && npm test
 ## Заметки по окружению
 
 - npm-окружение блокирует postinstall-скрипты (предупреждение про esbuild) — на сборку бандла не влияет.
-- Взаимодействие с Xcode (расширения, App Group, права, подписи) начнётся только в планах 2–4; движок (этот план) — чистый SwiftPM.
+- Движок (`QuickLookersEngine`, `QuickLookersPreviewKit`) — чистый SwiftPM, тестируется `swift test`. Xcode-обвязка (приложение + расширение) — поверх, через XcodeGen.
+- Диагностика SourceKt в редакторе («No such module …», «@main …») при правках Xcode-таргетов — это **задержка индексатора**, а не ошибка сборки; `swift test` / `xcodebuild` собирают нормально.
+- В **zsh** есть встроенная команда `log` — для системных логов всегда полный путь `/usr/bin/log`.
