@@ -16,6 +16,9 @@ public func previewPageHTML(highlighted: String) -> String {
         font-size: 12px;
         line-height: 1.5;
         tab-size: 4;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
     </style>
     </head>

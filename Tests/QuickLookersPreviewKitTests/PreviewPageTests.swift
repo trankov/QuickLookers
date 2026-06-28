@@ -16,4 +16,10 @@ final class PreviewPageTests: XCTestCase {
         let page = previewPageHTML(highlighted: fragment)
         XCTAssertTrue(page.contains(fragment))
     }
+
+    func test_pageWrapsLongLines() {
+        let page = previewPageHTML(highlighted: #"<pre class="shiki">x</pre>"#)
+        XCTAssertTrue(page.contains("pre-wrap"), "длинные строки должны переноситься")
+        XCTAssertTrue(page.contains("overflow-wrap"), "длинные строки без пробелов ломаются")
+    }
 }
