@@ -23,7 +23,7 @@ final class CatalogSourceTests: XCTestCase {
         let catalog = try source.loadCatalog()
 
         XCTAssertEqual(catalog.languages, [LanguageInfo(id: "swift", displayName: "Swift")])
-        XCTAssertEqual(catalog.themes.sorted { $0.id < $1.id }, [
+        XCTAssertEqual(catalog.themes, [
             ThemeInfo(id: "dark-plus", displayName: "Dark Plus", isDark: true),
             ThemeInfo(id: "light-plus", displayName: "Light Plus", isDark: false),
         ])
