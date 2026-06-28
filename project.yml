@@ -37,9 +37,14 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.files.user-selected.read-only: true
+        com.apple.security.application-groups: [group.com.quicklookers]
     dependencies:
       - target: QuickLookersPreview
         embed: true
+      - package: QuickLookersEngine
+        product: QuickLookersEngine
+      - package: QuickLookersEngine
+        product: QuickLookersSettingsKit
 
   QuickLookersPreview:
     type: app-extension
@@ -58,6 +63,7 @@ targets:
         # GPU, Network) через защищённые соединения. Без network.client они
         # падают при запуске — даже если HTML грузится из строки, без сети.
         com.apple.security.network.client: true
+        com.apple.security.application-groups: [group.com.quicklookers]
     info:
       path: PreviewExtension/Info.plist
       properties:
@@ -77,3 +83,5 @@ targets:
         product: QuickLookersEngine
       - package: QuickLookersEngine
         product: QuickLookersPreviewKit
+      - package: QuickLookersEngine
+        product: QuickLookersSettingsKit
