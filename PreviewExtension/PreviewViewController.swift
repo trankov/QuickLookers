@@ -26,6 +26,8 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     private static let cacheMaxBytes = 5 * 1024 * 1024         // 5 МБ
     private static let bundleVersion =
         (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? "0"
+    // URL контейнера App Group не меняется за жизнь процесса — считаем один раз.
+    private static let sharedContainerURL: URL? = quickLookersContainerURL()
 
     private var loadContinuation: CheckedContinuation<Void, Error>?
 
@@ -78,7 +80,6 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
             cache?.store(key, html: page)
         }
 
-        Self.sharedWebView.navigationDelegate = self
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             self.loadContinuation = cont
             Self.sharedWebView.loadHTMLString(page, baseURL: nil)
@@ -115,12 +116,12 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     }
 
     private static func settings() -> ManagerSettings {
-        guard let container = quickLookersContainerURL() else { return .default }
+        guard let container = sharedContainerURL else { return .default }
         return SettingsStore(fileURL: container.appendingPathComponent("settings.json")).load()
     }
 
     private static func cache() -> HTMLCache? {
-        guard let container = quickLookersContainerURL() else { return nil }
+        guard let container = sharedContainerURL else { return nil }
         return HTMLCache(directory: container.appendingPathComponent("Caches/html"),
                          maxBytes: cacheMaxBytes)
     }

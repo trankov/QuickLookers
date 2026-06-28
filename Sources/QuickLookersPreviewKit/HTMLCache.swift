@@ -11,6 +11,10 @@ public struct HTMLCacheKey: Equatable {
     public let themeId: String
     public let maxLines: Int
     public let bundleVersion: String
+    /// Короткий стабильный хэш всех полей — имя файла записи в кэше.
+    /// Считается один раз при создании ключа (на промахе кэша ключ используется
+    /// дважды — в lookup и store).
+    public let fileName: String
 
     public init(path: String, mtime: TimeInterval, size: Int,
                 languageId: String, themeId: String, maxLines: Int, bundleVersion: String) {
@@ -21,14 +25,9 @@ public struct HTMLCacheKey: Equatable {
         self.themeId = themeId
         self.maxLines = maxLines
         self.bundleVersion = bundleVersion
-    }
-
-    /// Короткий стабильный хэш всех полей — имя файла записи в кэше.
-    public var fileName: String {
         let raw = "\(path)|\(mtime)|\(size)|\(languageId)|\(themeId)|\(maxLines)|\(bundleVersion)"
         let digest = SHA256.hash(data: Data(raw.utf8))
-        let hex = digest.map { String(format: "%02x", $0) }.joined()
-        return hex + ".html"
+        self.fileName = digest.map { String(format: "%02x", $0) }.joined() + ".html"
     }
 }
 
@@ -37,7 +36,6 @@ public struct HTMLCacheKey: Equatable {
 public struct HTMLCache {
     private let directory: URL
     private let maxBytes: Int
-    private let fm = FileManager.default
 
     public init(directory: URL, maxBytes: Int) {
         self.directory = directory
@@ -50,13 +48,13 @@ public struct HTMLCache {
         let url = directory.appendingPathComponent(key.fileName)
         guard let data = try? Data(contentsOf: url),
               let html = String(data: data, encoding: .utf8) else { return nil }
-        try? fm.setAttributes([.modificationDate: Date()], ofItemAtPath: url.path)
+        try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: url.path)
         return html
     }
 
     /// Пишет HTML атомарно. Ошибка проглатывается (показ уже идёт).
     public func store(_ key: HTMLCacheKey, html: String) {
-        try? fm.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent(key.fileName)
         try? Data(html.utf8).write(to: url, options: .atomic)
     }
@@ -64,7 +62,7 @@ public struct HTMLCache {
     /// Если суммарный размер кэша больше `maxBytes` — удаляет давно не
     /// использованные записи (по возрастанию mtime), пока не уложится.
     public func evictIfNeeded() {
-        guard let urls = try? fm.contentsOfDirectory(
+        guard let urls = try? FileManager.default.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey],
             options: [.skipsHiddenFiles]) else { return }
@@ -83,7 +81,7 @@ public struct HTMLCache {
         files.sort { $0.mtime < $1.mtime }   // давно использованные — первыми
         for f in files {
             if total <= maxBytes { break }
-            if (try? fm.removeItem(at: f.url)) != nil {
+            if (try? FileManager.default.removeItem(at: f.url)) != nil {
                 total -= f.size
             }
         }

@@ -19,12 +19,10 @@ public func readBoundedPrefix(of url: URL, maxBytes: Int) throws -> String {
     defer { try? handle.close() }
     let data = try handle.read(upToCount: maxBytes) ?? Data()
     if let s = String(data: data, encoding: .utf8) { return s }
-    // UTF-8 символ — до 4 байт; отрезаем хвост по байту, пока не декодируется.
-    var trimmed = data
-    for _ in 0..<3 {
-        guard !trimmed.isEmpty else { break }
-        trimmed.removeLast()
-        if let s = String(data: trimmed, encoding: .utf8) { return s }
+    // UTF-8 символ — до 4 байт; отрезаем хвост срезом (без копии буфера),
+    // пока префикс не декодируется.
+    for drop in 1...3 where data.count - drop > 0 {
+        if let s = String(data: data.prefix(data.count - drop), encoding: .utf8) { return s }
     }
     throw CocoaError(.fileReadInapplicableStringEncoding)
 }
