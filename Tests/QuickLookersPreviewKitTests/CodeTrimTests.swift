@@ -53,4 +53,15 @@ final class CodeTrimTests: XCTestCase {
         XCTAssertLessThanOrEqual(s.utf8.count, 5)
         XCTAssertTrue(s.allSatisfy { $0 == "я" }, "не должно быть мусорных символов")
     }
+
+    func test_throwsOnUndecodableData() throws {
+        // Непустые не-UTF-8 байты → ошибка (откат к системному превью), не пустая строка.
+        let url = try writeTemp(Data([0xFF, 0xFF, 0xFF, 0xFF]))
+        XCTAssertThrowsError(try readBoundedPrefix(of: url, maxBytes: 1024))
+    }
+
+    func test_emptyFileStillReturnsEmptyString() throws {
+        let url = try writeTemp(Data())
+        XCTAssertEqual(try readBoundedPrefix(of: url, maxBytes: 1024), "")
+    }
 }

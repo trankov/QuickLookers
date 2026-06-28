@@ -13,6 +13,7 @@ public func trimToFirstLines(_ code: String, max: Int) -> (code: String, truncat
 
 /// Читает не более `maxBytes` префикса файла как UTF-8. Если граница попала на
 /// середину многобайтового символа — отбрасывает неполный хвост (до 3 байт).
+/// Пустой файл возвращает пустую строку; непустые нечитаемые данные бросают ошибку.
 public func readBoundedPrefix(of url: URL, maxBytes: Int) throws -> String {
     let handle = try FileHandle(forReadingFrom: url)
     defer { try? handle.close() }
@@ -25,5 +26,5 @@ public func readBoundedPrefix(of url: URL, maxBytes: Int) throws -> String {
         trimmed.removeLast()
         if let s = String(data: trimmed, encoding: .utf8) { return s }
     }
-    return ""
+    throw CocoaError(.fileReadInapplicableStringEncoding)
 }
