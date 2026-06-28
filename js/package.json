@@ -1,0 +1,15 @@
+{
+  "name": "quicklookers-shiki-bundle",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test/smoke.mjs"
+  },
+  "dependencies": {
+    "shiki": "^1.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0"
+  }
+}
