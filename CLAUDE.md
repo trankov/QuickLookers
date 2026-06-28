@@ -19,9 +19,11 @@ macOS-приложение, возвращающее превью кода и Ma
 
 ## Текущее состояние
 
-Реализуется первая подсистема — **движок рендеринга** (Swift-пакет `QuickLookersEngine`). План: `docs/superpowers/plans/2026-06-27-quicklookers-rendering-engine.md`. Расширения QuickLook, App Group и приложение — отдельные будущие планы.
+Первая подсистема — **движок рендеринга** (Swift-пакет `QuickLookersEngine`) — **реализована** (план `docs/superpowers/plans/2026-06-27-quicklookers-rendering-engine.md`, все 6 задач + cleanup, ветка `feat/rendering-engine`). Расширения QuickLook, App Group и приложение — отдельные будущие планы.
 
-Движок: `код + язык + тема → готовый HTML` через **Shiki** в **JavaScriptCore**. Shiki выбран потому, что использует те же TextMate-грамматики и VS Code-темы → совпадение с VS Code, а не «похоже».
+Движок: `код + язык + тема → готовый HTML` через **Shiki** в **JavaScriptCore**. Shiki выбран потому, что использует те же TextMate-грамматики и VS Code-темы → совпадение с VS Code, а не «похоже». Точка входа — `QuickLookersEngineFactory.makeDefault() -> HighlightEngine`.
+
+**Замер производительности (важно для следующих подсистем):** голый движок на 200 строках Swift даёт холодный показ ≈440 мс, тёплый ≈190 мс (release ≈ debug — стоимость в JS-слое JSC). Это **над** ориентиром ~100 мс. Бюджет добираем не в движке, а оптимизациями показа в подсистеме Preview: кэш готового HTML, обрезка первого экрана, при необходимости свап на WASM-движок регулярок. Полный нативный порт (Oniguruma + Swift) **отложен**. Детали и решение — `docs/superpowers/notes/2026-06-28-engine-benchmark.md`.
 
 ## Структура
 
