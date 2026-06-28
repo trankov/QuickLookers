@@ -126,9 +126,9 @@ xcodebuild -project QuickLookers.xcodeproj -scheme QuickLookers \
 
 ## Коммиты
 
-- Сообщения по-русски, формат `feat(engine): ...` / `test(engine): ...` / `docs: ...`.
+- Сообщения по-русски, формат `feat(engine): ...` / `feat(preview): ...` / `test(...): ...` / `docs: ...`.
 - Трейлер: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
-- Реализация идёт в ветке `feat/rendering-engine`, не в `main`.
+- Каждая подсистема — в своей ветке, не в `main` напрямую. Фазы 1–2 влиты в `main`; следующая фаза начинается с новой ветки.
 
 ## Заметки по окружению
 
