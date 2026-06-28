@@ -7,6 +7,7 @@ let package = Package(
     products: [
         .library(name: "QuickLookersEngine", targets: ["QuickLookersEngine"]),
         .library(name: "QuickLookersPreviewKit", targets: ["QuickLookersPreviewKit"]),
+        .library(name: "QuickLookersSettingsKit", targets: ["QuickLookersSettingsKit"]),
     ],
     targets: [
         .target(
@@ -28,6 +29,13 @@ let package = Package(
         .testTarget(
             name: "QuickLookersPreviewKitTests",
             dependencies: ["QuickLookersPreviewKit"]
+        ),
+        .target(
+            name: "QuickLookersSettingsKit"
+        ),
+        .testTarget(
+            name: "QuickLookersSettingsKitTests",
+            dependencies: ["QuickLookersSettingsKit"]
         ),
     ]
 )
