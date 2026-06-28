@@ -9,16 +9,39 @@ import QuickLookersSettingsKit
 final class PreviewViewController: NSViewController, QLPreviewingController, WKNavigationDelegate {
     private static let log = Logger(subsystem: "com.quicklookers.preview", category: "preview")
 
-    // Тёплый процесс: движок, набор id тем и сам вебвью строятся один раз на
-    // жизнь процесса. Общий вебвью переживает контроллеры — убирает холодный
-    // старт WebContent (выбросы 1–2,6 с).
+    // Тёплый процесс: движок и набор id тем строятся один раз на жизнь процесса.
     private static var cachedEngine: HighlightEngine?
     private static var cachedThemeIds: Set<String>?
-    private static let sharedWebView: WKWebView = {
+
+    // Пул тёплых вебвью. Один общий вебвью держать нельзя: Finder показывает
+    // превью ПАРАЛЛЕЛЬНО (панель «Просмотр» + QuickLook-пробел, галерея) — один
+    // вебвью не обслужит два показа сразу: второй перехватит делегата и навигацию,
+    // и континуация первого не разрешится (бесконечный спиннер). Пул выдаёт
+    // каждому показу свой вебвью и переиспользует освободившиеся (тепло сохраняется).
+    // Доступ только с главного потока (QLPreviewingController @MainActor).
+    private static var idleWebViews: [WKWebView] = []
+
+    private static func makeWebView() -> WKWebView {
         let config = WKWebViewConfiguration()
         config.defaultWebpagePreferences.allowsContentJavaScript = false
+        // Между показами QuickLook убирает вебвью из окна. По умолчанию WebKit
+        // тогда тормозит/усыпляет WebContent (jetsam-приоритет падает) → первый
+        // показ после простоя ждёт пробуждения процесса (~1,4 с, пустой экран).
+        // .none держит вебвью активным вне окна; JS выключен, поэтому почти даром.
+        if #available(macOS 14.0, *) {
+            config.preferences.inactiveSchedulingPolicy = .none
+        }
         return WKWebView(frame: .zero, configuration: config)
-    }()
+    }
+
+    private static func acquireWebView() -> WKWebView {
+        idleWebViews.popLast() ?? makeWebView()
+    }
+
+    private static func releaseWebView(_ webView: WKWebView) {
+        webView.navigationDelegate = nil
+        idleWebViews.append(webView)
+    }
 
     // Константы фазы оптимизации (см. спеку 2026-06-29).
     private static let maxLines = 2000
@@ -29,12 +52,26 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     // URL контейнера App Group не меняется за жизнь процесса — считаем один раз.
     private static let sharedContainerURL: URL? = quickLookersContainerURL()
 
+    private var webView: WKWebView!
     private var loadContinuation: CheckedContinuation<Void, Error>?
 
     override func loadView() {
-        // Общий вебвью переезжает к текущему контроллеру; делегат указываем на себя.
-        Self.sharedWebView.navigationDelegate = self
-        self.view = Self.sharedWebView
+        // Берём вебвью из пула (или создаём); делегат — на себя.
+        let wv = Self.acquireWebView()
+        wv.navigationDelegate = self
+        self.webView = wv
+        self.view = wv
+    }
+
+    deinit {
+        // Превью закрыто — возвращаем вебвью в пул. Вебвью — UI-объект, трогаем
+        // на главном потоке (deinit может прийти не с него).
+        guard let wv = webView else { return }
+        if Thread.isMainThread {
+            Self.releaseWebView(wv)
+        } else {
+            DispatchQueue.main.async { Self.releaseWebView(wv) }
+        }
     }
 
     func preparePreviewOfFile(at url: URL) async throws {
@@ -82,7 +119,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
 
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             self.loadContinuation = cont
-            Self.sharedWebView.loadHTMLString(page, baseURL: nil)
+            self.webView.loadHTMLString(page, baseURL: nil)
         }
 
         // Вытеснение — после показа, вне горячего пути.
@@ -121,8 +158,16 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     }
 
     private static func cache() -> HTMLCache? {
-        guard let container = sharedContainerURL else { return nil }
-        return HTMLCache(directory: container.appendingPathComponent("Caches/html"),
+        // Песочница превью-расширения НЕ даёт запись в ГРУППОВОЙ контейнер
+        // (kernel: deny file-write-create и в корне, и в Library/Caches) — превью
+        // задумано «только смотреть», поэтому групповой контейнер для расширения
+        // доступен лишь на чтение (так читаются настройки, которые пишет приложение).
+        // Кэш HTML пишет и читает ТОЛЬКО расширение, поэтому держим его в СВОЁМ
+        // контейнере расширения, где запись разрешена.
+        guard let caches = try? FileManager.default.url(
+            for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        else { return nil }
+        return HTMLCache(directory: caches.appendingPathComponent("QuickLookersHTML"),
                          maxBytes: cacheMaxBytes)
     }
 
