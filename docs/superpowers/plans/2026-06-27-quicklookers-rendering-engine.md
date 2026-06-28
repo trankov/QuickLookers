@@ -16,7 +16,7 @@
 - [x] **Task 2** — JS-бандл Shiki. Коммит `e64c8b2`. Бандл собран (349 КБ), node-смоук зелёный.
 - [x] **Task 3** — обёртка `JSCoreRuntime`. Shiki отработал внутри JavaScriptCore (~21 мс холодный plaintext).
 - [x] **Task 4** — провайдеры + ресурсы Shiki. 5 ресурсов (javascript, swift, json, dark-plus, light-plus), 4 теста зелёные.
-- [ ] **Task 5** — `ShikiEngine` + фабрика.
+- [x] **Task 5** — `ShikiEngine` + фабрика. Сквозная подсветка Swift темой dark-plus, ленивый кэш подтверждён. 6 тестов зелёные.
 - [ ] **Task 6** — бенчмарк бюджета.
 
 **Зафиксированные факты и отклонения от плана:**
