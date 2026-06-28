@@ -35,7 +35,7 @@ let package = Package(
         ),
         .testTarget(
             name: "QuickLookersSettingsKitTests",
-            dependencies: ["QuickLookersSettingsKit"]
+            dependencies: ["QuickLookersSettingsKit", "QuickLookersEngine"]
         ),
     ]
 )

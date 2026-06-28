@@ -15,13 +15,12 @@ const themesDir = '../Sources/QuickLookersEngine/Resources/themes'
 mkdirSync(grammarsDir, { recursive: true })
 mkdirSync(themesDir, { recursive: true })
 
-// Грамматика: модуль экспортирует массив регистраций; берём ту, чьё name == id.
+// Грамматика: модуль экспортирует массив [главная + встроенные]. Пишем целиком.
 for (const id of GRAMMARS) {
   const mod = await import(`@shikijs/langs/${id}`)
   const arr = Array.isArray(mod.default) ? mod.default : [mod.default]
-  const grammar = arr.find((g) => g.name === id) ?? arr[0]
-  writeFileSync(`${grammarsDir}/${id}.json`, JSON.stringify(grammar))
-  console.log(`grammar ${id} <- name=${grammar.name}`)
+  writeFileSync(`${grammarsDir}/${id}.json`, JSON.stringify(arr))
+  console.log(`grammar ${id} <- entries=${arr.length}`)
 }
 
 // Тема: модуль экспортирует один объект.

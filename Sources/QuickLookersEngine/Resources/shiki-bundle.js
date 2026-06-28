@@ -10571,9 +10571,9 @@ XID_Start XIDS`.split(/\s/)
     });
     return theme;
   }
-  async function resolveLangs(langs2) {
+  async function resolveLangs(langs) {
     return Array.from(new Set((await Promise.all(
-      langs2.filter((l) => !isSpecialLang(l)).map(async (lang) => await normalizeGetter(lang).then((r3) => Array.isArray(r3) ? r3 : [r3]))
+      langs.filter((l) => !isSpecialLang(l)).map(async (lang) => await normalizeGetter(lang).then((r3) => Array.isArray(r3) ? r3 : [r3]))
     )).flat()));
   }
   async function resolveThemes(themes2) {
@@ -10684,8 +10684,8 @@ XID_Start XIDS`.split(/\s/)
       this._langGraph.clear();
       this._loadedThemesCache = null;
     }
-    loadLanguages(langs2) {
-      for (const lang of langs2)
+    loadLanguages(langs) {
+      for (const lang of langs)
         this.resolveEmbeddedLanguages(lang);
       const langsGraphArray = Array.from(this._langGraph.entries());
       const missingLangs = langsGraphArray.filter(([_, lang]) => !lang);
@@ -10720,12 +10720,12 @@ XID_Start XIDS`.split(/\s/)
     _scopeToLang = /* @__PURE__ */ new Map();
     _injections = /* @__PURE__ */ new Map();
     _onigLib;
-    constructor(engine2, langs2) {
+    constructor(engine2, langs) {
       this._onigLib = {
         createOnigScanner: (patterns) => engine2.createScanner(patterns),
         createOnigString: (s) => engine2.createString(s)
       };
-      langs2.forEach((i) => this.addLanguage(i));
+      langs.forEach((i) => this.addLanguage(i));
     }
     get onigLib() {
       return this._onigLib;
@@ -10770,10 +10770,10 @@ XID_Start XIDS`.split(/\s/)
     let isDisposed = false;
     if (!options.engine)
       throw new ShikiError2("`engine` option is required for synchronous mode");
-    const langs2 = (options.langs || []).flat(1);
+    const langs = (options.langs || []).flat(1);
     const themes2 = (options.themes || []).flat(1).map(normalizeTheme);
-    const resolver = new Resolver(options.engine, langs2);
-    const _registry = new Registry2(resolver, themes2, langs2, options.langAlias);
+    const resolver = new Resolver(options.engine, langs);
+    const _registry = new Registry2(resolver, themes2, langs, options.langAlias);
     let _lastTheme;
     function getLanguage(name) {
       ensureNotDisposed();
@@ -10812,12 +10812,12 @@ XID_Start XIDS`.split(/\s/)
       ensureNotDisposed();
       return _registry.getLoadedLanguages();
     }
-    function loadLanguageSync(...langs22) {
+    function loadLanguageSync(...langs2) {
       ensureNotDisposed();
-      _registry.loadLanguages(langs22.flat(1));
+      _registry.loadLanguages(langs2.flat(1));
     }
-    async function loadLanguage(...langs22) {
-      return loadLanguageSync(await resolveLangs(langs22));
+    async function loadLanguage(...langs2) {
+      return loadLanguageSync(await resolveLangs(langs2));
     }
     function loadThemeSync(...themes22) {
       ensureNotDisposed();
@@ -10870,30 +10870,44 @@ XID_Start XIDS`.split(/\s/)
 
   // src/highlight.mjs
   var engine = createJavaScriptRegexEngine({ forgiving: true });
-  var langs = /* @__PURE__ */ new Map();
+  var langByName = /* @__PURE__ */ new Map();
   var themes = /* @__PURE__ */ new Map();
   var highlighters = /* @__PURE__ */ new Map();
   globalThis.qlRegisterLang = (json) => {
-    const lang = JSON.parse(json);
-    langs.set(lang.name, lang);
-    return lang.name;
+    const parsed = JSON.parse(json);
+    const arr = Array.isArray(parsed) ? parsed : [parsed];
+    for (const g of arr)
+      langByName.set(g.name, g);
+    return arr.length;
   };
   globalThis.qlRegisterTheme = (json) => {
     const theme = JSON.parse(json);
     themes.set(theme.name, theme);
     return theme.name;
   };
+  function collectLangs(name, acc, seen) {
+    if (seen.has(name))
+      return;
+    seen.add(name);
+    const g = langByName.get(name);
+    if (!g)
+      return;
+    acc.push(g);
+    for (const dep of g.embeddedLangs || [])
+      collectLangs(dep, acc, seen);
+  }
   globalThis.qlHighlight = (code, langName, themeName) => {
     const key2 = langName + " " + themeName;
     let hl = highlighters.get(key2);
     if (!hl) {
-      const lang = langs.get(langName);
-      const theme = themes.get(themeName);
-      if (!lang)
+      const langs = [];
+      collectLangs(langName, langs, /* @__PURE__ */ new Set());
+      if (langs.length === 0)
         throw new Error("lang not registered: " + langName);
+      const theme = themes.get(themeName);
       if (!theme)
         throw new Error("theme not registered: " + themeName);
-      hl = createHighlighterCoreSync({ themes: [theme], langs: [lang], engine });
+      hl = createHighlighterCoreSync({ themes: [theme], langs, engine });
       highlighters.set(key2, hl);
     }
     return hl.codeToHtml(code, { lang: langName, theme: themeName });

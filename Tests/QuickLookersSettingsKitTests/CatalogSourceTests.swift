@@ -1,5 +1,6 @@
 import XCTest
 import QuickLookersSettingsKit
+import QuickLookersEngine
 
 final class CatalogSourceTests: XCTestCase {
     private func makeTempDir() throws -> URL {
@@ -12,7 +13,7 @@ final class CatalogSourceTests: XCTestCase {
     func testReadsLanguagesAndThemesWithMetadata() throws {
         let grammars = try makeTempDir()
         let themes = try makeTempDir()
-        try #"{"name":"swift","displayName":"Swift","scopeName":"source.swift"}"#
+        try #"[{"name":"swift","displayName":"Swift","scopeName":"source.swift"}]"#
             .write(to: grammars.appendingPathComponent("swift.json"), atomically: true, encoding: .utf8)
         try #"{"name":"dark-plus","displayName":"Dark Plus","type":"dark"}"#
             .write(to: themes.appendingPathComponent("dark-plus.json"), atomically: true, encoding: .utf8)
@@ -32,10 +33,18 @@ final class CatalogSourceTests: XCTestCase {
     func testDisplayNameFallsBackToName() throws {
         let grammars = try makeTempDir()
         let themes = try makeTempDir()
-        try #"{"name":"json"}"#
+        try #"[{"name":"json"}]"#
             .write(to: grammars.appendingPathComponent("json.json"), atomically: true, encoding: .utf8)
         let source = FileCatalogSource(grammarsDirectory: grammars, themesDirectory: themes)
         let catalog = try source.loadCatalog()
         XCTAssertEqual(catalog.languages, [LanguageInfo(id: "json", displayName: "json")])
+    }
+
+    func test_grammarDisplayNameFromArrayEntry() throws {
+        let catalog = try FileCatalogSource(
+            grammarsDirectory: QuickLookersEngineResources.grammarsDirectory(),
+            themesDirectory: QuickLookersEngineResources.themesDirectory()).loadCatalog()
+        let js = try XCTUnwrap(catalog.languages.first { $0.id == "javascript" })
+        XCTAssertEqual(js.displayName, "JavaScript")
     }
 }

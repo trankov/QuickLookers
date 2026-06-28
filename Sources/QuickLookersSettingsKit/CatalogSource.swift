@@ -15,14 +15,17 @@ public struct FileCatalogSource: CatalogSource {
         self.themesDirectory = themesDirectory
     }
 
-    private struct GrammarMeta: Decodable { let name: String; let displayName: String? }
+    private struct GrammarEntry: Decodable { let name: String; let displayName: String? }
     private struct ThemeMeta: Decodable { let name: String; let displayName: String?; let type: String? }
 
     public func loadCatalog() throws -> Catalog {
         let languages = try jsonFiles(in: grammarsDirectory).compactMap { url -> LanguageInfo? in
-            guard let meta = try? JSONDecoder().decode(GrammarMeta.self, from: Data(contentsOf: url))
+            let id = url.deletingPathExtension().lastPathComponent
+            guard let entries = try? JSONDecoder().decode([GrammarEntry].self,
+                                                           from: Data(contentsOf: url))
             else { return nil }
-            return LanguageInfo(id: meta.name, displayName: meta.displayName ?? meta.name)
+            let main = entries.first { $0.name == id }
+            return LanguageInfo(id: id, displayName: main?.displayName ?? id)
         }
         let themes = try jsonFiles(in: themesDirectory).compactMap { url -> ThemeInfo? in
             guard let meta = try? JSONDecoder().decode(ThemeMeta.self, from: Data(contentsOf: url))
