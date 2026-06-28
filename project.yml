@@ -93,9 +93,29 @@ targets:
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PreviewViewController
           NSExtensionAttributes:
             QLSupportedContentTypes:
-              - public.swift-source
-              - public.json
+              - public.python-script
               - com.netscape.javascript-source
+              - org.nodejs.cjs
+              - public.tsx
+              - com.adobe.jsx
+              - public.c-source
+              - public.c-header
+              - public.c-plus-plus-source
+              - public.c-plus-plus-header
+              - com.sun.java-source
+              - org.go.source
+              - org.rust-lang.rust
+              - public.swift-source
+              - com.microsoft.csharp-source
+              - public.php-script
+              - public.ruby-script
+              - org.scala.source
+              - public.perl-script
+              - org.vuejs.vue
+              - public.yaml
+              - public.toml
+              - public.json
+              - org.iso.sql
             QLSupportsSearchableItems: false
     dependencies:
       - package: QuickLookersEngine
