@@ -41,7 +41,10 @@ for (const { lang, code } of cases) {
 // --- проверяем встроенную подсветку vue (html + css + js внутри одного файла) ---
 const vueJson = readFileSync(join(grammarsDir, 'vue.json'), 'utf8')
 const vueCount = globalThis.qlRegisterLang(vueJson)
-assert.ok(vueCount >= 1, `qlRegisterLang(vue) должен вернуть >= 1`)
+// vue.json — массив [главная грамматика + встроенные html/css/js/ts и их зависимости].
+// Слабый порог (>= 1) пропустил бы регрессию, где collectLangs вернёт только главную
+// грамматику без встроенных. Требуем весь набор (фактически 17 записей).
+assert.ok(vueCount >= 10, `qlRegisterLang(vue) должен вернуть >= 10 (встроенные грамматики), получено ${vueCount}`)
 
 const vueSfc = `<template>
   <div class="hello">{{ msg }}</div>
@@ -52,14 +55,21 @@ export default { data() { return { msg: 'Hello' } } }
 
 const vueHtml = globalThis.qlHighlight(vueSfc, 'vue', 'dark-plus')
 assert.ok(vueHtml.includes('<pre'), 'vue: ожидался <pre> в выводе')
-// В шаблоне: тег div или атрибут class → span с color-стилем
+// Токен из <template>: Shiki разбивает разметку на span'ы с цветом.
+// (Буквальная строка class="hello" в подсвеченном HTML НЕ появляется — она
+// разбита на токены; её наличие означало бы как раз поломку подсветки.)
 assert.ok(
-  vueHtml.includes('class="hello"') || vueHtml.includes('style="color:'),
+  vueHtml.includes('style="color:'),
   'vue: ожидаются раскрашенные токены из <template>'
 )
-// В скрипте: export или default → отдельные span
+// Токен из <script>: ключевое слово export должно быть обёрнуто в span (раскрашено),
+// а не выведено голым текстом. Это доказывает работу встроенной грамматики js.
+assert.ok(
+  /<span[^>]*>export<\/span>/.test(vueHtml),
+  'vue: ключевое слово export из <script> должно быть раскрашено (span)'
+)
 const spanMatches = (vueHtml.match(/<span[^>]*>/g) || []).length
 assert.ok(spanMatches >= 4, `vue: ожидается >= 4 span-токенов, получено ${spanMatches}`)
-console.log(`smoke vue: OK (${vueHtml.length} bytes, ${spanMatches} spans)`)
+console.log(`smoke vue: OK (${vueHtml.length} bytes, ${spanMatches} spans, langs=${vueCount})`)
 
 console.log('smoke OK')
