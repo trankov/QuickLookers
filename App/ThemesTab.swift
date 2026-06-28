@@ -5,9 +5,6 @@ import QuickLookersSettingsKit
 struct ThemesTab: View {
     @ObservedObject var model: SettingsModel
 
-    private var lightThemes: [ThemeInfo] { model.catalog.themes.filter { !$0.isDark } }
-    private var darkThemes: [ThemeInfo] { model.catalog.themes.filter { $0.isDark } }
-
     var body: some View {
         Form {
             Toggle("Следовать за системой", isOn: Binding(
@@ -15,8 +12,8 @@ struct ThemesTab: View {
                 set: { on in model.update { $0.theme.followSystem = on } }))
 
             if model.settings.theme.followSystem {
-                themePicker("Светлая тема", themes: lightThemes, keyPath: \.theme.lightThemeId)
-                themePicker("Тёмная тема", themes: darkThemes, keyPath: \.theme.darkThemeId)
+                themePicker("Светлая тема", themes: model.lightThemes, keyPath: \.theme.lightThemeId)
+                themePicker("Тёмная тема", themes: model.darkThemes, keyPath: \.theme.darkThemeId)
             } else {
                 themePicker("Активная тема", themes: model.catalog.themes, keyPath: \.theme.fixedThemeId)
             }

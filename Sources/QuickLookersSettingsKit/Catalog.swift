@@ -1,5 +1,3 @@
-import Foundation
-
 public struct LanguageInfo: Equatable, Identifiable {
     public let id: String
     public let displayName: String

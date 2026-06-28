@@ -1,5 +1,5 @@
 import XCTest
-@testable import QuickLookersSettingsKit
+import QuickLookersSettingsKit
 
 final class SettingsStoreTests: XCTestCase {
     private func tempFile() -> URL {

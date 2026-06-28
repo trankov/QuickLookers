@@ -1,5 +1,5 @@
 import XCTest
-@testable import QuickLookersSettingsKit
+import QuickLookersSettingsKit
 
 final class CatalogSourceTests: XCTestCase {
     private func makeTempDir() throws -> URL {

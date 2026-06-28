@@ -10,12 +10,7 @@ struct FormatsTab: View {
                 ForEach(model.catalog.languages) { lang in
                     Toggle(lang.displayName, isOn: Binding(
                         get: { model.isLanguageOn(lang.id) },
-                        set: { on in
-                            model.update { s in
-                                if on { s.disabledLanguageIds.remove(lang.id) }
-                                else { s.disabledLanguageIds.insert(lang.id) }
-                            }
-                        }))
+                        set: { model.setLanguageOn(lang.id, $0) }))
                 }
             }
         }

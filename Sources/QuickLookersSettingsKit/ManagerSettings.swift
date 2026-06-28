@@ -1,5 +1,3 @@
-import Foundation
-
 /// Дефолтные id встроенных тем VS Code.
 public enum DefaultThemeIds {
     public static let light = "light-plus"

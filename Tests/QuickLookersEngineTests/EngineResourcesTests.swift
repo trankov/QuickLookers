@@ -1,5 +1,5 @@
 import XCTest
-@testable import QuickLookersEngine
+import QuickLookersEngine
 
 final class EngineResourcesTests: XCTestCase {
     func testGrammarsDirectoryContainsSwift() throws {

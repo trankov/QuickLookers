@@ -1,5 +1,3 @@
-import Foundation
-
 /// Один объявленный тип: UTI в Info.plist, расширение файла, целевой язык.
 public struct DeclaredType: Equatable {
     public let uti: String
