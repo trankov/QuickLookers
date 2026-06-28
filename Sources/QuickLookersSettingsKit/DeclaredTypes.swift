@@ -16,6 +16,20 @@ public struct DeclaredType: Equatable {
 ///
 /// UTI получены резолвером `UTType(filenameExtension:)` на macOS 26 (Darwin 25.5.0).
 ///
+/// ВАЖНО — машинная зависимость. Резолвер запускался на dev-машине с кучей
+/// установленных инструментов. Базовые системные — только `public.*`
+/// (python/c/cpp/swift/php/ruby/perl/yaml/toml/json/sql/tsx) и
+/// `com.netscape.javascript-source`. Вендорные reverse-DNS — `org.go.source`,
+/// `org.rust-lang.rust`, `org.scala.source`, `org.vuejs.vue`, `org.nodejs.cjs`,
+/// `com.microsoft.csharp-source`, `com.sun.java-source`, `com.adobe.jsx` —
+/// существуют в LaunchServices, ПОТОМУ ЧТО их зарегистрировало установленное
+/// приложение/тулчейн. На чистой macOS без него файл получит другой тип
+/// (`public.plain-text`/`dyn.*`), и перехват не сработает. Это принято
+/// осознанно (прагматичная стратегия: работает на нашей машине; дистрибутив-
+/// робастность — через собственные `UTExportedTypeDeclarations`, позже).
+/// Отдельно: `com.adobe.jsx` семантически — Adobe ExtendScript, а не React JSX
+/// (как и исключённый сторонний `org.sbarex.dart`).
+///
 /// Расширения без стабильного системного UTI — для Task 5 (нужен собственный UTI):
 ///   - ts  → public.mpeg-2-transport-stream  (конфликт: MPEG-2, не TypeScript)
 ///   - r   → com.apple.rez-source            (конфликт: Apple Rez, не R-язык)
