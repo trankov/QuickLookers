@@ -24,8 +24,10 @@ public struct FileCatalogSource: CatalogSource {
             guard let entries = try? JSONDecoder().decode([GrammarEntry].self,
                                                            from: Data(contentsOf: url))
             else { return nil }
-            let main = entries.first { $0.name == id }
-            return LanguageInfo(id: id, displayName: main?.displayName ?? id)
+            // Главная грамматика — запись с name == id (в массиве может быть не первой:
+            // напр. у vue она идёт последней, после встроенных html/css/js).
+            return LanguageInfo(id: id,
+                                displayName: entries.first { $0.name == id }?.displayName ?? id)
         }
         let themes = try jsonFiles(in: themesDirectory).compactMap { url -> ThemeInfo? in
             guard let meta = try? JSONDecoder().decode(ThemeMeta.self, from: Data(contentsOf: url))

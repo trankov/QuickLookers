@@ -10,6 +10,13 @@ final class CatalogSourceTests: XCTestCase {
         return url
     }
 
+    /// Каталог из реальных ресурсов пакета (общий для интеграционных тестов).
+    private func realCatalog() throws -> Catalog {
+        try FileCatalogSource(
+            grammarsDirectory: QuickLookersEngineResources.grammarsDirectory(),
+            themesDirectory: QuickLookersEngineResources.themesDirectory()).loadCatalog()
+    }
+
     func testReadsLanguagesAndThemesWithMetadata() throws {
         let grammars = try makeTempDir()
         let themes = try makeTempDir()
@@ -41,17 +48,13 @@ final class CatalogSourceTests: XCTestCase {
     }
 
     func test_grammarDisplayNameFromArrayEntry() throws {
-        let catalog = try FileCatalogSource(
-            grammarsDirectory: QuickLookersEngineResources.grammarsDirectory(),
-            themesDirectory: QuickLookersEngineResources.themesDirectory()).loadCatalog()
+        let catalog = try realCatalog()
         let js = try XCTUnwrap(catalog.languages.first { $0.id == "javascript" })
         XCTAssertEqual(js.displayName, "JavaScript")
     }
 
     func test_catalogLoadsFullLibrary() throws {
-        let catalog = try FileCatalogSource(
-            grammarsDirectory: QuickLookersEngineResources.grammarsDirectory(),
-            themesDirectory: QuickLookersEngineResources.themesDirectory()).loadCatalog()
+        let catalog = try realCatalog()
         XCTAssertGreaterThan(catalog.languages.count, 200)
         XCTAssertGreaterThan(catalog.themes.count, 50)
     }
