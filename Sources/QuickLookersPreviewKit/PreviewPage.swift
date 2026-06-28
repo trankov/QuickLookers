@@ -1,8 +1,19 @@
 /// Оборачивает готовый фрагмент подсветки в самодостаточный HTML-документ.
-/// Фон и цвета несёт сам фрагмент (его `<pre>` от Shiki); здесь только
-/// сброс полей и моноширинный шрифт, чтобы фон заполнял всё окно превью.
-public func previewPageHTML(highlighted: String) -> String {
-    """
+/// Фон и цвета несёт сам фрагмент (его `<pre>` от Shiki); здесь только сброс
+/// полей, моноширинный шрифт и перенос длинных строк, чтобы фон заполнял окно.
+/// `truncatedNotice` (если задан) дорисовывает внизу неинтерактивную плашку.
+public func previewPageHTML(highlighted: String, truncatedNotice: String? = nil) -> String {
+    let notice = truncatedNotice.map { #"<div class="ql-truncated">\#($0)</div>"# } ?? ""
+    let truncatedStyle = truncatedNotice != nil ? """
+        .ql-truncated {
+            padding: 8px 12px;
+            font-family: -apple-system, system-ui, sans-serif;
+            font-size: 11px;
+            color: #888;
+            text-align: center;
+        }
+        """ : ""
+    return """
     <!DOCTYPE html>
     <html>
     <head>
@@ -20,10 +31,12 @@ public func previewPageHTML(highlighted: String) -> String {
         overflow-wrap: anywhere;
         word-break: break-word;
     }
+    \(truncatedStyle)
     </style>
     </head>
     <body>
     \(highlighted)
+    \(notice)
     </body>
     </html>
     """

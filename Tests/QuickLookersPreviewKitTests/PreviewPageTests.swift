@@ -22,4 +22,15 @@ final class PreviewPageTests: XCTestCase {
         XCTAssertTrue(page.contains("pre-wrap"), "длинные строки должны переноситься")
         XCTAssertTrue(page.contains("overflow-wrap"), "длинные строки без пробелов ломаются")
     }
+
+    func test_truncationNoticeShownWhenProvided() {
+        let page = previewPageHTML(highlighted: "x", truncatedNotice: "Показаны первые 2000 строк")
+        XCTAssertTrue(page.contains("ql-truncated"), "должна быть плашка обрезки")
+        XCTAssertTrue(page.contains("Показаны первые 2000 строк"), "текст плашки вставлен")
+    }
+
+    func test_noTruncationNoticeByDefault() {
+        let page = previewPageHTML(highlighted: "x")
+        XCTAssertFalse(page.contains("ql-truncated"), "без обрезки плашки нет")
+    }
 }
