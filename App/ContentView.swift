@@ -4,23 +4,29 @@ struct ContentView: View {
     @StateObject private var model = SettingsModel()
 
     var body: some View {
-        VStack(spacing: 0) {
+        // TabView — корень окна, чтобы macOS показал нативную панель вкладок
+        // сверху. Предупреждение вешаем через safeAreaInset, не оборачивая
+        // TabView в VStack (иначе панель схлопывается в overflow-шеврон «>>»).
+        TabView {
+            FormatsTab(model: model)
+                .tabItem { Label("Форматы подсветки", systemImage: "paintbrush") }
+            ThemesTab(model: model)
+                .tabItem { Label("Темы", systemImage: "circle.lefthalf.filled") }
+            FileTypesTab(model: model)
+                .tabItem { Label("Сопоставление", systemImage: "doc.text") }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
             if let warning = model.warning {
                 Text(warning)
                     .font(.caption)
                     .foregroundStyle(.orange)
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            TabView {
-                FormatsTab(model: model)
-                    .tabItem { Label("Форматы подсветки", systemImage: "paintbrush") }
-                ThemesTab(model: model)
-                    .tabItem { Label("Темы", systemImage: "circle.lefthalf.filled") }
-                FileTypesTab(model: model)
-                    .tabItem { Label("Сопоставление", systemImage: "doc.text") }
+                    .background(.bar)
             }
         }
-        .frame(width: 460, height: 360)
+        // Шире, чтобы три подписи вкладок помещались в верхнюю панель и она
+        // не сворачивалась в «>>».
+        .frame(width: 620, height: 420)
     }
 }
