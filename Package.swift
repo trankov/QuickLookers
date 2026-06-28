@@ -6,6 +6,7 @@ let package = Package(
     platforms: [.macOS(.v13)],
     products: [
         .library(name: "QuickLookersEngine", targets: ["QuickLookersEngine"]),
+        .library(name: "QuickLookersPreviewKit", targets: ["QuickLookersPreviewKit"]),
     ],
     targets: [
         .target(
@@ -19,6 +20,14 @@ let package = Package(
         .testTarget(
             name: "QuickLookersEngineTests",
             dependencies: ["QuickLookersEngine"]
+        ),
+        .target(
+            name: "QuickLookersPreviewKit",
+            dependencies: ["QuickLookersEngine"]
+        ),
+        .testTarget(
+            name: "QuickLookersPreviewKitTests",
+            dependencies: ["QuickLookersPreviewKit"]
         ),
     ]
 )
