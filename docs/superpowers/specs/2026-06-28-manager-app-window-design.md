@@ -62,9 +62,9 @@ project.yml                            # + entitlement App Group обоим та
 **Настройки** (сохраняются в `settings.json`) — выбор пользователя:
 - `schemaVersion: Int` — версия формата файла (для совместимости).
 - `settingsVersion: Int` — счётчик, растёт на каждое сохранение. Позже станет частью ключа кэша HTML.
-- `enabledLanguageIds: Set<String>` — какие языки включены (вкладка «Форматы»).
+- `disabledLanguageIds: Set<String>` — языки, которые пользователь **выключил** (вкладка «Форматы»). Модель opt-out: пусто = все языки каталога включены. Так новый язык из будущего импорта по умолчанию включён (его нет в множестве выключенных), и это поведение проверяемо уже сейчас.
 - `theme: ThemeSelection` — `followSystem: Bool` + `lightThemeId: String` + `darkThemeId: String` + `fixedThemeId: String` (используется, когда `followSystem == false`).
-- `interceptedLanguageIds: Set<String>` — какие языки показываем в Finder (вкладка «Сопоставление»). *(Имя внутреннее; пользователю — «просмотр».)*
+- `previewDisabledLanguageIds: Set<String>` — языки, убранные из **просмотра** в Finder (вкладка «Сопоставление»). Тоже opt-out: пусто = все объявленные типы показываются. *(Имя внутреннее; пользователю — «просмотр».)*
 
 **Каталог** (НЕ сохраняется, выводится из доступного):
 - `languages: [LanguageInfo]` — `id`, `displayName`. Заполняется чтением метаданных из вшитых грамматик. Сейчас 3 (Swift, JSON, JavaScript). Размер не фиксирован.
@@ -73,7 +73,7 @@ project.yml                            # + entitlement App Group обоим та
 **Таблица объявленных типов** (статическая в срезе, отражает `QLSupportedContentTypes`) — граница Слоя 2:
 - записи `(uti, pathExtension, languageId)`: `(public.swift-source, swift, swift)`, `(public.json, json, json)`, `(com.netscape.javascript-source, js, javascript)`.
 
-**Умолчания** (когда `settings.json` ещё нет): все 3 языка включены; темы `light-plus`/`dark-plus`; «следовать за системой» включено; все три языка в просмотре. Это ровно нынешнее поведение расширения.
+**Умолчания** (когда `settings.json` ещё нет): оба множества выключенных пусты (все языки включены и показываются); темы `light-plus`/`dark-plus`; «следовать за системой» включено. Это ровно нынешнее поведение расширения.
 
 ## Хранилище: `settings.json` в контейнере
 
