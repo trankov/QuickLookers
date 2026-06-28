@@ -6,7 +6,7 @@ final class ResolutionTests: XCTestCase {
         XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "swift"), "swift")
         XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "JSON"), "json") // регистронезависимо
         XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "js"), "javascript")
-        XCTAssertNil(DeclaredTypes.languageId(forPathExtension: "py"))
+        XCTAssertNil(DeclaredTypes.languageId(forPathExtension: "docx"))
     }
 
     func testPreviewHappyPath() {
@@ -15,7 +15,15 @@ final class ResolutionTests: XCTestCase {
     }
 
     func testUnknownExtensionGivesNil() {
-        XCTAssertNil(previewLanguageId(forPathExtension: "py", settings: .default))
+        XCTAssertNil(previewLanguageId(forPathExtension: "docx", settings: .default))
+    }
+
+    func test_previewLanguageForExpandedExtensions() {
+        let s = ManagerSettings.default
+        XCTAssertEqual(previewLanguageId(forPathExtension: "py", settings: s), "python")
+        XCTAssertEqual(previewLanguageId(forPathExtension: "rs", settings: s), "rust")
+        XCTAssertEqual(previewLanguageId(forPathExtension: "yml", settings: s), "yaml")
+        XCTAssertEqual(previewLanguageId(forPathExtension: "tsx", settings: s), "tsx")
     }
 
     func testDisabledLanguageGivesNil() {
