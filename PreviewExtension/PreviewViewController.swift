@@ -20,6 +20,9 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     // каждому показу свой вебвью и переиспользует освободившиеся (тепло сохраняется).
     // Доступ только с главного потока (QLPreviewingController @MainActor).
     private static var idleWebViews: [WKWebView] = []
+    // Сколько тёплых вебвью держать про запас. Пик параллельных показов — панель
+    // «Просмотр» + QuickLook + пара ячеек галереи; сверх потолка отпускаем (ARC).
+    private static let maxPooledWebViews = 3
 
     private static func makeWebView() -> WKWebView {
         let config = WKWebViewConfiguration()
@@ -40,6 +43,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
 
     private static func releaseWebView(_ webView: WKWebView) {
         webView.navigationDelegate = nil
+        guard idleWebViews.count < maxPooledWebViews else { return }
         idleWebViews.append(webView)
     }
 
@@ -97,7 +101,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
                                languageId: lang, themeId: themeId,
                                maxLines: Self.maxLines, bundleVersion: Self.bundleVersion)
 
-        let cache = Self.cache()
+        let cache = Self.sharedCache
         let page: String
         let cacheHit: Bool
         if let cached = cache?.lookup(key) {
@@ -157,19 +161,19 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         return SettingsStore(fileURL: container.appendingPathComponent("settings.json")).load()
     }
 
-    private static func cache() -> HTMLCache? {
-        // Песочница превью-расширения НЕ даёт запись в ГРУППОВОЙ контейнер
-        // (kernel: deny file-write-create и в корне, и в Library/Caches) — превью
-        // задумано «только смотреть», поэтому групповой контейнер для расширения
-        // доступен лишь на чтение (так читаются настройки, которые пишет приложение).
-        // Кэш HTML пишет и читает ТОЛЬКО расширение, поэтому держим его в СВОЁМ
-        // контейнере расширения, где запись разрешена.
+    // Песочница превью-расширения НЕ даёт запись в ГРУППОВОЙ контейнер
+    // (kernel: deny file-write-create и в корне, и в Library/Caches) — превью
+    // задумано «только смотреть», поэтому групповой контейнер для расширения
+    // доступен лишь на чтение (так читаются настройки, которые пишет приложение).
+    // Кэш HTML пишет и читает ТОЛЬКО расширение, поэтому держим его в СВОЁМ
+    // контейнере расширения. Директория и потолок постоянны → считаем раз.
+    private static let sharedCache: HTMLCache? = {
         guard let caches = try? FileManager.default.url(
             for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         else { return nil }
         return HTMLCache(directory: caches.appendingPathComponent("QuickLookersHTML"),
                          maxBytes: cacheMaxBytes)
-    }
+    }()
 
     private static func themeIds() throws -> Set<String> {
         if let ids = cachedThemeIds { return ids }
