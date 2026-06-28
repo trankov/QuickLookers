@@ -47,4 +47,12 @@ final class CatalogSourceTests: XCTestCase {
         let js = try XCTUnwrap(catalog.languages.first { $0.id == "javascript" })
         XCTAssertEqual(js.displayName, "JavaScript")
     }
+
+    func test_catalogLoadsFullLibrary() throws {
+        let catalog = try FileCatalogSource(
+            grammarsDirectory: QuickLookersEngineResources.grammarsDirectory(),
+            themesDirectory: QuickLookersEngineResources.themesDirectory()).loadCatalog()
+        XCTAssertGreaterThan(catalog.languages.count, 200)
+        XCTAssertGreaterThan(catalog.themes.count, 50)
+    }
 }

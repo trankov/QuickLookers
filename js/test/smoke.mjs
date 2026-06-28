@@ -38,4 +38,28 @@ for (const { lang, code } of cases) {
   console.log(`smoke ${lang}: OK (${html.length} bytes)`)
 }
 
+// --- проверяем встроенную подсветку vue (html + css + js внутри одного файла) ---
+const vueJson = readFileSync(join(grammarsDir, 'vue.json'), 'utf8')
+const vueCount = globalThis.qlRegisterLang(vueJson)
+assert.ok(vueCount >= 1, `qlRegisterLang(vue) должен вернуть >= 1`)
+
+const vueSfc = `<template>
+  <div class="hello">{{ msg }}</div>
+</template>
+<script>
+export default { data() { return { msg: 'Hello' } } }
+</script>`
+
+const vueHtml = globalThis.qlHighlight(vueSfc, 'vue', 'dark-plus')
+assert.ok(vueHtml.includes('<pre'), 'vue: ожидался <pre> в выводе')
+// В шаблоне: тег div или атрибут class → span с color-стилем
+assert.ok(
+  vueHtml.includes('class="hello"') || vueHtml.includes('style="color:'),
+  'vue: ожидаются раскрашенные токены из <template>'
+)
+// В скрипте: export или default → отдельные span
+const spanMatches = (vueHtml.match(/<span[^>]*>/g) || []).length
+assert.ok(spanMatches >= 4, `vue: ожидается >= 4 span-токенов, получено ${spanMatches}`)
+console.log(`smoke vue: OK (${vueHtml.length} bytes, ${spanMatches} spans)`)
+
 console.log('smoke OK')

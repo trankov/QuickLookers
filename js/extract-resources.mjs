@@ -6,9 +6,10 @@
 // Запуск: cd js && npm install && node extract-resources.mjs
 
 import { writeFileSync, mkdirSync } from 'fs'
+import { bundledLanguagesInfo, bundledThemesInfo } from 'shiki'
 
-const GRAMMARS = ['javascript', 'swift', 'json']
-const THEMES = ['dark-plus', 'light-plus']
+const GRAMMARS = bundledLanguagesInfo.map((l) => l.id)
+const THEMES = bundledThemesInfo.map((t) => t.id)
 
 const grammarsDir = '../Sources/QuickLookersEngine/Resources/grammars'
 const themesDir = '../Sources/QuickLookersEngine/Resources/themes'
