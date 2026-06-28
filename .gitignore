@@ -10,6 +10,7 @@ js/node_modules/
 .DS_Store
 
 # Xcode
+*.xcodeproj
 *.xcuserstate
 xcuserdata/
 DerivedData/

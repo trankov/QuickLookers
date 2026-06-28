@@ -1,0 +1,62 @@
+name: QuickLookers
+options:
+  deploymentTarget:
+    macOS: "13.0"
+  bundleIdPrefix: com.quicklookers
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    CODE_SIGN_STYLE: Automatic
+    # Впиши сюда свой Team ID (Xcode → Settings → Accounts → твой аккаунт → Team ID).
+    # Для ручного запуска в Finder подпись обязательна; для xcodebuild-проверки
+    # компиляции подпись отключается флагом в команде (CODE_SIGNING_ALLOWED=NO).
+    DEVELOPMENT_TEAM: ""
+
+packages:
+  QuickLookersEngine:
+    path: .
+
+targets:
+  QuickLookers:
+    type: application
+    platform: macOS
+    sources: [App]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.quicklookers.QuickLookers
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+    dependencies:
+      - target: QuickLookersPreview
+        embed: true
+
+  QuickLookersPreview:
+    type: app-extension
+    platform: macOS
+    sources: [PreviewExtension]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.quicklookers.QuickLookers.PreviewExtension
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: PreviewExtension/Info.plist
+      properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.quicklook.preview
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PreviewViewController
+          NSExtensionAttributes:
+            QLSupportedContentTypes:
+              - public.swift-source
+              - public.json
+              - com.netscape.javascript-source
+            QLSupportsSearchableItems: false
+    dependencies:
+      - package: QuickLookersEngine
+        product: QuickLookersEngine
+      - package: QuickLookersEngine
+        product: QuickLookersPreviewKit
