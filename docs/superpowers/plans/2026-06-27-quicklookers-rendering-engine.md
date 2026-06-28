@@ -8,6 +8,23 @@
 
 **Tech Stack:** Swift 5.9 / SwiftPM, JavaScriptCore, Shiki (`shiki/core` + `shiki/engine/javascript`), esbuild + Node (только как шаг сборки JS-бандла), XCTest.
 
+## Статус выполнения
+
+Реализация идёт в ветке `feat/rendering-engine`.
+
+- [x] **Task 1** — каркас пакета. Коммит `6e69372`. `swift test` зелёный (1 тест). Добавлен `.gitignore`.
+- [x] **Task 2** — JS-бандл Shiki. Коммит `e64c8b2`. Бандл собран (349 КБ), node-смоук зелёный.
+- [ ] **Task 3** — обёртка `JSCoreRuntime`.
+- [ ] **Task 4** — провайдеры + ресурсы Shiki.
+- [ ] **Task 5** — `ShikiEngine` + фабрика.
+- [ ] **Task 6** — бенчмарк бюджета.
+
+**Зафиксированные факты и отклонения от плана:**
+- Установленные версии: **shiki 1.29.2**, **esbuild 0.20.2** (см. `js/package-lock.json`).
+- Метод `codeToHtml` у `createHighlighterCoreSync` в этой версии **есть** — смоук подтвердил (`<pre>` + текст). Сверка из Task 2 снята: Task 3 идёт без правок API.
+- **Поправка плана:** в `js/test/smoke.mjs` путь к бандлу `../Sources/...` исправлен на `../../Sources/...` (файл лежит в `js/test/`, бандл — в корне репозитория).
+- npm-окружение блокирует postinstall-скрипты (предупреждение про esbuild) — на сборку не влияет.
+
 ## Global Constraints
 
 - Платформа: **macOS 13+** (`.macOS(.v13)` в Package.swift).
