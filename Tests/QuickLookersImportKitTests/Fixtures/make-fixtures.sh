@@ -37,5 +37,13 @@ EOF
 echo '{"name":"Good"}' > build/be/extension/theme/good.json
 (cd build/be && zip -r -X ../../broken-entry.vsix extension >/dev/null)
 
+# malicious-id: грамматика с path-traversal в language
+mkdir -p build/mal/extension/syntaxes
+cat > build/mal/extension/package.json <<'EOF'
+{"name":"m","contributes":{"grammars":[{"language":"../../evil","scopeName":"source.evil","path":"./syntaxes/evil.tmLanguage.json"}]}}
+EOF
+echo '{"name":"../../evil","patterns":[]}' > build/mal/extension/syntaxes/evil.tmLanguage.json
+(cd build/mal && zip -r -X ../../malicious-id.vsix extension >/dev/null)
+
 rm -rf build
 echo "fixtures built"

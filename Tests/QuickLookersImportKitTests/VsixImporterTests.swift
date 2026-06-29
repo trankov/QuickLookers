@@ -41,4 +41,11 @@ final class VsixImporterTests: XCTestCase {
             XCTAssertEqual(e as? ImportError, .notArchive)
         }
     }
+
+    func test_maliciousIdIsSkippedNotImported() throws {
+        let r = try importer()(vsixData: try fixture("malicious-id.vsix"))
+        XCTAssertTrue(r.artifacts.isEmpty)                       // ничего не импортировано
+        XCTAssertEqual(r.skips.count, 1)
+        XCTAssertTrue(r.skips[0].reason.contains("недопустимый идентификатор"))
+    }
 }

@@ -38,6 +38,21 @@ final class ImportedLibraryTests: XCTestCase {
         XCTAssertEqual((sidecar?["themes"] as? [[String: Any]])?.count, 0)
     }
 
+    func test_writeRejectsUnsafeId() throws {
+        let container = try tempContainer()
+        let lib = ImportedLibrary(containerURL: container)
+        try lib.write(ImportResult(artifacts: [
+            .init(kind: .grammar, id: "../evil", displayName: "X", isDark: false, json: Data("[]".utf8)),
+        ], skips: []))
+        // Файл за пределами grammarsDir не создан.
+        XCTAssertFalse(FileManager.default.fileExists(atPath: container.appendingPathComponent("evil.json").path))
+        // Сайдкар (если создан) не содержит небезопасный id.
+        if let data = try? Data(contentsOf: lib.sidecarURL),
+           let s = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            XCTAssertEqual((s["languages"] as? [[String: Any]])?.count ?? 0, 0)
+        }
+    }
+
     func test_writeMergesWithExisting() throws {
         let lib = ImportedLibrary(containerURL: try tempContainer())
         try lib.write(ImportResult(artifacts: [

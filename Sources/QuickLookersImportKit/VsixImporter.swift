@@ -34,6 +34,10 @@ public struct VsixImporter {
             }
             let n = ThemeNormalizer.normalize(label: t.label, uiTheme: t.uiTheme,
                                               themeJSON: raw, existingSlugs: themeSlugs)
+            guard isSafeImportID(n.id) else {
+                skips.append(.init(item: "тема «\(t.label)»", reason: "недопустимый идентификатор"))
+                continue
+            }
             themeSlugs.insert(n.id)
             artifacts.append(.init(kind: .theme, id: n.id, displayName: n.displayName,
                                    isDark: n.isDark, json: n.json))
@@ -54,6 +58,10 @@ public struct VsixImporter {
         for g in manifest.grammars {
             guard let lang = g.language else {
                 skips.append(.init(item: "грамматика \(g.path)", reason: "инъекция (injectTo) — пропущено"))
+                continue
+            }
+            guard isSafeImportID(lang) else {
+                skips.append(.init(item: "грамматика «\(lang)»", reason: "недопустимый идентификатор"))
                 continue
             }
             guard let grammarJSON = siblings[lang] else {

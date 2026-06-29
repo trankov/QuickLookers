@@ -24,6 +24,7 @@ public struct ImportedLibrary {
 
         var sidecar = loadSidecar()
         for a in result.artifacts {
+            guard isSafeImportID(a.id) else { continue }   // защита FS-границы (импортёр уже фильтрует)
             switch a.kind {
             case .grammar:
                 try a.json.write(to: grammarsDir.appendingPathComponent("\(a.id).json"), options: .atomic)
@@ -37,6 +38,7 @@ public struct ImportedLibrary {
     }
 
     public func remove(kind: ImportArtifact.Kind, id: String) throws {
+        guard isSafeImportID(id) else { return }
         let fm = FileManager.default
         var sidecar = loadSidecar()
         switch kind {
