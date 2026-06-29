@@ -29,9 +29,12 @@ final class SettingsModel: ObservableObject {
         // Каталог из ресурсов движка.
         let loadedCatalog: Catalog
         do {
+            // Каталог из встроенного сайдкара; если его нет — FileCatalogSource
+            // сам откатится на обход директорий.
             let source = FileCatalogSource(
                 grammarsDirectory: try QuickLookersEngineResources.grammarsDirectory(),
-                themesDirectory: try QuickLookersEngineResources.themesDirectory())
+                themesDirectory: try QuickLookersEngineResources.themesDirectory(),
+                sidecarURLs: [QuickLookersEngineResources.catalogSidecarURL()].compactMap { $0 })
             loadedCatalog = try source.loadCatalog()
         } catch {
             loadedCatalog = Catalog(languages: [], themes: [])
