@@ -34,7 +34,7 @@ final class SettingsModel: ObservableObject {
             let source = FileCatalogSource(
                 grammarsDirectory: try QuickLookersEngineResources.grammarsDirectory(),
                 themesDirectory: try QuickLookersEngineResources.themesDirectory(),
-                sidecarURLs: [QuickLookersEngineResources.catalogSidecarURL()].compactMap { $0 })
+                sidecarURLs: QuickLookersEngineResources.catalogSidecarURLs())
             loadedCatalog = try source.loadCatalog()
         } catch {
             loadedCatalog = Catalog(languages: [], themes: [])

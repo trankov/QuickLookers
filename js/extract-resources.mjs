@@ -11,8 +11,9 @@ import { bundledLanguagesInfo, bundledThemesInfo } from 'shiki'
 const GRAMMARS = bundledLanguagesInfo.map((l) => l.id)
 const THEMES = bundledThemesInfo.map((t) => t.id)
 
-const grammarsDir = '../Sources/QuickLookersEngine/Resources/grammars'
-const themesDir = '../Sources/QuickLookersEngine/Resources/themes'
+const resourcesDir = '../Sources/QuickLookersEngine/Resources'
+const grammarsDir = `${resourcesDir}/grammars`
+const themesDir = `${resourcesDir}/themes`
 mkdirSync(grammarsDir, { recursive: true })
 mkdirSync(themesDir, { recursive: true })
 
@@ -45,8 +46,6 @@ for (const id of THEMES) {
 
 // Сайдкар-каталог: маленький индекс метаданных, чтобы окно настроек не читало
 // все ~41 МБ грамматик. Артефакт сборки — руками не править.
-writeFileSync(`${grammarsDir}/../catalog.json`,
-  JSON.stringify({ languages, themes }))
-console.log(`catalog <- languages=${languages.length} themes=${themes.length}`)
+writeFileSync(`${resourcesDir}/catalog.json`, JSON.stringify({ languages, themes }))
 
-console.log('resources extracted')
+console.log(`resources extracted: languages=${languages.length} themes=${themes.length}`)

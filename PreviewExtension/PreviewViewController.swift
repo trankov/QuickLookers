@@ -182,7 +182,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         let source = FileCatalogSource(
             grammarsDirectory: try QuickLookersEngineResources.grammarsDirectory(),
             themesDirectory: try QuickLookersEngineResources.themesDirectory(),
-            sidecarURLs: [QuickLookersEngineResources.catalogSidecarURL()].compactMap { $0 })
+            sidecarURLs: QuickLookersEngineResources.catalogSidecarURLs())
         let ids = Set(try source.loadCatalog().themes.map(\.id))
         cachedThemeIds = ids
         return ids

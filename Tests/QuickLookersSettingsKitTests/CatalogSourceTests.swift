@@ -113,11 +113,14 @@ final class CatalogSourceTests: XCTestCase {
 
     /// Каталог из настоящего встроенного сайдкара.
     private func realSidecarCatalog() throws -> Catalog {
-        let sidecar = try XCTUnwrap(QuickLookersEngineResources.catalogSidecarURL())
+        let sidecars = QuickLookersEngineResources.catalogSidecarURLs()
+        // Сайдкар обязан быть собран — иначе тест молча ушёл бы в фоллбэк-обход
+        // и перестал бы проверять путь сайдкара.
+        XCTAssertFalse(sidecars.isEmpty, "встроенный сайдкар catalog.json должен быть собран")
         return try FileCatalogSource(
             grammarsDirectory: QuickLookersEngineResources.grammarsDirectory(),
             themesDirectory: QuickLookersEngineResources.themesDirectory(),
-            sidecarURLs: [sidecar]).loadCatalog()
+            sidecarURLs: sidecars).loadCatalog()
     }
 
     func test_realSidecar_loadsFullLibrary() throws {

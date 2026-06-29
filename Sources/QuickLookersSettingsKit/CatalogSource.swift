@@ -35,12 +35,11 @@ public struct FileCatalogSource: CatalogSource {
 
     /// Каталог из слияния валидных сайдкаров; nil, если ни одного валидного нет.
     private func catalogFromSidecars() -> Catalog? {
+        let decoder = JSONDecoder()
         let sidecars = sidecarURLs.compactMap { url -> Sidecar? in
             guard let data = try? Data(contentsOf: url) else { return nil }
-            return try? JSONDecoder().decode(Sidecar.self, from: data)
+            return try? decoder.decode(Sidecar.self, from: data)
         }
-        guard !sidecars.isEmpty else { return nil }
-
         var langs: [String: LanguageInfo] = [:]
         var themes: [String: ThemeInfo] = [:]
         for sidecar in sidecars {   // порядок списка → последний перекрывает по id
@@ -51,8 +50,9 @@ public struct FileCatalogSource: CatalogSource {
                 themes[t.id] = ThemeInfo(id: t.id, displayName: t.displayName, isDark: t.isDark)
             }
         }
-        // Пустой результат слияния трактуем как «валидного сайдкара нет» →
-        // фоллбэк-обход (гарантия: каталог не пустеет из-за проблем с сайдкаром).
+        // Пустой результат слияния (нет сайдкаров, все битые или пусты) трактуем
+        // как «валидного сайдкара нет» → фоллбэк-обход (гарантия: каталог не
+        // пустеет из-за проблем с сайдкаром).
         guard !(langs.isEmpty && themes.isEmpty) else { return nil }
         return Catalog(languages: langs.values.sorted { $0.id < $1.id },
                        themes: themes.values.sorted { $0.id < $1.id })
