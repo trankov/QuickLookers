@@ -12,8 +12,10 @@ public struct VsixImporter {
         let names: [String]
         do { names = try reader.entryNames(in: vsixData) }
         catch { throw ImportError.notArchive }
-        guard names.contains("extension/package.json"),
-              let pkg = try reader.entry("extension/package.json", in: vsixData)
+        guard names.contains("extension/package.json") else { throw ImportError.noManifest }
+        // Сырой ZipError (повреждённая/нечитаемая запись) трактуем как noManifest —
+        // наружу из callAsFunction выходит только ImportError.
+        guard let pkg = (try? reader.entry("extension/package.json", in: vsixData)) ?? nil
         else { throw ImportError.noManifest }
 
         let manifest: VsixManifest
@@ -54,10 +56,10 @@ public struct VsixImporter {
                 skips.append(.init(item: "грамматика \(g.path)", reason: "инъекция (injectTo) — пропущено"))
                 continue
             }
-            guard let raw = siblings[lang] else {
+            guard let grammarJSON = siblings[lang] else {
                 skips.append(.init(item: "грамматика «\(lang)»", reason: "нет/битый файл \(g.path)")); continue
             }
-            guard let out = try? normalizer.normalize(languageId: lang, grammarJSON: raw,
+            guard let out = try? normalizer.normalize(languageId: lang, grammarJSON: grammarJSON,
                                                       embeddedLanguageIds: g.embeddedLanguageIds,
                                                       siblingGrammars: siblings) else {
                 skips.append(.init(item: "грамматика «\(lang)»", reason: "не разобралась")); continue
