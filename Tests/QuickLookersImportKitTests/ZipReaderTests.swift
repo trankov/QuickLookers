@@ -32,4 +32,19 @@ final class ZipReaderTests: XCTestCase {
     func test_notAnArchiveThrows() throws {
         XCTAssertThrowsError(try ZipReader().entryNames(in: try fixture("not-a-vsix.vsix")))
     }
+
+    func test_entryTooLargeThrows() throws {
+        // Крошечный потолок → даже мелкая запись превышает его.
+        let reader = ZipReader(maxEntryBytes: 1)
+        XCTAssertThrowsError(try reader.entry("extension/package.json", in: try fixture("grammar-json.vsix"))) { e in
+            XCTAssertEqual(e as? ZipError, .entryTooLarge)
+        }
+    }
+
+    func test_tooManyEntriesThrows() throws {
+        let reader = ZipReader(maxEntries: 1)   // в фикстуре записей больше одной
+        XCTAssertThrowsError(try reader.entryNames(in: try fixture("theme-only.vsix"))) { e in
+            XCTAssertEqual(e as? ZipError, .tooManyEntries)
+        }
+    }
 }

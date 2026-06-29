@@ -10,6 +10,8 @@ struct archive_entry;
 struct archive *archive_read_new(void);
 int archive_read_support_format_all(struct archive *);
 int archive_read_support_filter_all(struct archive *);
+int archive_read_support_format_zip(struct archive *);
+int archive_read_support_filter_none(struct archive *);
 int archive_read_open_memory(struct archive *, const void *buff, size_t size);
 int archive_read_next_header(struct archive *, struct archive_entry **);
 const char *archive_entry_pathname(struct archive_entry *);
