@@ -26,5 +26,16 @@ echo '{"name":"toy","scopeName":"source.toy","patterns":[]}' > build/gj/extensio
 # not-a-vsix: случайные байты
 head -c 64 /dev/urandom > not-a-vsix.vsix
 
+# broken-entry: валидная тема + тема с отсутствующим файлом по path
+mkdir -p build/be/extension/theme
+cat > build/be/extension/package.json <<'EOF'
+{"name":"b","contributes":{"themes":[
+  {"label":"Good","uiTheme":"vs-dark","path":"./theme/good.json"},
+  {"label":"Missing","uiTheme":"vs","path":"./theme/missing.json"}
+]}}
+EOF
+echo '{"name":"Good"}' > build/be/extension/theme/good.json
+(cd build/be && zip -r -X ../../broken-entry.vsix extension >/dev/null)
+
 rm -rf build
 echo "fixtures built"
