@@ -51,6 +51,9 @@ public struct FileCatalogSource: CatalogSource {
                 themes[t.id] = ThemeInfo(id: t.id, displayName: t.displayName, isDark: t.isDark)
             }
         }
+        // Пустой результат слияния трактуем как «валидного сайдкара нет» →
+        // фоллбэк-обход (гарантия: каталог не пустеет из-за проблем с сайдкаром).
+        guard !(langs.isEmpty && themes.isEmpty) else { return nil }
         return Catalog(languages: langs.values.sorted { $0.id < $1.id },
                        themes: themes.values.sorted { $0.id < $1.id })
     }

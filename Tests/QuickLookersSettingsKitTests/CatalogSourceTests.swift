@@ -131,6 +131,21 @@ final class CatalogSourceTests: XCTestCase {
         XCTAssertEqual(try realSidecarCatalog(), try realCatalog())
     }
 
+    func test_emptyButValidSidecar_fallsBackToDirectoryScan() throws {
+        let dir = try makeTempDir()
+        let grammars = try makeTempDir()
+        let themes = try makeTempDir()
+        try #"[{"name":"json","displayName":"JSON"}]"#
+            .write(to: grammars.appendingPathComponent("json.json"), atomically: true, encoding: .utf8)
+        // Валидный, но пустой сайдкар не должен «обнулить» каталог — нужен фоллбэк.
+        let empty = try writeSidecar(#"{"languages":[],"themes":[]}"#, to: dir)
+
+        let source = FileCatalogSource(grammarsDirectory: grammars, themesDirectory: themes,
+                                       sidecarURLs: [empty])
+        let catalog = try source.loadCatalog()
+        XCTAssertEqual(catalog.languages, [LanguageInfo(id: "json", displayName: "JSON")])
+    }
+
     func test_twoSidecars_lastOverridesByID() throws {
         let dir = try makeTempDir()
         let grammars = try makeTempDir()

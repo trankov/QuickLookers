@@ -177,9 +177,12 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
 
     private static func themeIds() throws -> Set<String> {
         if let ids = cachedThemeIds { return ids }
+        // Каталог из встроенного сайдкара; нет сайдкара → FileCatalogSource
+        // сам откатится на обход директорий.
         let source = FileCatalogSource(
             grammarsDirectory: try QuickLookersEngineResources.grammarsDirectory(),
-            themesDirectory: try QuickLookersEngineResources.themesDirectory())
+            themesDirectory: try QuickLookersEngineResources.themesDirectory(),
+            sidecarURLs: [QuickLookersEngineResources.catalogSidecarURL()].compactMap { $0 })
         let ids = Set(try source.loadCatalog().themes.map(\.id))
         cachedThemeIds = ids
         return ids
