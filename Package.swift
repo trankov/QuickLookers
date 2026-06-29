@@ -33,7 +33,8 @@ let package = Package(
             dependencies: ["QuickLookersPreviewKit"]
         ),
         .target(
-            name: "QuickLookersSettingsKit"
+            name: "QuickLookersSettingsKit",
+            dependencies: ["QuickLookersImportKit"]
         ),
         .testTarget(
             name: "QuickLookersSettingsKitTests",
