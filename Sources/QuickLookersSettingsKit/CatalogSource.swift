@@ -4,21 +4,60 @@ public protocol CatalogSource {
     func loadCatalog() throws -> Catalog
 }
 
-/// Каталог из JSON-файлов библиотеки. Метаданные берём из самих дескрипторов,
-/// чтобы тот же путь чтения позже использовал импортёр .vsix.
+/// Каталог из сайдкаров `catalog.json` или, если их нет/они битые, из обхода
+/// директорий грамматик/тем. Сайдкар — расширяемый индекс: список URL сливается
+/// (последний перекрывает по `id`), что готовит путь под будущий импорт .vsix.
 public struct FileCatalogSource: CatalogSource {
     private let grammarsDirectory: URL
     private let themesDirectory: URL
+    private let sidecarURLs: [URL]
 
-    public init(grammarsDirectory: URL, themesDirectory: URL) {
+    public init(grammarsDirectory: URL, themesDirectory: URL, sidecarURLs: [URL] = []) {
         self.grammarsDirectory = grammarsDirectory
         self.themesDirectory = themesDirectory
+        self.sidecarURLs = sidecarURLs
     }
 
     private struct GrammarEntry: Decodable { let name: String; let displayName: String? }
     private struct ThemeMeta: Decodable { let name: String; let displayName: String?; let type: String? }
 
+    private struct Sidecar: Decodable {
+        struct Language: Decodable { let id: String; let displayName: String }
+        struct Theme: Decodable { let id: String; let displayName: String; let isDark: Bool }
+        let languages: [Language]
+        let themes: [Theme]
+    }
+
     public func loadCatalog() throws -> Catalog {
+        if let catalog = catalogFromSidecars() { return catalog }
+        return try catalogFromDirectories()
+    }
+
+    /// Каталог из слияния валидных сайдкаров; nil, если ни одного валидного нет.
+    private func catalogFromSidecars() -> Catalog? {
+        let sidecars = sidecarURLs.compactMap { url -> Sidecar? in
+            guard let data = try? Data(contentsOf: url) else { return nil }
+            return try? JSONDecoder().decode(Sidecar.self, from: data)
+        }
+        guard !sidecars.isEmpty else { return nil }
+
+        var langs: [String: LanguageInfo] = [:]
+        var themes: [String: ThemeInfo] = [:]
+        for sidecar in sidecars {   // порядок списка → последний перекрывает по id
+            for l in sidecar.languages {
+                langs[l.id] = LanguageInfo(id: l.id, displayName: l.displayName)
+            }
+            for t in sidecar.themes {
+                themes[t.id] = ThemeInfo(id: t.id, displayName: t.displayName, isDark: t.isDark)
+            }
+        }
+        return Catalog(languages: langs.values.sorted { $0.id < $1.id },
+                       themes: themes.values.sorted { $0.id < $1.id })
+    }
+
+    /// Фоллбэк: метаданные из самих файлов грамматик/тем (страховка, если
+    /// сайдкара нет). Тот же путь чтения позже использует импортёр .vsix.
+    private func catalogFromDirectories() throws -> Catalog {
         let languages = try jsonFiles(in: grammarsDirectory).compactMap { url -> LanguageInfo? in
             let id = url.deletingPathExtension().lastPathComponent
             guard let entries = try? JSONDecoder().decode([GrammarEntry].self,

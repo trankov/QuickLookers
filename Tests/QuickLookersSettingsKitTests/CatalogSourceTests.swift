@@ -58,4 +58,81 @@ final class CatalogSourceTests: XCTestCase {
         XCTAssertGreaterThan(catalog.languages.count, 200)
         XCTAssertGreaterThan(catalog.themes.count, 50)
     }
+
+    private func writeSidecar(_ json: String, to dir: URL) throws -> URL {
+        let url = dir.appendingPathComponent("catalog-\(UUID().uuidString).json")
+        try json.write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+
+    func test_sidecarPresent_readsFromSidecarNotDirectories() throws {
+        let dir = try makeTempDir()
+        // Директории грамматик/тем намеренно пусты — если каталог не пуст,
+        // значит данные пришли из сайдкара, а не из обхода.
+        let grammars = try makeTempDir()
+        let themes = try makeTempDir()
+        let sidecar = try writeSidecar(#"""
+        {"languages":[{"id":"swift","displayName":"Swift"}],
+         "themes":[{"id":"dark-plus","displayName":"Dark Plus","isDark":true}]}
+        """#, to: dir)
+
+        let source = FileCatalogSource(grammarsDirectory: grammars, themesDirectory: themes,
+                                       sidecarURLs: [sidecar])
+        let catalog = try source.loadCatalog()
+
+        XCTAssertEqual(catalog.languages, [LanguageInfo(id: "swift", displayName: "Swift")])
+        XCTAssertEqual(catalog.themes, [ThemeInfo(id: "dark-plus", displayName: "Dark Plus", isDark: true)])
+    }
+
+    func test_noSidecar_fallsBackToDirectoryScan() throws {
+        let grammars = try makeTempDir()
+        let themes = try makeTempDir()
+        try #"[{"name":"json","displayName":"JSON"}]"#
+            .write(to: grammars.appendingPathComponent("json.json"), atomically: true, encoding: .utf8)
+        // sidecarURLs пуст → должен сработать обход директорий.
+        let source = FileCatalogSource(grammarsDirectory: grammars, themesDirectory: themes,
+                                       sidecarURLs: [])
+        let catalog = try source.loadCatalog()
+        XCTAssertEqual(catalog.languages, [LanguageInfo(id: "json", displayName: "JSON")])
+    }
+
+    func test_malformedSidecar_fallsBackToDirectoryScan() throws {
+        let dir = try makeTempDir()
+        let grammars = try makeTempDir()
+        let themes = try makeTempDir()
+        try #"[{"name":"json","displayName":"JSON"}]"#
+            .write(to: grammars.appendingPathComponent("json.json"), atomically: true, encoding: .utf8)
+        let bad = try writeSidecar("{ not valid json", to: dir)
+
+        let source = FileCatalogSource(grammarsDirectory: grammars, themesDirectory: themes,
+                                       sidecarURLs: [bad])
+        let catalog = try source.loadCatalog()
+        // Битый сайдкар проигнорирован → фоллбэк-обход.
+        XCTAssertEqual(catalog.languages, [LanguageInfo(id: "json", displayName: "JSON")])
+    }
+
+    func test_twoSidecars_lastOverridesByID() throws {
+        let dir = try makeTempDir()
+        let grammars = try makeTempDir()
+        let themes = try makeTempDir()
+        let base = try writeSidecar(#"""
+        {"languages":[{"id":"swift","displayName":"Swift"},{"id":"json","displayName":"JSON"}],
+         "themes":[{"id":"dark-plus","displayName":"Dark Plus","isDark":true}]}
+        """#, to: dir)
+        let imported = try writeSidecar(#"""
+        {"languages":[{"id":"swift","displayName":"Swift (custom)"}],
+         "themes":[{"id":"dark-plus","displayName":"Dark Plus (custom)","isDark":true}]}
+        """#, to: dir)
+
+        let source = FileCatalogSource(grammarsDirectory: grammars, themesDirectory: themes,
+                                       sidecarURLs: [base, imported])
+        let catalog = try source.loadCatalog()
+
+        XCTAssertEqual(catalog.languages, [
+            LanguageInfo(id: "json", displayName: "JSON"),
+            LanguageInfo(id: "swift", displayName: "Swift (custom)"),
+        ])
+        XCTAssertEqual(catalog.themes,
+                       [ThemeInfo(id: "dark-plus", displayName: "Dark Plus (custom)", isDark: true)])
+    }
 }
