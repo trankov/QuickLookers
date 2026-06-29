@@ -31,3 +31,29 @@ public struct BundledThemeProvider: ThemeProvider {
         try readJSON(directory, themeId)
     }
 }
+
+/// Провайдер «сначала primary, при отсутствии — fallback».
+/// Контейнер импорта (primary) перекрывает бандл (fallback) по id.
+public struct CompositeGrammarProvider: GrammarProvider {
+    private let primary: GrammarProvider
+    private let fallback: GrammarProvider
+    public init(primary: GrammarProvider, fallback: GrammarProvider) {
+        self.primary = primary; self.fallback = fallback
+    }
+    public func grammarJSON(languageId: String) throws -> String {
+        if let s = try? primary.grammarJSON(languageId: languageId) { return s }
+        return try fallback.grammarJSON(languageId: languageId)
+    }
+}
+
+public struct CompositeThemeProvider: ThemeProvider {
+    private let primary: ThemeProvider
+    private let fallback: ThemeProvider
+    public init(primary: ThemeProvider, fallback: ThemeProvider) {
+        self.primary = primary; self.fallback = fallback
+    }
+    public func themeJSON(themeId: String) throws -> String {
+        if let s = try? primary.themeJSON(themeId: themeId) { return s }
+        return try fallback.themeJSON(themeId: themeId)
+    }
+}
