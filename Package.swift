@@ -16,6 +16,7 @@ let package = Package(
                 .copy("Resources/shiki-bundle.js"),
                 .copy("Resources/grammars"),
                 .copy("Resources/themes"),
+                .copy("Resources/catalog.json"),
             ]
         ),
         .testTarget(

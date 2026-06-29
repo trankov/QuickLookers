@@ -111,6 +111,26 @@ final class CatalogSourceTests: XCTestCase {
         XCTAssertEqual(catalog.languages, [LanguageInfo(id: "json", displayName: "JSON")])
     }
 
+    /// Каталог из настоящего встроенного сайдкара.
+    private func realSidecarCatalog() throws -> Catalog {
+        let sidecar = try XCTUnwrap(QuickLookersEngineResources.catalogSidecarURL())
+        return try FileCatalogSource(
+            grammarsDirectory: QuickLookersEngineResources.grammarsDirectory(),
+            themesDirectory: QuickLookersEngineResources.themesDirectory(),
+            sidecarURLs: [sidecar]).loadCatalog()
+    }
+
+    func test_realSidecar_loadsFullLibrary() throws {
+        let catalog = try realSidecarCatalog()
+        XCTAssertEqual(catalog.languages.count, 218)
+        XCTAssertEqual(catalog.themes.count, 54)
+    }
+
+    func test_realSidecar_matchesDirectoryScan() throws {
+        // Сайдкар и фоллбэк-обход должны давать идентичный каталог.
+        XCTAssertEqual(try realSidecarCatalog(), try realCatalog())
+    }
+
     func test_twoSidecars_lastOverridesByID() throws {
         let dir = try makeTempDir()
         let grammars = try makeTempDir()

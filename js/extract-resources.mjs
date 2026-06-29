@@ -16,11 +16,17 @@ const themesDir = '../Sources/QuickLookersEngine/Resources/themes'
 mkdirSync(grammarsDir, { recursive: true })
 mkdirSync(themesDir, { recursive: true })
 
-// Грамматика: модуль экспортирует массив [главная + встроенные]. Пишем целиком.
+const languages = []
+const themes = []
+
+// Грамматика: модуль экспортирует массив [главная + встроенные]. Пишем целиком,
+// а в сайдкар — id + displayName главной записи (name == id), как читает фоллбэк.
 for (const id of GRAMMARS) {
   const mod = await import(`@shikijs/langs/${id}`)
   const arr = Array.isArray(mod.default) ? mod.default : [mod.default]
   writeFileSync(`${grammarsDir}/${id}.json`, JSON.stringify(arr))
+  const main = arr.find((g) => g.name === id)
+  languages.push({ id, displayName: main?.displayName ?? id })
   console.log(`grammar ${id} <- entries=${arr.length}`)
 }
 
@@ -29,7 +35,18 @@ for (const id of THEMES) {
   const mod = await import(`@shikijs/themes/${id}`)
   const theme = mod.default
   writeFileSync(`${themesDir}/${id}.json`, JSON.stringify(theme))
+  themes.push({
+    id: theme.name,
+    displayName: theme.displayName ?? theme.name,
+    isDark: theme.type === 'dark',
+  })
   console.log(`theme ${id} <- name=${theme.name}`)
 }
+
+// Сайдкар-каталог: маленький индекс метаданных, чтобы окно настроек не читало
+// все ~41 МБ грамматик. Артефакт сборки — руками не править.
+writeFileSync(`${grammarsDir}/../catalog.json`,
+  JSON.stringify({ languages, themes }))
+console.log(`catalog <- languages=${languages.length} themes=${themes.length}`)
 
 console.log('resources extracted')

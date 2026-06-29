@@ -7,6 +7,12 @@ public enum QuickLookersEngineResources {
     public static func grammarsDirectory() throws -> URL { try resourceDirectory("grammars") }
     public static func themesDirectory() throws -> URL { try resourceDirectory("themes") }
 
+    /// URL встроенного сайдкар-каталога или nil, если он не собран
+    /// (тогда потребитель откатывается на обход директорий).
+    public static func catalogSidecarURL() -> URL? {
+        Bundle.module.url(forResource: "catalog", withExtension: "json")
+    }
+
     private static func resourceDirectory(_ name: String) throws -> URL {
         guard let url = Bundle.module.url(forResource: name, withExtension: nil) else {
             throw EngineError.resourceNotFound(name)
