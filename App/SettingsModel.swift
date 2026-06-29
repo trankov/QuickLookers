@@ -16,33 +16,22 @@ final class SettingsModel: ObservableObject {
 
     @Published var settings: ManagerSettings
     @Published private(set) var warning: String?
-    let catalog: Catalog
-
-    // Производные от каталога — считаются один раз при сборке окна.
-    let lightThemes: [ThemeInfo]
-    let darkThemes: [ThemeInfo]
-    let fileTypeRows: [FileTypeRow]
+    @Published private(set) var catalog: Catalog
+    @Published private(set) var lightThemes: [ThemeInfo]
+    @Published private(set) var darkThemes: [ThemeInfo]
+    @Published private(set) var fileTypeRows: [FileTypeRow]
+    /// Идентификаторы импортированных языков и тем (из catalog-imported.json контейнера).
+    @Published private(set) var importedIds: Set<String>
 
     private let store: SettingsStore?
 
     init() {
-        // Каталог из ресурсов движка.
-        let loadedCatalog: Catalog
-        do {
-            // Каталог из встроенного сайдкара; если его нет — FileCatalogSource
-            // сам откатится на обход директорий.
-            let source = FileCatalogSource(
-                grammarsDirectory: try QuickLookersEngineResources.grammarsDirectory(),
-                themesDirectory: try QuickLookersEngineResources.themesDirectory(),
-                sidecarURLs: QuickLookersEngineResources.catalogSidecarURLs())
-            loadedCatalog = try source.loadCatalog()
-        } catch {
-            loadedCatalog = Catalog(languages: [], themes: [])
-        }
+        let (loadedCatalog, loadedImportedIds) = Self.loadCatalog()
         self.catalog = loadedCatalog
         self.lightThemes = loadedCatalog.themes.filter { !$0.isDark }
         self.darkThemes = loadedCatalog.themes.filter { $0.isDark }
         self.fileTypeRows = Self.makeFileTypeRows(catalog: loadedCatalog)
+        self.importedIds = loadedImportedIds
 
         // Хранилище — в общем контейнере. Нет контейнера → окно работает,
         // но предупреждаем: подпись/entitlement не настроены.
@@ -56,6 +45,52 @@ final class SettingsModel: ObservableObject {
             self.settings = .default
             self.warning = "Контейнер App Group недоступен — изменения не сохраняются. Проверь подпись и entitlement."
         }
+    }
+
+    /// Перезагружает каталог (встроенный + импортированный) и обновляет производные.
+    /// Вызывается после импорта .vsix или удаления импортированного элемента.
+    func reloadCatalog() {
+        let (newCatalog, newImportedIds) = Self.loadCatalog()
+        catalog = newCatalog
+        lightThemes = newCatalog.themes.filter { !$0.isDark }
+        darkThemes = newCatalog.themes.filter { $0.isDark }
+        fileTypeRows = Self.makeFileTypeRows(catalog: newCatalog)
+        importedIds = newImportedIds
+    }
+
+    // MARK: - Private helpers
+
+    /// Загрузка каталога: встроенный сайдкар + импортированный из контейнера.
+    /// Возвращает каталог и множество id из импортированного сайдкара.
+    private static func loadCatalog() -> (Catalog, Set<String>) {
+        var sidecars = QuickLookersEngineResources.catalogSidecarURLs()
+        var importedIds: Set<String> = []
+
+        if let container = quickLookersContainerURL() {
+            let lib = ImportedLibrary(containerURL: container)
+            let importedSidecars = lib.sidecarURLsForCatalog()
+            // Собираем id из импортированного сайдкара для пометки в UI.
+            if let sidecarURL = importedSidecars.first,
+               let data = try? Data(contentsOf: sidecarURL),
+               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                let langs = (obj["languages"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
+                let themes = (obj["themes"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
+                importedIds = Set(langs + themes)
+            }
+            sidecars += importedSidecars
+        }
+
+        let loadedCatalog: Catalog
+        do {
+            let source = FileCatalogSource(
+                grammarsDirectory: try QuickLookersEngineResources.grammarsDirectory(),
+                themesDirectory: try QuickLookersEngineResources.themesDirectory(),
+                sidecarURLs: sidecars)
+            loadedCatalog = try source.loadCatalog()
+        } catch {
+            loadedCatalog = Catalog(languages: [], themes: [])
+        }
+        return (loadedCatalog, importedIds)
     }
 
     /// Строки вкладки «Сопоставление»: объявленные языки + их расширения.

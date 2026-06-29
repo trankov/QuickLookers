@@ -177,12 +177,15 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
 
     private static func themeIds() throws -> Set<String> {
         if let ids = cachedThemeIds { return ids }
-        // Каталог из встроенного сайдкара; нет сайдкара → FileCatalogSource
-        // сам откатится на обход директорий.
+        // Встроенный сайдкар + импортированный из контейнера App Group (только чтение).
+        var sidecars = QuickLookersEngineResources.catalogSidecarURLs()
+        if let container = sharedContainerURL {
+            sidecars += ImportedLibrary(containerURL: container).sidecarURLsForCatalog()
+        }
         let source = FileCatalogSource(
             grammarsDirectory: try QuickLookersEngineResources.grammarsDirectory(),
             themesDirectory: try QuickLookersEngineResources.themesDirectory(),
-            sidecarURLs: QuickLookersEngineResources.catalogSidecarURLs())
+            sidecarURLs: sidecars)
         let ids = Set(try source.loadCatalog().themes.map(\.id))
         cachedThemeIds = ids
         return ids
@@ -190,7 +193,18 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
 
     private static func engine() throws -> HighlightEngine {
         if let engine = cachedEngine { return engine }
-        let engine = try QuickLookersEngineFactory.makeDefault()
+        // Если в контейнере есть импортированные грамматики/темы — они перекрывают
+        // бандл по id (контейнер старше бандла). Расширение читает из контейнера,
+        // но не пишет (sandbox: deny file-write-create на групповом контейнере).
+        var importedGrammars: URL?, importedThemes: URL?
+        if let container = sharedContainerURL {
+            let lib = ImportedLibrary(containerURL: container)
+            importedGrammars = lib.grammarsDir
+            importedThemes = lib.themesDir
+        }
+        let engine = try QuickLookersEngineFactory.makeDefault(
+            importedGrammarsDir: importedGrammars,
+            importedThemesDir: importedThemes)
         cachedEngine = engine
         return engine
     }

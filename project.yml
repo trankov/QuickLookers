@@ -46,6 +46,10 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
+        # libarchive приходит транзитивно от CLibArchive.systemLibrary (link "archive"
+        # в module.modulemap). Явный флаг — страховка на случай, если линкер Xcode
+        # не подхватит транзитивную зависимость.
+        OTHER_LDFLAGS: -larchive
     entitlements:
       path: App/QuickLookers.entitlements
       properties:
@@ -63,6 +67,8 @@ targets:
         product: QuickLookersEngine
       - package: QuickLookersEngine
         product: QuickLookersSettingsKit
+      - package: QuickLookersEngine
+        product: QuickLookersImportKit
 
   QuickLookersPreview:
     type: app-extension
