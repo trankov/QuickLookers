@@ -22,7 +22,7 @@ public enum ThemeFileLoader {
               let dict = plist as? [String: Any] else { throw ThemeFileError.badPlist }
         let name = dict["name"] as? String ?? "Imported Theme"
         let settings = dict["settings"] as? [[String: Any]] ?? []
-        let type = (uiTheme == "vs-dark" || uiTheme == "hc-black") ? "dark" : "light"
+        let type = ThemeNormalizer.isDark(uiTheme: uiTheme) ? "dark" : "light"
         let theme: [String: Any] = ["name": name, "type": type, "tokenColors": settings]
         guard let out = try? JSONSerialization.data(withJSONObject: theme) else { throw ThemeFileError.badPlist }
         return out

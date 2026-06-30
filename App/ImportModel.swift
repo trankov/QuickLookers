@@ -105,12 +105,13 @@ final class ImportModel: ObservableObject {
                     return EditorImportOutcome(themeId: nil, font: font,
                                                message: "Тема «\(lbl)» не прочиталась — применён только шрифт.")
                 }
-                let existing = Set(ImportedLibrary(containerURL: container).importedIds())
+                let lib = ImportedLibrary(containerURL: container)
+                let existing = Set(lib.importedIds())
                 let n = ThemeNormalizer.normalize(label: lbl, uiTheme: uiTheme,
                                                   themeJSON: strict, existingSlugs: existing)
                 let artifact = ImportArtifact(kind: .theme, id: n.id, displayName: n.displayName,
                                               isDark: n.isDark, json: n.json)
-                try? ImportedLibrary(containerURL: container).write(ImportResult(artifacts: [artifact], skips: []))
+                try? lib.write(ImportResult(artifacts: [artifact], skips: []))
                 return EditorImportOutcome(themeId: n.id, font: font, message: nil)
             case .notFound:
                 return EditorImportOutcome(themeId: nil, font: font,

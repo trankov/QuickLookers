@@ -28,7 +28,7 @@ struct ThemesTab: View {
     var body: some View {
         VStack(spacing: 10) {
             Picker("Язык образца", selection: $langIndex) {
-                ForEach(Array(snippets.enumerated()), id: \.offset) { i, s in Text(s.name).tag(i) }
+                ForEach(snippets.indices, id: \.self) { i in Text(snippets[i].name).tag(i) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
