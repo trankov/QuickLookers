@@ -39,10 +39,13 @@ public func previewPageHTML(highlighted: String, fontFamily: String? = nil, font
     <meta charset="utf-8">
     <style>
     html, body { margin: 0; padding: 0; }
+    /* Семейство задаём и на <code> внутри <pre.shiki>: у браузера есть UA-правило
+       code { font-family: monospace }, которое бьёт прямо по <code> и иначе перебивает
+       унаследованный шрифт (размер при этом наследуется — UA его на code не задаёт). */
+    pre.shiki, pre.shiki code { font-family: \(familyCSS); }
     pre.shiki {
         margin: 0;
         padding: 12px;
-        font-family: \(familyCSS);
         font-size: \(size)px;
         line-height: 1.5;
         tab-size: 4;

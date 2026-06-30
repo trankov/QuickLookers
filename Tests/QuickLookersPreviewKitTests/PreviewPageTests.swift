@@ -43,6 +43,16 @@ final class PreviewPageTests: XCTestCase {
         XCTAssertTrue(html.contains("font-size: 15px"))
     }
 
+    func test_fontFamilyAlsoTargetsCodeElement() {
+        // Shiki кладёт код в <pre class="shiki"><code>. У браузера есть UA-правило
+        // code { font-family: monospace }, которое бьёт прямо по <code> и перебивает
+        // унаследованный от pre.shiki шрифт. Поэтому селектор обязан накрывать и code,
+        // иначе выбранное семейство в Finder не применяется (а размер — да, он наследуется).
+        let html = previewPageHTML(highlighted: "<pre class=\"shiki\"><code>x</code></pre>",
+                                   fontFamily: "JetBrains Mono", fontSize: 15)
+        XCTAssertTrue(html.contains("pre.shiki code"), "font-family должен накрывать и <code>")
+    }
+
     func test_nilFontKeepsDefaults() {
         let html = previewPageHTML(highlighted: "x", fontFamily: nil, fontSize: nil)
         XCTAssertTrue(html.contains("ui-monospace"))
