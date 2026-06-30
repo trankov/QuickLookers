@@ -2,6 +2,13 @@ import XCTest
 @testable import QuickLookersEngine
 
 final class RuntimeTests: XCTestCase {
+    // Тёплый рантайм на весь класс: загрузка JS-бандла Shiki — самая дорогая часть
+    // конструктора (~190–440 мс по замерам проекта), а большинству тестов ниже нужен
+    // лишь рабочий рантайм, не чистое состояние регистраций (id языков/тем в разных
+    // тестах не пересекаются содержательно). Тесты, которым нужен именно свежий/битый
+    // рантайм (например проверка ошибки конструктора), строят его сами.
+    private static let sharedRuntime = try! JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+
     func test_highlightRequest_storesFields() {
         let r = HighlightRequest(code: "let x = 1", languageId: "swift", themeId: "dark-plus")
         XCTAssertEqual(r.code, "let x = 1")
@@ -10,7 +17,7 @@ final class RuntimeTests: XCTestCase {
     }
 
     func test_runtime_highlightsPlaintext() throws {
-        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let runtime = Self.sharedRuntime
         try runtime.registerLanguage(json: #"{"name":"plaintext","scopeName":"source.plain","patterns":[]}"#)
         try runtime.registerTheme(json: ##"{"name":"t","type":"dark","colors":{"editor.foreground":"#ffffff"},"tokenColors":[]}"##)
         let html = try runtime.highlight(code: "hello", language: "plaintext", theme: "t")
@@ -29,7 +36,7 @@ final class RuntimeTests: XCTestCase {
     }
 
     func test_registerLanguage_malformedJSON_throwsJSException() throws {
-        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let runtime = Self.sharedRuntime
         XCTAssertThrowsError(try runtime.registerLanguage(json: "{not valid json")) { error in
             guard case EngineError.jsException = error else {
                 return XCTFail("ожидали .jsException, получили \(error)")
@@ -38,7 +45,7 @@ final class RuntimeTests: XCTestCase {
     }
 
     func test_registerTheme_malformedJSON_throwsJSException() throws {
-        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let runtime = Self.sharedRuntime
         XCTAssertThrowsError(try runtime.registerTheme(json: "{not valid json")) { error in
             guard case EngineError.jsException = error else {
                 return XCTFail("ожидали .jsException, получили \(error)")
@@ -47,7 +54,7 @@ final class RuntimeTests: XCTestCase {
     }
 
     func test_highlight_unregisteredLanguage_throws() throws {
-        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let runtime = Self.sharedRuntime
         try runtime.registerTheme(json: ##"{"name":"t","type":"dark","colors":{},"tokenColors":[]}"##)
         XCTAssertThrowsError(try runtime.highlight(code: "hello", language: "no-such-lang", theme: "t")) { error in
             guard case EngineError.jsException(let message) = error else {
@@ -58,7 +65,7 @@ final class RuntimeTests: XCTestCase {
     }
 
     func test_highlight_unregisteredTheme_throws() throws {
-        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let runtime = Self.sharedRuntime
         try runtime.registerLanguage(json: #"{"name":"plaintext","scopeName":"source.plain","patterns":[]}"#)
         XCTAssertThrowsError(try runtime.highlight(code: "hello", language: "plaintext", theme: "no-such-theme")) { error in
             guard case EngineError.jsException(let message) = error else {

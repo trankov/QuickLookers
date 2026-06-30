@@ -63,11 +63,19 @@ final class ZipReaderTests: XCTestCase {
 
     func test_truncatedArchiveDoesNotCrash() throws {
         // Архив, обрубленный на середине — типичный результат битой/неполной
-        // закачки .vsix. Сама проверка — что процесс не падает и не виснет;
-        // допустимо как бросить ZipError, так и вернуть частичный список записей,
-        // поэтому здесь нет assert на конкретный исход, только что вызов завершается.
-        let full = try fixture("grammar-json.vsix")
-        let truncated = Data(full.prefix(full.count / 2))
-        _ = try? ZipReader().entryNames(in: truncated)
+        // закачки .vsix. Допустимо как бросить ZipError, так и вернуть частичный
+        // список записей — но не больше, чем было в целом архиве, и не какая-то
+        // другая ошибка, маскирующая иной баг.
+        let fullData = try fixture("grammar-json.vsix")
+        let fullCount = try ZipReader().entryNames(in: fullData).count
+        let truncated = Data(fullData.prefix(fullData.count / 2))
+        do {
+            let names = try ZipReader().entryNames(in: truncated)
+            XCTAssertLessThanOrEqual(names.count, fullCount)
+        } catch is ZipError {
+            // Тоже ожидаемый исход — главное, что не упало и не зависло.
+        } catch {
+            XCTFail("неожиданный тип ошибки на обрубленном архиве: \(error)")
+        }
     }
 }

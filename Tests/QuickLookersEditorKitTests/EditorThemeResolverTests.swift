@@ -14,6 +14,9 @@ final class EditorThemeResolverTests: XCTestCase {
             catalog: StubCatalog(map: ["Monokai": "monokai"]), extensionsDir: extDir)
         XCTAssertEqual(r, .bundled(themeId: "monokai"))
     }
+    /// extDir также содержит расширения с нечитаемым package.json и с пустым списком
+    /// тем (aaa.broken-1.0.0, bbb.no-theme-1.0.0) — резолвер должен пропускать их
+    /// по пути и всё равно находить нужную тему среди остальных расширений.
     func testCustomFromExtensions() {
         let r = EditorThemeResolver.resolve(label: "Cool Dark",
             catalog: StubCatalog(map: [:]), extensionsDir: extDir)
@@ -26,13 +29,6 @@ final class EditorThemeResolverTests: XCTestCase {
         let r = EditorThemeResolver.resolve(label: "Nope",
             catalog: StubCatalog(map: [:]), extensionsDir: extDir)
         XCTAssertEqual(r, .notFound)
-    }
-    /// Среди установленных расширений встречаются: с нечитаемым package.json и
-    /// с пустым списком тем — цикл должен пропускать их и доходить до нужного.
-    func testCustomThemeFoundAcrossMultipleExtensionsDespiteBrokenAndEmptyOnes() {
-        let r = EditorThemeResolver.resolve(label: "Cool Dark",
-            catalog: StubCatalog(map: [:]), extensionsDir: extDir)
-        guard case .custom = r else { return XCTFail("ожидался .custom несмотря на сломанные соседние расширения: \(r)") }
     }
     /// Текущее поведение — точное (регистрозависимое) сравнение меток; документируем это,
     /// а не предполагаем нормализацию регистра, которой в коде нет.

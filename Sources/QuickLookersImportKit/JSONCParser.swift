@@ -7,11 +7,24 @@ public enum JSONCError: Error { case invalid }
 /// экранирует сырые управляющие символы внутри строк, чтобы JSONSerialization не падал.
 public enum JSONCParser {
     public static func object(from data: Data) throws -> Any {
+        let (_, obj) = try strictJSONAndObject(data)
+        return obj
+    }
+
+    /// Как `toStrictJSON`, но дополнительно проверяет, что результат — действительно
+    /// валидный JSON: `toStrictJSON` сам по себе только текстовое преобразование
+    /// (снимает комментарии/висячие запятые) и не гарантирует валидность результата.
+    public static func toStrictValidatedJSON(_ data: Data) throws -> Data {
+        let (strict, _) = try strictJSONAndObject(data)
+        return strict
+    }
+
+    private static func strictJSONAndObject(_ data: Data) throws -> (Data, Any) {
         let strict = try toStrictJSON(data)
         guard let obj = try? JSONSerialization.jsonObject(with: strict, options: [.fragmentsAllowed]) else {
             throw JSONCError.invalid
         }
-        return obj
+        return (strict, obj)
     }
 
     public static func toStrictJSON(_ data: Data) throws -> Data {

@@ -50,9 +50,7 @@ final class MonospaceFontsTests: XCTestCase {
 @MainActor
 final class SettingsModelPreviewHTMLTests: XCTestCase {
     func test_previewHTML_rendersHighlightedFragment() throws {
-        let tmp = FileManager.default.temporaryDirectory
-            .appendingPathComponent("QuickLookersTests-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        let tmp = try makeTempContainer()
         defer { try? FileManager.default.removeItem(at: tmp) }
 
         let model = SettingsModel(containerURL: tmp)
@@ -64,9 +62,7 @@ final class SettingsModelPreviewHTMLTests: XCTestCase {
     }
 
     func test_previewHTML_cachesFragmentAcrossCallsWithSameLanguageAndTheme() throws {
-        let tmp = FileManager.default.temporaryDirectory
-            .appendingPathComponent("QuickLookersTests-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        let tmp = try makeTempContainer()
         defer { try? FileManager.default.removeItem(at: tmp) }
 
         let model = SettingsModel(containerURL: tmp)

@@ -5,11 +5,12 @@ final class VsixImporterTests: XCTestCase {
     private func fixture(_ name: String) throws -> Data {
         try Data(contentsOf: try XCTUnwrap(Bundle.module.url(forResource: "Fixtures/\(name)", withExtension: nil)))
     }
-    private func importer() -> VsixImporter {
+    private func importer(reader: ZipReader? = nil) -> VsixImporter {
         // Каталог встроенных грамматик не нужен этим тестам (без вложенных) — пустой временный.
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return VsixImporter(bundledGrammarsDir: dir)
+        guard let reader else { return VsixImporter(bundledGrammarsDir: dir) }
+        return VsixImporter(bundledGrammarsDir: dir, reader: reader)
     }
 
     func test_importsThemeArtifact() throws {
@@ -70,23 +71,14 @@ final class VsixImporterTests: XCTestCase {
         }
     }
 
-    func test_tooManyEntriesMapsToTooLarge() throws {
-        // Урезанный потолок числа записей у ZipReader — проверяем маппинг
-        // ZipError.tooManyEntries → ImportError.tooLarge без гигантской фикстуры.
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let tinyImporter = VsixImporter(bundledGrammarsDir: dir, reader: ZipReader(maxEntries: 1))
-        XCTAssertThrowsError(try tinyImporter(vsixData: try fixture("theme-only.vsix"))) { e in
-            XCTAssertEqual(e as? ImportError, .tooLarge)
-        }
-    }
-
-    func test_entryTooLargeMapsToTooLarge() throws {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let tinyImporter = VsixImporter(bundledGrammarsDir: dir, reader: ZipReader(maxEntryBytes: 1))
-        XCTAssertThrowsError(try tinyImporter(vsixData: try fixture("theme-only.vsix"))) { e in
-            XCTAssertEqual(e as? ImportError, .tooLarge)
+    func test_tinyZipReaderLimitsMapToTooLarge() throws {
+        // Урезанные потолки ZipReader — проверяем маппинг ZipError.tooManyEntries
+        // и .entryTooLarge → ImportError.tooLarge без гигантских фикстур.
+        let tinyReaders: [ZipReader] = [ZipReader(maxEntries: 1), ZipReader(maxEntryBytes: 1)]
+        for reader in tinyReaders {
+            XCTAssertThrowsError(try importer(reader: reader)(vsixData: try fixture("theme-only.vsix"))) { e in
+                XCTAssertEqual(e as? ImportError, .tooLarge)
+            }
         }
     }
 }

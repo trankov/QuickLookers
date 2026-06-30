@@ -7,13 +7,6 @@ import QuickLookersSettingsKit
 /// портил настоящие настройки.
 @MainActor
 final class SettingsModelTests: XCTestCase {
-    private func makeTempContainer() throws -> URL {
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("QuickLookersTests-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
-    }
-
     func test_init_withTempContainer_loadsDefaultSettingsAndNoWarning() throws {
         let model = SettingsModel(containerURL: try makeTempContainer())
         XCTAssertNil(model.warning)

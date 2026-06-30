@@ -2,8 +2,13 @@ import XCTest
 @testable import QuickLookersEngine
 
 final class ShikiEngineTests: XCTestCase {
+    // Тёплый рантайм на весь класс — см. RuntimeTests.swift. Кеш «загружено один раз»
+    // живёт в самом ShikiEngine (и в провайдере-счётчике), а не в JSCoreRuntime, поэтому
+    // общий рантайм не портит изоляцию между тестами на повторную загрузку.
+    private static let sharedRuntime = try! JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+
     private func makeEngine() throws -> (ShikiEngine, CountingGrammarProvider) {
-        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let runtime = Self.sharedRuntime
         let grammarsDir = Bundle.module.url(forResource: "grammars", withExtension: nil)!
         let themesDir = Bundle.module.url(forResource: "themes", withExtension: nil)!
         let counting = CountingGrammarProvider(BundledGrammarProvider(directory: grammarsDir))
@@ -32,7 +37,7 @@ final class ShikiEngineTests: XCTestCase {
     // MARK: - Edge cases
 
     func test_themeLoadedOncePerTheme() throws {
-        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let runtime = Self.sharedRuntime
         let grammarsDir = Bundle.module.url(forResource: "grammars", withExtension: nil)!
         let themesDir = Bundle.module.url(forResource: "themes", withExtension: nil)!
         let countingThemes = CountingThemeProvider(BundledThemeProvider(directory: themesDir))
@@ -46,7 +51,7 @@ final class ShikiEngineTests: XCTestCase {
     }
 
     func test_failedGrammarLoad_isNotCached_retriesOnNextCall() throws {
-        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let runtime = Self.sharedRuntime
         let grammarsDir = Bundle.module.url(forResource: "grammars", withExtension: nil)!
         let themesDir = Bundle.module.url(forResource: "themes", withExtension: nil)!
         let flaky = FlakyOnceGrammarProvider(BundledGrammarProvider(directory: grammarsDir))
