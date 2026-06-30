@@ -30,6 +30,39 @@ final class ThemeFileLoaderTests: XCTestCase {
 
     func testBadPlistThrows() throws {
         XCTAssertThrowsError(try ThemeFileLoader.loadStrictThemeJSON(
-            data: Data("not a plist".utf8), fileExtension: "tmTheme", uiTheme: "vs-dark"))
+            data: Data("not a plist".utf8), fileExtension: "tmTheme", uiTheme: "vs-dark")) { e in
+            XCTAssertEqual(e as? ThemeFileError, .badPlist)
+        }
+    }
+
+    func testPlistExtensionIsAcceptedLikeTmTheme() throws {
+        // .plist — то же имя расширения, что и у .tmTheme не по словарю, проверяем явно.
+        let out = try ThemeFileLoader.loadStrictThemeJSON(
+            data: fixture("sample.tmTheme"), fileExtension: "plist", uiTheme: "vs-dark")
+        let o = try JSONSerialization.jsonObject(with: out) as! [String: Any]
+        XCTAssertEqual(o["type"] as? String, "dark")
+    }
+
+    func testUppercaseExtensionIsCaseInsensitive() throws {
+        let out = try ThemeFileLoader.loadStrictThemeJSON(
+            data: fixture("sample.tmTheme"), fileExtension: "TMTHEME", uiTheme: "vs")
+        let o = try JSONSerialization.jsonObject(with: out) as! [String: Any]
+        XCTAssertEqual(o["type"] as? String, "light")
+    }
+
+    func testMalformedJSONThemeThrowsBadJSON() throws {
+        // Не plist-расширение, но содержимое — не разбираемый даже как JSONC мусор
+        // (незакрытая строка ломает разбор и до strict-JSON).
+        XCTAssertThrowsError(try ThemeFileLoader.loadStrictThemeJSON(
+            data: Data(#"{ "name": "broken, "#.utf8), fileExtension: "json", uiTheme: "vs-dark")) { e in
+            XCTAssertEqual(e as? ThemeFileError, .badJSON)
+        }
+    }
+
+    func testInvalidUTF8ThemeThrowsBadJSON() throws {
+        XCTAssertThrowsError(try ThemeFileLoader.loadStrictThemeJSON(
+            data: Data([0xFF, 0xFE, 0x00]), fileExtension: "json", uiTheme: "vs-dark")) { e in
+            XCTAssertEqual(e as? ThemeFileError, .badJSON)
+        }
     }
 }

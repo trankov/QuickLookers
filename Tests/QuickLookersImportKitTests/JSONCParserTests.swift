@@ -49,4 +49,25 @@ final class JSONCParserTests: XCTestCase {
         let o = try JSONSerialization.jsonObject(with: strict) as! [String: Any]
         XCTAssertEqual(o["a"] as? Double, 1)
     }
+
+    func testInvalidUTF8Throws() throws {
+        // Недоверенный settings.json/тема может быть не в UTF-8 — не должны падать.
+        let bad = Data([0xFF, 0xFE, 0x00, 0xD8, 0x00])
+        XCTAssertThrowsError(try JSONCParser.toStrictJSON(bad)) { e in
+            XCTAssertEqual(e as? JSONCError, .invalid)
+        }
+        XCTAssertThrowsError(try JSONCParser.object(from: bad))
+    }
+
+    func testDeeplyNestedTrailingCommasAreStripped() throws {
+        // Висячие запятые часто встречаются не только на верхнем уровне.
+        let o = try parse("""
+        {
+          "a": { "b": [1, 2,], "c": {"d": 1,},},
+        }
+        """)
+        let a = try XCTUnwrap(o["a"] as? [String: Any])
+        XCTAssertEqual((a["b"] as? [Any])?.count, 2)
+        XCTAssertEqual((a["c"] as? [String: Any])?["d"] as? Double, 1)
+    }
 }

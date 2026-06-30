@@ -45,5 +45,29 @@ EOF
 echo '{"name":"../../evil","patterns":[]}' > build/mal/extension/syntaxes/evil.tmLanguage.json
 (cd build/mal && zip -r -X ../../malicious-id.vsix extension >/dev/null)
 
+# no-manifest: архив без extension/package.json вовсе
+mkdir -p build/nm/extension/theme
+echo '{"name":"x"}' > build/nm/extension/theme/cool.json
+(cd build/nm && zip -r -X ../../no-manifest.vsix extension >/dev/null)
+
+# no-contributions: валидный package.json, но contributes пуст (нет themes/grammars)
+mkdir -p build/nc/extension
+cat > build/nc/extension/package.json <<'EOF'
+{"name":"empty","contributes":{}}
+EOF
+(cd build/nc && zip -r -X ../../no-contributions.vsix extension >/dev/null)
+
+# duplicate-entry-names: два разных файла под одним именем в архиве (zip это допускает) —
+# проверка, что ZipReader не падает на неоднозначном архиве недоверенного .vsix.
+python3 - "$(pwd)/duplicate-entry-names.vsix" <<'PYEOF'
+import sys, zipfile
+path = sys.argv[1]
+with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+    z.writestr("extension/package.json",
+        '{"name":"d","contributes":{"themes":[{"label":"Dup","uiTheme":"vs-dark","path":"./theme/dup.json"}]}}')
+    z.writestr("extension/theme/dup.json", '{"name":"first","type":"dark","tokenColors":[]}')
+    z.writestr("extension/theme/dup.json", '{"name":"second","type":"dark","tokenColors":[]}')
+PYEOF
+
 rm -rf build
 echo "fixtures built"

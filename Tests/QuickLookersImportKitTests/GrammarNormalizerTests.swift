@@ -61,4 +61,44 @@ final class GrammarNormalizerTests: XCTestCase {
         let arr = try XCTUnwrap(JSONSerialization.jsonObject(with: out) as? [[String: Any]])
         XCTAssertEqual(arr.compactMap { $0["name"] as? String }, ["vue"])  // только главная, без падения
     }
+
+    func test_malformedPlistThrowsBadGrammar() throws {
+        let n = GrammarNormalizer(bundledGrammarsDir: try bundledDir(css: "[]"))
+        XCTAssertThrowsError(try n.toJSON(Data("not a plist at all".utf8), path: "a.tmLanguage")) { e in
+            XCTAssertEqual(e as? GrammarError, .badGrammar)
+        }
+    }
+
+    func test_malformedMainGrammarJSONThrowsBadGrammar() throws {
+        // grammarJSON, переданный normalize, — не объект (например, обрублен/мусор из .vsix).
+        let n = GrammarNormalizer(bundledGrammarsDir: try bundledDir(css: "[]"))
+        XCTAssertThrowsError(try n.normalize(languageId: "vue", grammarJSON: Data("not json".utf8),
+                                             embeddedLanguageIds: [], siblingGrammars: [:])) { e in
+            XCTAssertEqual(e as? GrammarError, .badGrammar)
+        }
+    }
+
+    func test_selfReferencingEmbedDoesNotDuplicateOrLoop() throws {
+        // Грамматика, объявляющая сама себя как embedded language (встречается у некоторых
+        // .vsix с неаккуратным package.json) — не должна задвоиться и не должна зациклиться.
+        let n = GrammarNormalizer(bundledGrammarsDir: try bundledDir(css: "[]"))
+        let vue = Data(#"{"name":"vue"}"#.utf8)
+        let out = try n.normalize(languageId: "vue", grammarJSON: vue,
+                                  embeddedLanguageIds: ["vue"], siblingGrammars: ["vue": vue])
+        let arr = try XCTUnwrap(JSONSerialization.jsonObject(with: out) as? [[String: Any]])
+        XCTAssertEqual(arr.compactMap { $0["name"] as? String }, ["vue"])  // не задвоилось
+    }
+
+    func test_corruptSiblingFallsBackToBundle() throws {
+        // Сиблинг-грамматика того же .vsix битая (не разбирается как JSON-объект) —
+        // дотягиваем встроенную версию вместо того, чтобы потерять вложенный язык целиком.
+        let n = GrammarNormalizer(bundledGrammarsDir: try bundledDir(css: #"[{"name":"css","from":"bundle"}]"#))
+        let vue = Data(#"{"name":"vue"}"#.utf8)
+        let corruptSibling = Data("not valid json".utf8)
+        let out = try n.normalize(languageId: "vue", grammarJSON: vue,
+                                  embeddedLanguageIds: ["css"], siblingGrammars: ["css": corruptSibling])
+        let arr = try XCTUnwrap(JSONSerialization.jsonObject(with: out) as? [[String: Any]])
+        let css: [String: Any] = try XCTUnwrap(arr.first { $0["name"] as? String == "css" })
+        XCTAssertEqual(css["from"] as? String, "bundle")    // упал на встроенную, не потерялся
+    }
 }

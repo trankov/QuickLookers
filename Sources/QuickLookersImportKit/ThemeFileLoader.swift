@@ -12,9 +12,15 @@ public enum ThemeFileLoader {
         if ext == "tmtheme" || ext == "plist" {
             return try convertTmTheme(data, uiTheme: uiTheme)
         }
-        // .json / .jsonc / прочее → терпимый разбор в строгий JSON.
-        do { return try JSONCParser.toStrictJSON(data) }
-        catch { throw ThemeFileError.badJSON }
+        // .json / .jsonc / прочее → терпимый разбор в строгий JSON. toStrictJSON делает
+        // только текстовое преобразование (снимает комментарии/висячие запятые) и не
+        // гарантирует валидность результата — проверяем явно, иначе структурно битый
+        // файл (например, незакрытая строка) тихо пролезет дальше как «строгий JSON».
+        do {
+            let strict = try JSONCParser.toStrictJSON(data)
+            _ = try JSONSerialization.jsonObject(with: strict, options: [.fragmentsAllowed])
+            return strict
+        } catch { throw ThemeFileError.badJSON }
     }
 
     private static func convertTmTheme(_ data: Data, uiTheme: String) throws -> Data {

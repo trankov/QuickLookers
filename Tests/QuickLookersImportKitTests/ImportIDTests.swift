@@ -13,4 +13,16 @@ final class ImportIDTests: XCTestCase {
             XCTAssertFalse(isSafeImportID(id), id)
         }
     }
+
+    func test_acceptsMaxLengthBoundary() {
+        XCTAssertTrue(isSafeImportID(String(repeating: "x", count: 64)))   // ровно потолок — годен
+    }
+
+    func test_rejectsUnicodeLetters() {
+        // ch.isLetter верен и для не-ASCII букв — без явной проверки ch.isASCII
+        // кириллица/иероглифы проскочили бы в имя файла на диске.
+        for id in ["café", "日本語", "naïve", "Москва"] {
+            XCTAssertFalse(isSafeImportID(id), id)
+        }
+    }
 }

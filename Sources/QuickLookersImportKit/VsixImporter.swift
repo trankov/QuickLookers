@@ -5,8 +5,17 @@ public enum ImportError: Error { case notArchive, noManifest, noContributions, t
 /// Оркестрация импорта: .vsix → артефакты (темы/грамматики) + пропуски с причинами.
 public struct VsixImporter {
     private let bundledGrammarsDir: URL
-    private let reader = ZipReader()
-    public init(bundledGrammarsDir: URL) { self.bundledGrammarsDir = bundledGrammarsDir }
+    private let reader: ZipReader
+    public init(bundledGrammarsDir: URL) {
+        self.bundledGrammarsDir = bundledGrammarsDir
+        self.reader = ZipReader()
+    }
+    /// Только для тестов: внедрить ZipReader с урезанными потолками, чтобы проверить
+    /// маппинг ZipError.tooManyEntries/entryTooLarge → ImportError.tooLarge без гигантских фикстур.
+    init(bundledGrammarsDir: URL, reader: ZipReader) {
+        self.bundledGrammarsDir = bundledGrammarsDir
+        self.reader = reader
+    }
 
     public func callAsFunction(vsixData: Data) throws -> ImportResult {
         let names: [String]
@@ -14,10 +23,7 @@ public struct VsixImporter {
         catch ZipError.tooManyEntries, ZipError.entryTooLarge { throw ImportError.tooLarge }
         catch { throw ImportError.notArchive }
         guard names.contains("extension/package.json") else { throw ImportError.noManifest }
-        // Сырой ZipError (повреждённая/нечитаемая запись) трактуем как noManifest —
-        // наружу из callAsFunction выходит только ImportError.
-        guard let pkg = readEntry("package.json", in: vsixData)
-        else { throw ImportError.noManifest }
+        let pkg = try readManifestEntry(in: vsixData)
 
         let manifest: VsixManifest
         do { manifest = try VsixManifest.parse(packageJSON: pkg) }
@@ -83,8 +89,26 @@ public struct VsixImporter {
     }
 
     /// Содержимое записи .vsix по относительному пути из package.json (с префиксом extension/).
+    /// Сырой ZipError (повреждённая/нечитаемая запись) трактуем как nil — наружу из
+    /// callAsFunction для отдельных тем/грамматик выходит только пропуск, не падение.
     private func readEntry(_ relPath: String, in data: Data) -> Data? {
         try? reader.entry("extension/" + clean(relPath), in: data)
+    }
+
+    /// package.json — обязательная запись, отказ должен быть различим: либо его действительно
+    /// нет/он битый (noManifest), либо он превысил потолок ZipReader (tooLarge, зип-бомба).
+    /// В отличие от readEntry, тут ZipError.entryTooLarge НЕ проглатывается.
+    private func readManifestEntry(in data: Data) throws -> Data {
+        do {
+            guard let d = try reader.entry("extension/package.json", in: data) else {
+                throw ImportError.noManifest
+            }
+            return d
+        } catch ZipError.entryTooLarge {
+            throw ImportError.tooLarge
+        } catch {
+            throw ImportError.noManifest
+        }
     }
 
     /// Путь из package.json часто начинается с "./" — убираем для склейки с "extension/".
