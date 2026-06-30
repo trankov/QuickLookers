@@ -34,7 +34,17 @@ public enum ThemeNormalizer {
         var id = safeBase
         var n = 2
         while existingSlugs.contains(id) { id = "\(safeBase)-\(n)"; n += 1 }
-        return NormalizedTheme(id: id, displayName: label, isDark: isDark(uiTheme: uiTheme), json: themeJSON)
+        // Движок регистрирует тему по её JSON-полю name, а ищет по id → name должно
+        // совпадать с id, иначе выбранная импортированная тема не найдётся.
+        let finalJSON = withName(themeJSON, id) ?? themeJSON
+        return NormalizedTheme(id: id, displayName: label, isDark: isDark(uiTheme: uiTheme), json: finalJSON)
+    }
+
+    /// Вписывает name = id в JSON темы. nil, если JSON — не объект (тогда берём исходный).
+    private static func withName(_ data: Data, _ id: String) -> Data? {
+        guard var obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        obj["name"] = id
+        return try? JSONSerialization.data(withJSONObject: obj)
     }
 
     /// Короткий стабильный ASCII-хэш строки (8 hex) для запасного id.

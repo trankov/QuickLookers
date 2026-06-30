@@ -13,13 +13,24 @@ final class ThemeNormalizerTests: XCTestCase {
         XCTAssertFalse(ThemeNormalizer.isDark(uiTheme: "vs"))
     }
 
-    func test_normalizeBuildsMeta() {
+    func test_normalizeBuildsMeta() throws {
         let n = ThemeNormalizer.normalize(label: "Night Owl", uiTheme: "vs-dark",
                                           themeJSON: Data("{}".utf8), existingSlugs: [])
         XCTAssertEqual(n.id, "night-owl")
         XCTAssertEqual(n.displayName, "Night Owl")
         XCTAssertTrue(n.isDark)
-        XCTAssertEqual(n.json, Data("{}".utf8))
+        // json больше не «как есть»: name вписывается = id (движок ищет тему по id).
+        let obj = try JSONSerialization.jsonObject(with: n.json) as! [String: Any]
+        XCTAssertEqual(obj["name"] as? String, "night-owl")
+    }
+
+    func test_normalizeRewritesNameToId() throws {
+        let raw = Data(#"{ "name": "Seti Monokai: Original", "type": "dark", "tokenColors": [] }"#.utf8)
+        let n = ThemeNormalizer.normalize(label: "Seti Monokai: Original", uiTheme: "vs-dark",
+                                          themeJSON: raw, existingSlugs: [])
+        let obj = try JSONSerialization.jsonObject(with: n.json) as! [String: Any]
+        XCTAssertEqual(obj["name"] as? String, n.id)   // name == id, иначе движок не найдёт тему
+        XCTAssertEqual(obj["type"] as? String, "dark") // прочие поля сохранены
     }
 
     func test_slugCollisionGetsSuffix() {
