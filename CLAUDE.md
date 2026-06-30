@@ -43,6 +43,14 @@ macOS-приложение, возвращающее превью кода по 
 
 **Сайдкар-каталог** — **реализовано** (спека `docs/superpowers/specs/2026-06-29-sidecar-catalog-design.md`, план `docs/superpowers/plans/2026-06-29-sidecar-catalog.md`). Окно настроек читает маленький `Resources/catalog.json` (генерится `extract-resources.mjs`) вместо обхода всех 218 грамматик (~41 МБ); полный обход остаётся фоллбэком. Сайдкар — расширяемый индекс (список URL, слияние с перекрытием по `id`) под будущий импорт `.vsix`.
 
+**6. Импорт темы и шрифта из редактора + витрина «Темы»** — **реализовано, идёт визуальная полировка** (спека `docs/superpowers/specs/2026-06-30-editor-theme-and-font-import-design.md`, план `docs/superpowers/plans/2026-06-30-editor-theme-and-font-import.md`). Цель — «как в моём редакторе»: одной кнопкой забрать активную тему и шрифт из установленного VS Code / Cursor. Новый пакетный таргет **`QuickLookersEditorKit`**: поиск редакторов (`EditorScanner` — по маркеру `product.json`, не по ненадёжному bundle id), чтение настроек (`EditorSettingsReader`, формат **JSONC** — комментарии/висячие запятые/сырые управляющие символы), разрешение темы (`EditorThemeResolver` → встроенная по id / своя кастомная для импорта / не найдена). **`QuickLookersImportKit` дополнен:** `JSONCParser` (JSONC→строгий JSON) и `ThemeFileLoader` (`.json`/`.jsonc` через парсер, **`.tmTheme`/`.plist`** через `PropertyListSerialization` → форма Shiki `{name,type,tokenColors}` — **tmTheme обязаны работать**). `ThemeNormalizer` теперь пишет `name = id` — **контракт движка:** Shiki регистрирует тему по JSON-полю `name`, ищет по id (раньше — латентный баг и в импорте `.vsix`). **Доступ:** песочница сохранена; два **ленивых** гранта (`~` для данных редактора, `/Applications` для поиска) через powerbox + **app-scoped security-scoped закладки** (`BookmarkStore`, `com.apple.security.files.bookmarks.app-scope` у хоста). **Настройки переписаны без миграции** (пользователей ещё нет): вместо `ThemeSelection`/«следовать за системой» — единый `activeThemeId` + `FontSettings` (семейство/размер, диапазон 6…48, `clampSize`). **Витрина «Темы»** (вкладка перестроена): сегментный выбор языка-образца → **живое превью** (`CodePreviewView`/WKWebView; `FragmentCache` мемоизирует подсветку — движок гоняется только при смене языка/темы, не на каждый кадр) → шрифт (список моноширинных + **системная панель `NSFontPanel`** через `FontPanelController`) → единый список тем с **галочкой активной** → импорт `.vsix` и «Из редактора…» (поповер `.popover(item:)` с иконками приложений). Шрифт прокинут в превью: `previewPageHTML(fontFamily:fontSize:)`, ключ `HTMLCacheKey` их учитывает.
+
+**Грабли этой фазы (дорого добыты живыми спайками):**
+- **Хосту нужен `network.client`.** Приложение теперь само показывает WKWebView (живое превью); без права вспомогательные процессы падают (`RBSAssertionError`/Jetsam «process does not exist»), вебвью пустой. Право было только у расширения.
+- **UA-стиль `code { font-family: monospace }` перебивает шрифт.** Shiki кладёт код в `<pre class="shiki"><code>`; UA-правило бьёт прямо по `<code>` и перебивает унаследованный шрифт (а размер наследуется — отсюда «размер меняется, семейство нет»). Селектор `font-family` накрывает и `<code>`.
+- **`List` вместо grouped-`Form` для списков на всю ширину.** grouped-`Form` на macOS центрирует содержимое с предельной шириной и не растёт с окном. В `List` тогл по умолчанию — чекбокс, поэтому возвращаем переключатель: `.toggleStyle(.switch)` + `.controlSize(.small)`.
+- **`.popover(item:)`, не `isPresented:` + отдельный `@State`.** Иначе поповер в первый раз пуст (читает захваченный устаревший массив). На `item` система пере-презентует от источника данных. `arrowEdge: .top` — раскрытие вверх (кнопка у нижнего края).
+
 Группа A (тёплый WebView, перенос по строкам, обрезка) и кэш HTML — **сделаны в фазе 5** (см. п.5). Исходный список рычагов — в `docs/superpowers/notes/2026-06-28-preview-thin-slice-spikes.md`.
 
 **Замеры производительности:**
@@ -54,7 +62,7 @@ macOS-приложение, возвращающее превью кода по 
 ## Структура
 
 ```
-Package.swift                          # SwiftPM-пакет: QuickLookersEngine + QuickLookersPreviewKit + QuickLookersSettingsKit, macOS 13+
+Package.swift                          # SwiftPM-пакет: Engine + PreviewKit + SettingsKit + ImportKit + EditorKit, macOS 13+
 Sources/QuickLookersEngine/
   HighlightEngine.swift                # протокол HighlightEngine + HighlightRequest + EngineError
   JSCoreRuntime.swift                  # обёртка над JavaScriptCore
@@ -68,15 +76,25 @@ Sources/QuickLookersEngine/
     grammars/*.json                    # грамматики Shiki: МАССИВ [главная + встроенные] (имя файла = id языка), 218 шт.
     themes/*.json                      # темы Shiki
 Sources/QuickLookersPreviewKit/        # тестируемая presentation-логика расширения
-  PreviewPage.swift                    # previewPageHTML(highlighted:truncatedNotice:) — HTML-страница с переносом строк и плашкой обрезки
+  PreviewPage.swift                    # previewPageHTML(highlighted:fontFamily:fontSize:truncatedNotice:) — HTML-страница; шрифт накрывает и <code>
   CodeTrim.swift                       # trimToFirstLines (обрезка до N строк) + readBoundedPrefix (огранич. чтение больших файлов)
-  HTMLCache.swift                      # HTMLCacheKey (ключ из атрибутов файла+тема+язык) + HTMLCache (lookup/store/evict, LRU, потолок 5 МБ)
+  HTMLCache.swift                      # HTMLCacheKey (ключ из атрибутов файла+тема+язык+ШРИФТ) + HTMLCache (lookup/store/evict, LRU, потолок 5 МБ)
 Sources/QuickLookersSettingsKit/       # настройки, каталог языков/тем, App Group
-  ManagerSettings.swift                # модель настроек (opt-out: выключенные языки + выбор темы)
+  ManagerSettings.swift                # модель настроек: opt-out по языкам + activeThemeId + FontSettings (семейство/размер, 6…48)
   DeclaredTypes.swift                  # объявленные типы файлов, разрешение языка и признака просмотра
   Catalog.swift                        # каталог языков и тем из JSON-дескрипторов
   CatalogSource.swift                  # FileCatalogSource: читает grammars/ и themes/ из пакета
-  SettingsStore.swift                  # атомарная запись settings.json, разрешение темы, App Group
+  SettingsStore.swift                  # атомарная запись settings.json, разрешение темы (resolvedThemeId), App Group
+Sources/QuickLookersImportKit/         # импорт тем/грамматик: .vsix и темы из редактора
+  JSONCParser.swift                    # JSONC (комментарии/висячие запятые/сырые ctrl-символы) → строгий JSON
+  ThemeFileLoader.swift                # .json/.jsonc + .tmTheme/.plist → форма Shiki {name,type,tokenColors}
+  ThemeNormalizer.swift                # нормализация темы; пишет name = id (контракт движка Shiki)
+  VsixImporter.swift / VsixManifest.swift / ImportedLibrary.swift  # распаковка .vsix, манифест, запись в контейнер
+Sources/QuickLookersEditorKit/         # обнаружение редактора и чтение его темы/шрифта
+  DetectedEditor.swift                 # найденный редактор: URL, имена, имя папки данных
+  EditorScanner.swift                  # поиск VS Code-подобных в /Applications по product.json
+  EditorSettingsReader.swift           # чтение editor.fontFamily/fontSize/colorTheme из settings.json (JSONC)
+  EditorThemeResolver.swift            # тема редактора → встроенная id / своя кастомная / не найдена
 js/                                    # шаг сборки JS-бандла (Node, только для сборки)
   src/highlight.mjs                    # точка входа: вешает globalThis.ql*
   build.mjs                            # esbuild → Resources/shiki-bundle.js
@@ -84,16 +102,24 @@ js/                                    # шаг сборки JS-бандла (No
 Tests/QuickLookersEngineTests/         # XCTest, TDD (движок)
 Tests/QuickLookersPreviewKitTests/     # XCTest, TDD (PreviewKit)
 Tests/QuickLookersSettingsKitTests/    # XCTest, TDD (SettingsKit)
+Tests/QuickLookersImportKitTests/      # XCTest, TDD (ImportKit: JSONC, темы, .vsix)
+Tests/QuickLookersEditorKitTests/      # XCTest, TDD (EditorKit: поиск, чтение настроек, разрешение темы)
 
 # Xcode-часть (генерируется XcodeGen, .xcodeproj в .gitignore)
 project.yml                            # спека XcodeGen: хост-приложение + расширение Preview
 App/QuickLookersApp.swift              # точка входа SwiftUI-приложения
-App/SettingsModel.swift                # @Observable модель, связывающая SettingsStore с UI
-App/ContentView.swift                  # три вкладки: Форматы / Темы / Сопоставление
-App/FormatsTab.swift                   # вкладка «Форматы подсветки» (Слой 1)
-App/ThemesTab.swift                    # вкладка «Темы» (следовать за системой / фиксированная)
-App/FileTypesTab.swift                 # вкладка «Сопоставление с типами файлов» (Слой 2)
-App/QuickLookers.entitlements          # App Sandbox + App Group хоста
+App/SettingsModel.swift                # модель окна: SettingsStore + каталог; applyEditorResult, FragmentCache
+App/ContentView.swift                  # три вкладки: Темы / Форматы / Просмотр; резиновое окно
+App/FormatsTab.swift                   # вкладка «Форматы подсветки» (Слой 1) — List + компактные тоглы
+App/ThemesTab.swift                    # витрина «Темы»: образец → превью → шрифт → список тем → импорт
+App/FileTypesTab.swift                 # вкладка «Просмотр в Finder» (Слой 2) — List + компактные тоглы
+App/LivePreview.swift                  # SettingsModel.previewHTML + FragmentCache (мемоизация подсветки) + MonospaceFonts
+App/CodePreviewView.swift              # NSViewRepresentable WKWebView для живого превью (guard по неизменному HTML)
+App/PreviewSnippets.swift              # образцы кода: Python/HTML/CSS/JSON/JS/SQL/PHP
+App/FontPanelController.swift          # системная панель NSFontPanel → семейство+размер
+App/BookmarkStore.swift                # ленивые app-scoped закладки на ~ и /Applications (powerbox)
+App/ImportModel.swift                  # пикер .vsix, scanEditors, importFromEditor
+App/QuickLookers.entitlements          # App Sandbox + App Group + network.client + bookmarks.app-scope (артефакт XcodeGen)
 PreviewExtension/
   PreviewViewController.swift          # QLPreviewingController: читает файл → движок → WKWebView
   Info.plist                           # NSExtension + QLSupportedContentTypes (генерит XcodeGen)
