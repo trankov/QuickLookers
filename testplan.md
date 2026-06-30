@@ -55,14 +55,14 @@
 | Sources/QuickLookersEditorKit/EditorScanner.swift | EditorScanner.scan(applicationsDir:) | | | | |
 | Sources/QuickLookersEditorKit/EditorSettingsReader.swift | EditorSettingsReader.read(editor:appSupportDir:) | | | | |
 | Sources/QuickLookersEditorKit/EditorThemeResolver.swift | EditorThemeResolver.resolve(label:catalog:extensionsDir:) | | | | |
-| Sources/QuickLookersPreviewKit/CodeTrim.swift | trimToFirstLines(_:max:) | | | | |
-| Sources/QuickLookersPreviewKit/CodeTrim.swift | readBoundedPrefix(of:maxBytes:) | | | | |
-| Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCacheKey.init(path:mtime:size:languageId:themeId:fontFamily:fontSize:maxLines:bundleVersion:) | | | | |
-| Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCache.lookup(_:) | | | | |
-| Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCache.store(_:html:) | | | | |
-| Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCache.evictIfNeeded() | | | | |
-| Sources/QuickLookersPreviewKit/PreviewPage.swift | sanitizedFontFamily(_:) | | | | |
-| Sources/QuickLookersPreviewKit/PreviewPage.swift | previewPageHTML(highlighted:fontFamily:fontSize:truncatedNotice:) | | | | |
+| Sources/QuickLookersPreviewKit/CodeTrim.swift | trimToFirstLines(_:max:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersPreviewKit/CodeTrim.swift | readBoundedPrefix(of:maxBytes:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCacheKey.init(path:mtime:size:languageId:themeId:fontFamily:fontSize:maxLines:bundleVersion:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCache.lookup(_:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCache.store(_:html:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCache.evictIfNeeded() | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersPreviewKit/PreviewPage.swift | sanitizedFontFamily(_:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersPreviewKit/PreviewPage.swift | previewPageHTML(highlighted:fontFamily:fontSize:truncatedNotice:) | 🟢 | | 🟢 | 🟢 |
 | App/BookmarkStore.swift | AccessScope.url | | | | |
 | App/BookmarkStore.swift | AccessScope.defaultsKey | | | | |
 | App/BookmarkStore.swift | AccessScope.prompt | | | | |
