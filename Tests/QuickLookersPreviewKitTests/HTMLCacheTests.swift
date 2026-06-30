@@ -52,6 +52,15 @@ final class HTMLCacheTests: XCTestCase {
         XCTAssertEqual(cache.lookup(key), "<html>hi</html>")
     }
 
+    func test_storeOverwritesExistingKey() throws {
+        let dir = try makeTempDir()
+        let cache = HTMLCache(directory: dir, maxBytes: 5 * 1024 * 1024)
+        let key = sampleKey()
+        cache.store(key, html: "<html>first</html>")
+        cache.store(key, html: "<html>second</html>")
+        XCTAssertEqual(cache.lookup(key), "<html>second</html>", "повторная запись по тому же ключу перезаписывает содержимое")
+    }
+
     func test_lookupMissOnEmptyDir() throws {
         let dir = try makeTempDir()
         let cache = HTMLCache(directory: dir, maxBytes: 5 * 1024 * 1024)

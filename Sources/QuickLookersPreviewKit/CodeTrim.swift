@@ -1,9 +1,14 @@
 import Foundation
 
 /// Режет код до первых `max` строк. `truncated` = true, если что-то отрезано.
-/// Пустой ввод → ("", false). Разделитель строк — `\n`.
+/// Пустой ввод → ("", false). Разделитель строк — `\n`. Один финальный `\n`
+/// (обычное завершение текстового файла) не считается отдельной лишней
+/// строкой — иначе файл ровно из `max` строк с финальным переводом строки
+/// ложно помечался бы как обрезанный.
 public func trimToFirstLines(_ code: String, max: Int) -> (code: String, truncated: Bool) {
-    let lines = code.split(separator: "\n", omittingEmptySubsequences: false)
+    var body = Substring(code)
+    if body.hasSuffix("\n") { body.removeLast() }
+    let lines = body.split(separator: "\n", omittingEmptySubsequences: false)
     if lines.count <= max {
         return (code, false)
     }

@@ -71,4 +71,29 @@ final class PreviewPageTests: XCTestCase {
         let html = previewPageHTML(highlighted: "x", fontFamily: nil, fontSize: 9999)
         XCTAssertFalse(html.contains("9999"))   // вне диапазона → размер не подставлен
     }
+
+    func test_sanitizesEmptyStringToNil() {
+        XCTAssertNil(sanitizedFontFamily(""))
+    }
+
+    func test_sanitizesWhitespaceOnlyToNil() {
+        XCTAssertNil(sanitizedFontFamily("   "))
+    }
+
+    func test_sanitizesNilStaysNil() {
+        XCTAssertNil(sanitizedFontFamily(nil))
+    }
+
+    func test_fullPagePreventsCSSInjectionViaFontFamily() {
+        // familyCSS вставляется в <style> БЕЗ окружающих кавычек, поэтому
+        // символы, которые могли бы закрыть правило/блок стиля или открыть
+        // новый тег, обязаны быть вырезаны до подстановки.
+        let malicious = #"x; } </style><script>alert(1)</script><style>body{background:url(javascript:alert(1))"#
+        let html = previewPageHTML(highlighted: "<pre class=\"shiki\"></pre>",
+                                   fontFamily: malicious, fontSize: 14)
+        XCTAssertFalse(html.contains("<script>"), "не должно быть выхода в новый тег")
+        XCTAssertEqual(html.components(separatedBy: "</style>").count, 2, "ровно один закрывающий </style>, инъекция не добавила второй")
+        XCTAssertFalse(html.contains("url("), "url() не должен пройти")
+        XCTAssertFalse(html.contains("javascript:"), "javascript: не должен пройти")
+    }
 }
