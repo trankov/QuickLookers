@@ -3,7 +3,8 @@ import QuickLookersSettingsKit
 import QuickLookersImportKit
 
 /// Слой 1 — библиотека: какие языки умеем красить (opt-out).
-/// Три зоны: поиск сверху, прокручиваемый список, кнопка импорта внизу.
+/// Три зоны: поиск сверху, прокручиваемый список (нативный grouped Form),
+/// кнопка импорта внизу.
 struct FormatsTab: View {
     @ObservedObject var model: SettingsModel
     @ObservedObject var importModel: ImportModel
@@ -26,13 +27,14 @@ struct FormatsTab: View {
                 .padding([.horizontal, .top])
                 .padding(.bottom, 8)
 
-            List {
+            // Form с grouped-стилем даёт нативные компактные переключатели (как
+            // на других вкладках) и сам прокручивается внутри своей области.
+            Form {
                 ForEach(filteredLanguages) { lang in
                     HStack {
                         Toggle(lang.displayName, isOn: Binding(
                             get: { model.isLanguageOn(lang.id) },
                             set: { model.setLanguageOn(lang.id, $0) }))
-                            .toggleStyle(.switch)
                         if model.importedIds.contains(lang.id) {
                             Button(role: .destructive) {
                                 importModel.remove(kind: .grammar, id: lang.id)
@@ -42,10 +44,12 @@ struct FormatsTab: View {
                                 Image(systemName: "minus.circle")
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("Удалить импортированный «\(lang.displayName)»")
                         }
                     }
                 }
             }
+            .formStyle(.grouped)
 
             Divider()
 

@@ -10,12 +10,12 @@ struct ContentView: View {
         // сверху. Предупреждение вешаем через safeAreaInset, не оборачивая
         // TabView в VStack (иначе панель схлопывается в overflow-шеврон «>>»).
         TabView {
-            FormatsTab(model: model, importModel: importModel)
-                .tabItem { Label("Форматы подсветки", systemImage: "paintbrush") }
             ThemesTab(model: model, importModel: importModel)
                 .tabItem { Label("Темы", systemImage: "circle.lefthalf.filled") }
+            FormatsTab(model: model, importModel: importModel)
+                .tabItem { Label("Форматы подсветки", systemImage: "paintbrush") }
             FileTypesTab(model: model)
-                .tabItem { Label("Сопоставление", systemImage: "doc.text") }
+                .tabItem { Label("Просмотр", systemImage: "eye") }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             if let warning = model.warning {
