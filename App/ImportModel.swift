@@ -50,7 +50,9 @@ final class ImportModel: ObservableObject {
         }
     }
 
-    private static func message(for error: ImportError) -> String {
+    /// internal (не private) — чтобы маппинг ошибок был напрямую покрыт unit-тестом
+    /// без необходимости гонять весь importFile() через реальный контейнер App Group.
+    static func message(for error: ImportError) -> String {
         switch error {
         case .notArchive:      return "Это не похоже на файл расширения .vsix."
         case .tooLarge:        return "Файл слишком большой или повреждён."

@@ -26,19 +26,31 @@ final class SettingsModel: ObservableObject {
     var fileTypeRows: [FileTypeRow] { Self.makeFileTypeRows(catalog: catalog) }
 
     private let store: SettingsStore?
+    /// Контейнер App Group, с которым работает эта модель — нужен, чтобы reloadCatalog()
+    /// перечитывал именно его (а не глобальный quickLookersContainerURL()): так
+    /// init(containerURL:) с временной директорией остаётся изолированным и в тестах.
+    private let containerURL: URL?
     /// Кэш подсветки живого превью (см. LivePreview): движок гоняем только при смене
     /// языка/темы, при смене шрифта — лишь пересобираем CSS-обёртку.
     let fragmentCache = FragmentCache()
 
-    init() {
-        let (loadedCatalog, loadedImportedIds) = Self.loadCatalog()
+    convenience init() {
+        self.init(containerURL: quickLookersContainerURL())
+    }
+
+    /// Инициализатор с явным контейнером — отдельная точка входа для тестов
+    /// (временная директория вместо реального App Group, чтобы не трогать
+    /// настоящие настройки пользователя).
+    init(containerURL: URL?) {
+        self.containerURL = containerURL
+        let (loadedCatalog, loadedImportedIds) = Self.loadCatalog(containerURL: containerURL)
         self.catalog = loadedCatalog
         self.importedIds = loadedImportedIds
 
         // Хранилище — в общем контейнере. Нет контейнера → окно работает,
         // но предупреждаем: подпись/entitlement не настроены.
-        if let container = quickLookersContainerURL() {
-            let store = SettingsStore(fileURL: container.appendingPathComponent("settings.json"))
+        if let containerURL {
+            let store = SettingsStore(fileURL: containerURL.appendingPathComponent("settings.json"))
             self.store = store
             self.settings = store.load()
             self.warning = nil
@@ -52,7 +64,7 @@ final class SettingsModel: ObservableObject {
     /// Перезагружает каталог (встроенный + импортированный) и обновляет производные.
     /// Вызывается после импорта .vsix или удаления импортированного элемента.
     func reloadCatalog() {
-        let (newCatalog, newImportedIds) = Self.loadCatalog()
+        let (newCatalog, newImportedIds) = Self.loadCatalog(containerURL: containerURL)
         catalog = newCatalog
         importedIds = newImportedIds
         fragmentCache.invalidate()   // после импорта тема под тем же id могла смениться
@@ -62,11 +74,11 @@ final class SettingsModel: ObservableObject {
 
     /// Загрузка каталога: встроенный сайдкар + импортированный из контейнера.
     /// Возвращает каталог и множество id из импортированного сайдкара.
-    private static func loadCatalog() -> (Catalog, Set<String>) {
+    private static func loadCatalog(containerURL: URL?) -> (Catalog, Set<String>) {
         var sidecars = QuickLookersEngineResources.catalogSidecarURLs()
         var importedIds: Set<String> = []
 
-        if let container = quickLookersContainerURL() {
+        if let container = containerURL {
             let lib = ImportedLibrary(containerURL: container)
             let importedSidecars = lib.sidecarURLsForCatalog()
             importedIds = lib.importedIds()

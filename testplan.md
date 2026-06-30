@@ -63,39 +63,39 @@
 | Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCache.evictIfNeeded() | | | | |
 | Sources/QuickLookersPreviewKit/PreviewPage.swift | sanitizedFontFamily(_:) | | | | |
 | Sources/QuickLookersPreviewKit/PreviewPage.swift | previewPageHTML(highlighted:fontFamily:fontSize:truncatedNotice:) | | | | |
-| App/BookmarkStore.swift | AccessScope.url | | | | |
-| App/BookmarkStore.swift | AccessScope.defaultsKey | | | | |
-| App/BookmarkStore.swift | AccessScope.prompt | | | | |
+| App/BookmarkStore.swift | AccessScope.url | | | 🟢 | |
+| App/BookmarkStore.swift | AccessScope.defaultsKey | | | 🟢 | |
+| App/BookmarkStore.swift | AccessScope.prompt | | | 🟢 | |
 | App/BookmarkStore.swift | BookmarkStore.accessURL(for:) | | | | |
 | App/BookmarkStore.swift | BookmarkStore.withAccess(_:_:) | | | | |
 | App/BookmarkStore.swift | BookmarkStore.resolveBookmark(_:) | | | | |
 | App/BookmarkStore.swift | BookmarkStore.requestAccess(_:) | | | | |
 | App/CodePreviewView.swift | CodePreviewView.updateNSView(_:context:) | | | | |
 | App/FontPanelController.swift | FontPanelController.present(current:onChange:) | | | | |
-| App/FontPanelController.swift | FontPanelController.changeFont(_:) | | | | |
-| App/FontPanelController.swift | FontPanelController.validModesForFontPanel(_:) | | | | |
+| App/FontPanelController.swift | FontPanelController.changeFont(_:) | 🟢 | | 🟢 | |
+| App/FontPanelController.swift | FontPanelController.validModesForFontPanel(_:) | | | 🟢 | |
 | App/FormatsTab.swift | FormatsTab.filteredLanguages | | | | |
 | App/ImportModel.swift | ImportModel.runImport() | | | | |
 | App/ImportModel.swift | ImportModel.importFile(_:) | | | | |
-| App/ImportModel.swift | ImportModel.message(for:) | | | | |
+| App/ImportModel.swift | ImportModel.message(for:) | 🟢 | | 🟢 | |
 | App/ImportModel.swift | ImportModel.remove(kind:id:) | | | | |
 | App/ImportModel.swift | ImportModel.scanEditors(_:) | | | | |
 | App/ImportModel.swift | ImportModel.importFromEditor(_:store:catalog:) | | | | |
-| App/LivePreview.swift | FragmentCache.fragment(forKey:make:) | | | | |
-| App/LivePreview.swift | FragmentCache.invalidate() | | | | |
-| App/LivePreview.swift | SettingsModel.previewHTML(languageId:code:) | | | | |
-| App/LivePreview.swift | MonospaceFonts.families | | | | |
-| App/SettingsModel.swift | SettingsModel.init() | | | | |
-| App/SettingsModel.swift | SettingsModel.reloadCatalog() | | | | |
-| App/SettingsModel.swift | SettingsModel.loadCatalog() | | | | |
-| App/SettingsModel.swift | SettingsModel.makeFileTypeRows(catalog:) | | | | |
-| App/SettingsModel.swift | SettingsModel.update(_:) | | | | |
-| App/SettingsModel.swift | SettingsModel.isLanguageOn(_:) | | | | |
-| App/SettingsModel.swift | SettingsModel.isPreviewOn(_:) | | | | |
-| App/SettingsModel.swift | SettingsModel.setLanguageOn(_:_:) | | | | |
-| App/SettingsModel.swift | SettingsModel.setPreviewOn(_:_:) | | | | |
-| App/SettingsModel.swift | SettingsModel.CatalogLookup.themeId(forDisplayName:) | | | | |
-| App/SettingsModel.swift | SettingsModel.applyEditorResult(themeId:font:) | | | | |
+| App/LivePreview.swift | FragmentCache.fragment(forKey:make:) | 🟢 | | 🟢 | |
+| App/LivePreview.swift | FragmentCache.invalidate() | 🟢 | | 🟢 | |
+| App/LivePreview.swift | SettingsModel.previewHTML(languageId:code:) | | | | 🟢 |
+| App/LivePreview.swift | MonospaceFonts.families | | | 🟢 | |
+| App/SettingsModel.swift | SettingsModel.init() | 🟢 | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.reloadCatalog() | | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.loadCatalog() | | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.makeFileTypeRows(catalog:) | | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.update(_:) | | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.isLanguageOn(_:) | | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.isPreviewOn(_:) | | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.setLanguageOn(_:_:) | | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.setPreviewOn(_:_:) | | | | 🟢 |
+| App/SettingsModel.swift | SettingsModel.CatalogLookup.themeId(forDisplayName:) | 🟢 | | 🟢 | |
+| App/SettingsModel.swift | SettingsModel.applyEditorResult(themeId:font:) | 🟢 | | | 🟢 |
 | App/ThemesTab.swift | ThemesTab.selectEditor(_:) | | | | |
 | PreviewExtension/PreviewViewController.swift | PreviewViewController.makeWebView() | | | | |
 | PreviewExtension/PreviewViewController.swift | PreviewViewController.acquireWebView() | | | | |
