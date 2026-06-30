@@ -26,6 +26,9 @@ final class SettingsModel: ObservableObject {
     var fileTypeRows: [FileTypeRow] { Self.makeFileTypeRows(catalog: catalog) }
 
     private let store: SettingsStore?
+    /// Кэш подсветки живого превью (см. LivePreview): движок гоняем только при смене
+    /// языка/темы, при смене шрифта — лишь пересобираем CSS-обёртку.
+    let fragmentCache = FragmentCache()
 
     init() {
         let (loadedCatalog, loadedImportedIds) = Self.loadCatalog()
@@ -52,6 +55,7 @@ final class SettingsModel: ObservableObject {
         let (newCatalog, newImportedIds) = Self.loadCatalog()
         catalog = newCatalog
         importedIds = newImportedIds
+        fragmentCache.invalidate()   // после импорта тема под тем же id могла смениться
     }
 
     // MARK: - Private helpers

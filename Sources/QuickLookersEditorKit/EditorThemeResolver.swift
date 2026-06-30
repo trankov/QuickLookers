@@ -23,17 +23,15 @@ public enum EditorThemeResolver {
                   includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else { return .notFound }
         for ext in exts {
             let pkg = ext.appendingPathComponent("package.json")
+            // Разбор contributes.themes переиспользуем из VsixManifest (та же форма,
+            // тот же дефолт uiTheme = vs-dark); package.json бывает JSONC → нормализуем.
             guard let data = try? Data(contentsOf: pkg),
-                  let obj = try? JSONCParser.object(from: data) as? [String: Any],
-                  let contributes = obj["contributes"] as? [String: Any],
-                  let themes = contributes["themes"] as? [[String: Any]] else { continue }
-            for t in themes {
-                guard (t["label"] as? String) == label, let path = t["path"] as? String else { continue }
-                let rel = path.hasPrefix("./") ? String(path.dropFirst(2)) : path
-                let uiTheme = t["uiTheme"] as? String ?? "vs-dark"
-                return .custom(label: label, uiTheme: uiTheme,
-                               fileURL: ext.appendingPathComponent(rel))
-            }
+                  let strict = try? JSONCParser.toStrictJSON(data),
+                  let manifest = try? VsixManifest.parse(packageJSON: strict),
+                  let theme = manifest.themes.first(where: { $0.label == label }) else { continue }
+            let rel = theme.path.hasPrefix("./") ? String(theme.path.dropFirst(2)) : theme.path
+            return .custom(label: label, uiTheme: theme.uiTheme,
+                           fileURL: ext.appendingPathComponent(rel))
         }
         return .notFound
     }

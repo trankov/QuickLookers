@@ -23,10 +23,10 @@ public enum EditorSettingsReader {
               let data = try? Data(contentsOf: url),
               let obj = try? JSONCParser.object(from: data) as? [String: Any]
         else { return EditorPreferences(colorThemeLabel: nil, fontFamily: nil, fontSize: nil) }
-        let size = (obj["editor.fontSize"] as? Double) ?? (obj["editor.fontSize"] as? Int).map(Double.init)
+        // JSONSerialization отдаёт числа как NSNumber → as? Double ловит и целые (13 → 13.0).
         return EditorPreferences(
             colorThemeLabel: obj["workbench.colorTheme"] as? String,
             fontFamily: obj["editor.fontFamily"] as? String,
-            fontSize: size)
+            fontSize: obj["editor.fontSize"] as? Double)
     }
 }

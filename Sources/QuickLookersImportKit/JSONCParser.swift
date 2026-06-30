@@ -88,7 +88,7 @@ public enum JSONCParser {
             if c == "," {
                 // Заглянуть вперёд: если следующий значимый символ — } или ], запятую выбросить.
                 var j = i + 1
-                while j < chars.count, chars[j] == " " || chars[j] == "\n" || chars[j] == "\t" || chars[j] == "\r" { j += 1 }
+                while j < chars.count, chars[j].isWhitespace { j += 1 }
                 if j < chars.count, chars[j] == "}" || chars[j] == "]" { i += 1; continue }
             }
             out.append(c); i += 1

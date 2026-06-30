@@ -9,6 +9,14 @@ public struct FontSettings: Codable, Equatable {
     public var family: String?
     public var size: Double?
     public init(family: String?, size: Double?) { self.family = family; self.size = size }
+
+    /// Единый допустимый диапазон размера — для контролов UI и зажима импортируемых значений.
+    public static let sizeRange: ClosedRange<Double> = 6...48
+
+    /// Зажимает размер в допустимый диапазон (nil остаётся nil).
+    public static func clampSize(_ size: Double?) -> Double? {
+        size.map { min(max($0, sizeRange.lowerBound), sizeRange.upperBound) }
+    }
 }
 
 /// Настройки менеджера. Модель opt-out: храним выключенное, пусто = всё включено.

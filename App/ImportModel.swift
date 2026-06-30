@@ -88,7 +88,8 @@ final class ImportModel: ObservableObject {
         return store.withAccess(.home) { home in
             let appSupport = home.appendingPathComponent("Library/Application Support")
             let prefs = EditorSettingsReader.read(editor: editor, appSupportDir: appSupport)
-            let font = FontSettings(family: prefs.fontFamily, size: prefs.fontSize)
+            // Размер из редактора зажимаем в допустимый диапазон сразу на входе в модель.
+            let font = FontSettings(family: prefs.fontFamily, size: FontSettings.clampSize(prefs.fontSize))
             guard let label = prefs.colorThemeLabel else {
                 return EditorImportOutcome(themeId: nil, font: font,
                                            message: "У редактора не задана тема — применён только шрифт.")

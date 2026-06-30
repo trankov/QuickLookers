@@ -18,6 +18,8 @@ public func previewPageHTML(highlighted: String, fontFamily: String? = nil, font
                             truncatedNotice: String? = nil) -> String {
     let family = sanitizedFontFamily(fontFamily)
     let familyCSS = family.map { "\($0), ui-monospace, monospace" } ?? "ui-monospace, \"SF Mono\", Menlo, monospace"
+    // Граничный guard на стороне CSS (defense-in-depth): значение приходит примитивом,
+    // канонический диапазон живёт на FontSettings.sizeRange (входной зажим — там).
     let size = (fontSize.flatMap { (6...48).contains(Int($0)) ? Int($0) : nil }) ?? 12
 
     let notice = truncatedNotice.map { #"<div class="ql-truncated">\#($0)</div>"# } ?? ""

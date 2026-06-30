@@ -48,7 +48,7 @@ struct ThemesTab: View {
                 Text("Размер:")
                 Stepper(value: Binding(
                     get: { model.settings.font.size ?? 12 },
-                    set: { v in model.update { $0.font.size = v } }), in: 6...48) {
+                    set: { v in model.update { $0.font.size = v } }), in: FontSettings.sizeRange) {
                     Text("\(Int(model.settings.font.size ?? 12))")
                 }
             }
