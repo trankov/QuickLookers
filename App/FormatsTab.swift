@@ -36,10 +36,10 @@ struct FormatsTab: View {
                             get: { model.isLanguageOn(lang.id) },
                             set: { model.setLanguageOn(lang.id, $0) }))
                         // В List тогл по умолчанию — чекбокс; принудительно швыряем
-                        // на переключатель и задаём компактный размер (как в grouped-Form,
-                        // иначе переключатель выходит крупной «нашлёпкой»).
+                        // на переключатель и задаём минимальный размер (иначе
+                        // переключатель выходит крупной «нашлёпкой»).
                         .toggleStyle(.switch)
-                        .controlSize(.small)
+                        .controlSize(.mini)
                         if model.importedIds.contains(lang.id) {
                             Button(role: .destructive) {
                                 importModel.remove(kind: .grammar, id: lang.id)
@@ -58,7 +58,7 @@ struct FormatsTab: View {
             Divider()
 
             HStack(spacing: 12) {
-                Button("Импортировать…") {
+                Button("Импортировать .vsix…") {
                     if let outcome = importModel.runImport() {
                         if outcome.didChange { model.reloadCatalog(); errorText = nil }
                         else { errorText = outcome.errorText }

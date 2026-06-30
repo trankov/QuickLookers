@@ -18,10 +18,10 @@ struct FileTypesTab: View {
                             Text(row.extensions).font(.caption).foregroundStyle(.secondary)
                         }
                     }
-                    // В List тогл по умолчанию — чекбокс; возвращаем компактный
+                    // В List тогл по умолчанию — чекбокс; возвращаем минимальный
                     // переключатель (иначе он крупная «нашлёпка»).
                     .toggleStyle(.switch)
-                    .controlSize(.small)
+                    .controlSize(.mini)
                     .disabled(!model.isLanguageOn(row.id)) // выключенный на вкладке 1 язык неактивен
                 }
             }

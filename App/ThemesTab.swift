@@ -95,7 +95,7 @@ struct ThemesTab: View {
             .frame(width: 200)
 
             // Системная панель «Шрифты» — для всего за пределами списка моноширинных.
-            Button("Системная панель…") {
+            Button("Другие…") {
                 let size = model.settings.font.size ?? 12
                 let current = model.settings.font.family.flatMap { NSFont(name: $0, size: size) }
                     ?? NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
