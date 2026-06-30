@@ -20,4 +20,9 @@ final class ProviderTests: XCTestCase {
         let provider = BundledThemeProvider(directory: try resourceDir("themes"))
         XCTAssertThrowsError(try provider.themeJSON(themeId: "does-not-exist"))
     }
+
+    func test_grammarProvider_missingLanguageThrows() throws {
+        let provider = BundledGrammarProvider(directory: try resourceDir("grammars"))
+        XCTAssertThrowsError(try provider.grammarJSON(languageId: "does-not-exist"))
+    }
 }
