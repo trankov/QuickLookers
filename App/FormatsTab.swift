@@ -36,8 +36,10 @@ struct FormatsTab: View {
                             get: { model.isLanguageOn(lang.id) },
                             set: { model.setLanguageOn(lang.id, $0) }))
                         // В List тогл по умолчанию — чекбокс; принудительно швыряем
-                        // на переключатель (как было в grouped-Form).
+                        // на переключатель и задаём компактный размер (как в grouped-Form,
+                        // иначе переключатель выходит крупной «нашлёпкой»).
                         .toggleStyle(.switch)
+                        .controlSize(.small)
                         if model.importedIds.contains(lang.id) {
                             Button(role: .destructive) {
                                 importModel.remove(kind: .grammar, id: lang.id)
