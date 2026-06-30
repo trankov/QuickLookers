@@ -31,9 +31,21 @@ final class ImportModel: ObservableObject {
             let n = result.artifacts.count, m = result.skips.count
             summary = m == 0 ? "Импортировано: \(n)." : "Импортировано: \(n), пропущено: \(m)."
             return true
-        } catch {
-            summary = "Не удалось импортировать: \(error)"
+        } catch let e as ImportError {
+            summary = Self.message(for: e)
             return false
+        } catch {
+            summary = "Не удалось прочитать файл."
+            return false
+        }
+    }
+
+    private static func message(for error: ImportError) -> String {
+        switch error {
+        case .notArchive:      return "Это не похоже на файл расширения .vsix."
+        case .tooLarge:        return "Файл слишком большой или повреждён."
+        case .noManifest:      return "В расширении не найден package.json."
+        case .noContributions: return "В расширении нет тем и грамматик для импорта."
         }
     }
 

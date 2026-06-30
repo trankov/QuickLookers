@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 public struct NormalizedTheme: Equatable {
@@ -8,12 +9,12 @@ public struct NormalizedTheme: Equatable {
 }
 
 public enum ThemeNormalizer {
-    /// id из label: нижний регистр, недопустимые символы → '-', схлопывание и обрезка дефисов.
+    /// id из label: нижний регистр, только ASCII-буквы/цифры, остальное → '-', схлопывание и обрезка дефисов.
     public static func slug(_ label: String) -> String {
         let lowered = label.lowercased()
         var out = ""
         for ch in lowered {
-            if ch.isLetter || ch.isNumber { out.append(ch) }
+            if ch.isASCII && (ch.isLetter || ch.isNumber) { out.append(ch) }
             else if !out.hasSuffix("-") { out.append("-") }
         }
         return out.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
@@ -27,9 +28,18 @@ public enum ThemeNormalizer {
     public static func normalize(label: String, uiTheme: String, themeJSON: Data,
                                  existingSlugs: Set<String>) -> NormalizedTheme {
         let base = slug(label)
-        var id = base
+        // Название целиком из не-ASCII/пунктуации → слаг пуст. Даём стабильный
+        // ASCII-id из хэша названия, чтобы тема импортировалась, а не пропадала.
+        let safeBase = base.isEmpty ? "theme-" + Self.shortHash(label) : base
+        var id = safeBase
         var n = 2
-        while existingSlugs.contains(id) { id = "\(base)-\(n)"; n += 1 }
+        while existingSlugs.contains(id) { id = "\(safeBase)-\(n)"; n += 1 }
         return NormalizedTheme(id: id, displayName: label, isDark: isDark(uiTheme: uiTheme), json: themeJSON)
+    }
+
+    /// Короткий стабильный ASCII-хэш строки (8 hex) для запасного id.
+    private static func shortHash(_ s: String) -> String {
+        let digest = SHA256.hash(data: Data(s.utf8))
+        return digest.prefix(4).map { String(format: "%02x", $0) }.joined()
     }
 }

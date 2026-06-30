@@ -1,6 +1,6 @@
 import Foundation
 
-public enum ImportError: Error { case notArchive, noManifest, noContributions }
+public enum ImportError: Error { case notArchive, noManifest, noContributions, tooLarge }
 
 /// Оркестрация импорта: .vsix → артефакты (темы/грамматики) + пропуски с причинами.
 public struct VsixImporter {
@@ -11,6 +11,7 @@ public struct VsixImporter {
     public func callAsFunction(vsixData: Data) throws -> ImportResult {
         let names: [String]
         do { names = try reader.entryNames(in: vsixData) }
+        catch ZipError.tooManyEntries, ZipError.entryTooLarge { throw ImportError.tooLarge }
         catch { throw ImportError.notArchive }
         guard names.contains("extension/package.json") else { throw ImportError.noManifest }
         // Сырой ZipError (повреждённая/нечитаемая запись) трактуем как noManifest —
