@@ -20,19 +20,19 @@
 | Sources/QuickLookersEngine/Providers.swift | CompositeGrammarProvider.grammarJSON(languageId:) | | | | |
 | Sources/QuickLookersEngine/Providers.swift | CompositeThemeProvider.themeJSON(themeId:) | | | | |
 | Sources/QuickLookersEngine/ShikiEngine.swift | ShikiEngine.highlightToHTML(_:) | | | | |
-| Sources/QuickLookersImportKit/GrammarNormalizer.swift | GrammarNormalizer.toJSON(_:path:) | | | | |
-| Sources/QuickLookersImportKit/GrammarNormalizer.swift | GrammarNormalizer.normalize(languageId:grammarJSON:embeddedLanguageIds:siblingGrammars:) | | | | |
-| Sources/QuickLookersImportKit/ImportID.swift | isSafeImportID(_:) | | | | |
-| Sources/QuickLookersImportKit/JSONCParser.swift | JSONCParser.object(from:) | | | | |
-| Sources/QuickLookersImportKit/JSONCParser.swift | JSONCParser.toStrictJSON(_:) | | | | |
-| Sources/QuickLookersImportKit/ThemeFileLoader.swift | ThemeFileLoader.loadStrictThemeJSON(data:fileExtension:uiTheme:) | | | | |
-| Sources/QuickLookersImportKit/ThemeNormalizer.swift | ThemeNormalizer.slug(_:) | | | | |
-| Sources/QuickLookersImportKit/ThemeNormalizer.swift | ThemeNormalizer.isDark(uiTheme:) | | | | |
-| Sources/QuickLookersImportKit/ThemeNormalizer.swift | ThemeNormalizer.normalize(label:uiTheme:themeJSON:existingSlugs:) | | | | |
-| Sources/QuickLookersImportKit/VsixImporter.swift | VsixImporter.callAsFunction(vsixData:) | | | | |
-| Sources/QuickLookersImportKit/VsixManifest.swift | VsixManifest.parse(packageJSON:) | | | | |
-| Sources/QuickLookersImportKit/ZipReader.swift | ZipReader.entryNames(in:) | | | | |
-| Sources/QuickLookersImportKit/ZipReader.swift | ZipReader.entry(_:in:) | | | | |
+| Sources/QuickLookersImportKit/GrammarNormalizer.swift | GrammarNormalizer.toJSON(_:path:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/GrammarNormalizer.swift | GrammarNormalizer.normalize(languageId:grammarJSON:embeddedLanguageIds:siblingGrammars:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/ImportID.swift | isSafeImportID(_:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/JSONCParser.swift | JSONCParser.object(from:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersImportKit/JSONCParser.swift | JSONCParser.toStrictJSON(_:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/ThemeFileLoader.swift | ThemeFileLoader.loadStrictThemeJSON(data:fileExtension:uiTheme:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersImportKit/ThemeNormalizer.swift | ThemeNormalizer.slug(_:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/ThemeNormalizer.swift | ThemeNormalizer.isDark(uiTheme:) | | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/ThemeNormalizer.swift | ThemeNormalizer.normalize(label:uiTheme:themeJSON:existingSlugs:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/VsixImporter.swift | VsixImporter.callAsFunction(vsixData:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/VsixManifest.swift | VsixManifest.parse(packageJSON:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/ZipReader.swift | ZipReader.entryNames(in:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersImportKit/ZipReader.swift | ZipReader.entry(_:in:) | 🟢 | | 🟢 | 🟢 |
 | Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.loadCatalog() | | | | |
 | Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.catalogFromSidecars() | | | | |
 | Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.catalogFromDirectories() | | | | |

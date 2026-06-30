@@ -47,4 +47,27 @@ final class ZipReaderTests: XCTestCase {
             XCTAssertEqual(e as? ZipError, .tooManyEntries)
         }
     }
+
+    func test_duplicateEntryNamesDoNotCrash() throws {
+        // Недоверенный .vsix может содержать два разных файла под одним именем
+        // (zip это допускает) — ZipReader не должен падать на такой неоднозначности.
+        let data = try fixture("duplicate-entry-names.vsix")
+        let names = try ZipReader().entryNames(in: data)
+        XCTAssertEqual(names.filter { $0 == "extension/theme/dup.json" }.count, 2)
+        // entry(_:) детерминированно отдаёт первое совпадение по порядку в архиве,
+        // не падает и не виснет на неоднозначном имени.
+        let picked = try XCTUnwrap(try ZipReader().entry("extension/theme/dup.json", in: data))
+        let obj = try JSONSerialization.jsonObject(with: picked) as? [String: Any]
+        XCTAssertEqual(obj?["name"] as? String, "first")
+    }
+
+    func test_truncatedArchiveDoesNotCrash() throws {
+        // Архив, обрубленный на середине — типичный результат битой/неполной
+        // закачки .vsix. Сама проверка — что процесс не падает и не виснет;
+        // допустимо как бросить ZipError, так и вернуть частичный список записей,
+        // поэтому здесь нет assert на конкретный исход, только что вызов завершается.
+        let full = try fixture("grammar-json.vsix")
+        let truncated = Data(full.prefix(full.count / 2))
+        _ = try? ZipReader().entryNames(in: truncated)
+    }
 }
