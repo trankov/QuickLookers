@@ -6,20 +6,20 @@
 
 | Файл | Тестируемый объект | edge | end2end | unit | integration |
 |---|---|---|---|---|---|
-| Sources/QuickLookersEngine/EngineFactory.swift | QuickLookersEngineFactory.makeDefault(importedGrammarsDir:importedThemesDir:) | | | | |
-| Sources/QuickLookersEngine/EngineResources.swift | QuickLookersEngineResources.grammarsDirectory() | | | | |
-| Sources/QuickLookersEngine/EngineResources.swift | QuickLookersEngineResources.themesDirectory() | | | | |
-| Sources/QuickLookersEngine/EngineResources.swift | QuickLookersEngineResources.catalogSidecarURLs() | | | | |
-| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.init(bundleScript:) | | | | |
-| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.loadBundledScript() | | | | |
-| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.registerLanguage(json:) | | | | |
-| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.registerTheme(json:) | | | | |
-| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.highlight(code:language:theme:) | | | | |
-| Sources/QuickLookersEngine/Providers.swift | BundledGrammarProvider.grammarJSON(languageId:) | | | | |
-| Sources/QuickLookersEngine/Providers.swift | BundledThemeProvider.themeJSON(themeId:) | | | | |
-| Sources/QuickLookersEngine/Providers.swift | CompositeGrammarProvider.grammarJSON(languageId:) | | | | |
-| Sources/QuickLookersEngine/Providers.swift | CompositeThemeProvider.themeJSON(themeId:) | | | | |
-| Sources/QuickLookersEngine/ShikiEngine.swift | ShikiEngine.highlightToHTML(_:) | | | | |
+| Sources/QuickLookersEngine/EngineFactory.swift | QuickLookersEngineFactory.makeDefault(importedGrammarsDir:importedThemesDir:) | | | 🟢 | 🟢 |
+| Sources/QuickLookersEngine/EngineResources.swift | QuickLookersEngineResources.grammarsDirectory() | | | 🟢 | |
+| Sources/QuickLookersEngine/EngineResources.swift | QuickLookersEngineResources.themesDirectory() | | | 🟢 | |
+| Sources/QuickLookersEngine/EngineResources.swift | QuickLookersEngineResources.catalogSidecarURLs() | | | 🟢 | |
+| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.init(bundleScript:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.loadBundledScript() | | | 🟢 | |
+| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.registerLanguage(json:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.registerTheme(json:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersEngine/JSCoreRuntime.swift | JSCoreRuntime.highlight(code:language:theme:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersEngine/Providers.swift | BundledGrammarProvider.grammarJSON(languageId:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersEngine/Providers.swift | BundledThemeProvider.themeJSON(themeId:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersEngine/Providers.swift | CompositeGrammarProvider.grammarJSON(languageId:) | | | 🟢 | 🟢 |
+| Sources/QuickLookersEngine/Providers.swift | CompositeThemeProvider.themeJSON(themeId:) | | | 🟢 | 🟢 |
+| Sources/QuickLookersEngine/ShikiEngine.swift | ShikiEngine.highlightToHTML(_:) | 🟢 | | 🟢 | 🟢 |
 | Sources/QuickLookersImportKit/GrammarNormalizer.swift | GrammarNormalizer.toJSON(_:path:) | | | | |
 | Sources/QuickLookersImportKit/GrammarNormalizer.swift | GrammarNormalizer.normalize(languageId:grammarJSON:embeddedLanguageIds:siblingGrammars:) | | | | |
 | Sources/QuickLookersImportKit/ImportID.swift | isSafeImportID(_:) | | | | |
