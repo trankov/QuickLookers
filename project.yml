@@ -55,6 +55,10 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.files.user-selected.read-only: true
+        # Security-scoped закладки на ~ и /Applications живут между запусками
+        # (импорт темы и шрифта из установленного редактора). Без этого грант
+        # powerbox действует только до выхода из приложения.
+        com.apple.security.files.bookmarks.app-scope: true
         # Префикс Team ID (5FVC5YT2B5), а не «group.». macOS сверяет префикс с
         # подписью кода → доступ к контейнеру группы без профиля и без запроса
         # «доступ к данным других приложений». «group.»-идентификатор на
@@ -69,6 +73,10 @@ targets:
         product: QuickLookersSettingsKit
       - package: QuickLookersEngine
         product: QuickLookersImportKit
+      - package: QuickLookersEngine
+        product: QuickLookersEditorKit
+      - package: QuickLookersEngine
+        product: QuickLookersPreviewKit
 
   QuickLookersPreview:
     type: app-extension
