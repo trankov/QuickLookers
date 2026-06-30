@@ -1,0 +1,6 @@
+{
+  // настройки демо-редактора для интеграционного теста конвейера
+  "workbench.colorTheme": "Pipeline Theme",
+  "editor.fontFamily": "Menlo, monospace",
+  "editor.fontSize": 12,
+}

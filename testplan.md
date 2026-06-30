@@ -52,9 +52,9 @@
 | Sources/QuickLookersSettingsKit/SettingsStore.swift | SettingsStore.save(_:) | 🟢 | | 🟢 | 🟢 |
 | Sources/QuickLookersSettingsKit/SettingsStore.swift | resolvedThemeId(activeThemeId:availableThemeIds:) | 🟢 | | 🟢 | |
 | Sources/QuickLookersSettingsKit/SettingsStore.swift | quickLookersContainerURL() | 🟡 | | 🟢 | |
-| Sources/QuickLookersEditorKit/EditorScanner.swift | EditorScanner.scan(applicationsDir:) | | | | |
-| Sources/QuickLookersEditorKit/EditorSettingsReader.swift | EditorSettingsReader.read(editor:appSupportDir:) | | | | |
-| Sources/QuickLookersEditorKit/EditorThemeResolver.swift | EditorThemeResolver.resolve(label:catalog:extensionsDir:) | | | | |
+| Sources/QuickLookersEditorKit/EditorScanner.swift | EditorScanner.scan(applicationsDir:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersEditorKit/EditorSettingsReader.swift | EditorSettingsReader.read(editor:appSupportDir:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersEditorKit/EditorThemeResolver.swift | EditorThemeResolver.resolve(label:catalog:extensionsDir:) | 🟢 | | 🟢 | 🟢 |
 | Sources/QuickLookersPreviewKit/CodeTrim.swift | trimToFirstLines(_:max:) | | | | |
 | Sources/QuickLookersPreviewKit/CodeTrim.swift | readBoundedPrefix(of:maxBytes:) | | | | |
 | Sources/QuickLookersPreviewKit/HTMLCache.swift | HTMLCacheKey.init(path:mtime:size:languageId:themeId:fontFamily:fontSize:maxLines:bundleVersion:) | | | | |
