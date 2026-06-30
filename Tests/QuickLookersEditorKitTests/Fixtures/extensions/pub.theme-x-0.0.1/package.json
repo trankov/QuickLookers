@@ -1,0 +1,7 @@
+{
+  "contributes": {
+    "themes": [
+      { "label": "Cool Dark", "uiTheme": "vs-dark", "path": "./themes/cool.json" }
+    ]
+  }
+}
