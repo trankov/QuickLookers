@@ -1,0 +1,7 @@
+{
+  "contributes": {
+    "themes": [
+      { "label": "Pipeline Theme", "uiTheme": "vs-dark", "path": "./themes/pipeline.json" }
+    ]
+  }
+}

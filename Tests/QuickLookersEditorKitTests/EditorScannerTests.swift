@@ -15,4 +15,16 @@ final class EditorScannerTests: XCTestCase {
         XCTAssertEqual(cursor?.dataFolderName, ".cursor")
         XCTAssertEqual(cursor?.nameLong, "Cursor")
     }
+    func testEmptyDirectoryYieldsNoEditors() {
+        let empty = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ql-empty-apps-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: empty, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: empty) }
+        XCTAssertEqual(EditorScanner.scan(applicationsDir: empty), [])
+    }
+    func testUnreadableDirectoryYieldsNoEditorsInsteadOfCrashing() {
+        let missing = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ql-does-not-exist-\(UUID().uuidString)")
+        XCTAssertEqual(EditorScanner.scan(applicationsDir: missing), [])
+    }
 }
