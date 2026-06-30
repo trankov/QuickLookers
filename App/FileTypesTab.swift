@@ -18,6 +18,8 @@ struct FileTypesTab: View {
                             Text(row.extensions).font(.caption).foregroundStyle(.secondary)
                         }
                     }
+                    // В List тогл по умолчанию — чекбокс; возвращаем переключатель.
+                    .toggleStyle(.switch)
                     .disabled(!model.isLanguageOn(row.id)) // выключенный на вкладке 1 язык неактивен
                 }
             }

@@ -35,6 +35,9 @@ struct FormatsTab: View {
                         Toggle(lang.displayName, isOn: Binding(
                             get: { model.isLanguageOn(lang.id) },
                             set: { model.setLanguageOn(lang.id, $0) }))
+                        // В List тогл по умолчанию — чекбокс; принудительно швыряем
+                        // на переключатель (как было в grouped-Form).
+                        .toggleStyle(.switch)
                         if model.importedIds.contains(lang.id) {
                             Button(role: .destructive) {
                                 importModel.remove(kind: .grammar, id: lang.id)
