@@ -47,18 +47,12 @@ final class SettingsStoreTests: XCTestCase {
     }
 
     func testResolvedThemePresentIdUsedAsIs() {
-        let t = ThemeSelection(followSystem: true, lightThemeId: "light-plus",
-                               darkThemeId: "dark-plus", fixedThemeId: "dark-plus")
-        let id = resolvedThemeId(t, availableThemeIds: ["light-plus", "dark-plus"], appearanceIsDark: true)
-        XCTAssertEqual(id, "dark-plus")
+        let id = resolvedThemeId(activeThemeId: "github-dark", availableThemeIds: ["github-dark", "dark-plus"])
+        XCTAssertEqual(id, "github-dark")
     }
 
-    func testResolvedThemeMissingIdFallsBackByAppearance() {
-        let t = ThemeSelection(followSystem: false, lightThemeId: "light-plus",
-                               darkThemeId: "dark-plus", fixedThemeId: "monokai") // нет в каталоге
-        let dark = resolvedThemeId(t, availableThemeIds: ["light-plus", "dark-plus"], appearanceIsDark: true)
-        let light = resolvedThemeId(t, availableThemeIds: ["light-plus", "dark-plus"], appearanceIsDark: false)
-        XCTAssertEqual(dark, "dark-plus")
-        XCTAssertEqual(light, "light-plus")
+    func testResolvedThemeMissingIdFallsBackToDark() {
+        let id = resolvedThemeId(activeThemeId: "monokai", availableThemeIds: ["light-plus", "dark-plus"])
+        XCTAssertEqual(id, DefaultThemeIds.dark)
     }
 }

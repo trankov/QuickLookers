@@ -29,13 +29,9 @@ public struct SettingsStore {
     }
 }
 
-/// Кандидат темы с откатом, если выбранного id нет в каталоге.
-public func resolvedThemeId(_ theme: ThemeSelection,
-                            availableThemeIds: Set<String>,
-                            appearanceIsDark: Bool) -> String {
-    let candidate = theme.resolvedThemeId(appearanceIsDark: appearanceIsDark)
-    if availableThemeIds.contains(candidate) { return candidate }
-    return appearanceIsDark ? DefaultThemeIds.dark : DefaultThemeIds.light
+/// id темы с откатом на тёмную по умолчанию, если выбранного нет в каталоге.
+public func resolvedThemeId(activeThemeId: String, availableThemeIds: Set<String>) -> String {
+    availableThemeIds.contains(activeThemeId) ? activeThemeId : DefaultThemeIds.dark
 }
 
 /// Идентификатор общего контейнера App Group. Префикс — Team ID (5FVC5YT2B5),
