@@ -55,6 +55,12 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.files.user-selected.read-only: true
+        # Приложение тоже показывает WKWebView (живое превью темы во вкладке «Темы»).
+        # WKWebView в песочнице поднимает вспомогательные процессы (WebContent/GPU/
+        # Network) через защищённые соединения — без network.client они падают при
+        # запуске (в логе RBS/Jetsam «process does not exist»), вебвью остаётся пустым.
+        # Нужно и хосту, не только расширению, даже если HTML грузится из строки.
+        com.apple.security.network.client: true
         # Security-scoped закладки на ~ и /Applications живут между запусками
         # (импорт темы и шрифта из установленного редактора). Без этого грант
         # powerbox действует только до выхода из приложения.
