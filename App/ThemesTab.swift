@@ -6,6 +6,7 @@ import QuickLookersImportKit
 struct ThemesTab: View {
     @ObservedObject var model: SettingsModel
     @ObservedObject var importModel: ImportModel
+    @State private var errorText: String?
 
     var body: some View {
         Form {
@@ -22,10 +23,13 @@ struct ThemesTab: View {
 
             Section {
                 Button("Импортировать…") {
-                    if importModel.runImport() { model.reloadCatalog() }
+                    if let outcome = importModel.runImport() {
+                        if outcome.didChange { model.reloadCatalog(); errorText = nil }
+                        else { errorText = outcome.errorText }
+                    }
                 }
-                if let summary = importModel.summary {
-                    Text(summary).font(.caption).foregroundStyle(.secondary)
+                if let errorText {
+                    Text(errorText).font(.caption).foregroundStyle(.red)
                 }
             }
 
@@ -39,6 +43,7 @@ struct ThemesTab: View {
                             Button(role: .destructive) {
                                 importModel.remove(kind: .theme, id: theme.id)
                                 model.reloadCatalog()
+                                errorText = nil
                             } label: {
                                 Image(systemName: "minus.circle")
                             }

@@ -5,38 +5,47 @@ import QuickLookersEngine
 import QuickLookersImportKit
 import QuickLookersSettingsKit
 
-/// Логика импорта в приложении: пикер .vsix → ImportKit → запись в контейнер → сводка.
+/// Результат попытки импорта для обратной связи во вкладке.
+struct ImportOutcome {
+    /// Что-то импортировано → перечитать каталог и очистить строку ошибки.
+    let didChange: Bool
+    /// Текст ошибки или «ничего не нашлось»; nil при успехе.
+    let errorText: String?
+}
+
+/// Логика импорта в приложении: пикер .vsix → ImportKit → запись в контейнер.
+/// Состояния не держит — обратная связь живёт в @State вкладки.
 @MainActor
 final class ImportModel: ObservableObject {
-    @Published var summary: String?
-
-    /// Открывает .vsix, импортирует, пишет в контейнер. Возвращает true при успехе.
-    func runImport() -> Bool {
+    /// Открывает пикер .vsix и импортирует. nil — пользователь отменил выбор.
+    func runImport() -> ImportOutcome? {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [UTType(filenameExtension: "vsix") ?? .data]
         panel.allowsMultipleSelection = false
-        guard panel.runModal() == .OK, let url = panel.url else { return false }
+        guard panel.runModal() == .OK, let url = panel.url else { return nil }
         return importFile(url)
     }
 
-    func importFile(_ url: URL) -> Bool {
+    func importFile(_ url: URL) -> ImportOutcome {
         guard let container = quickLookersContainerURL() else {
-            summary = "Нет общего контейнера — импорт недоступен."; return false
+            return ImportOutcome(didChange: false, errorText: "Нет общего контейнера — импорт недоступен.")
         }
         do {
             let data = try Data(contentsOf: url)
             let importer = VsixImporter(bundledGrammarsDir: try QuickLookersEngineResources.grammarsDirectory())
             let result = try importer(vsixData: data)
             try ImportedLibrary(containerURL: container).write(result)
-            let n = result.artifacts.count, m = result.skips.count
-            summary = m == 0 ? "Импортировано: \(n)." : "Импортировано: \(n), пропущено: \(m)."
-            return true
+            if result.artifacts.isEmpty {
+                // contributes были, но всё отсеяно (только инъекции/негодные id) — успехом не считаем.
+                return ImportOutcome(didChange: false,
+                                     errorText: "В файле не нашлось тем или грамматик для импорта.")
+            }
+            // Успех виден по списку; число пропусков (служебные инъекции) не показываем.
+            return ImportOutcome(didChange: true, errorText: nil)
         } catch let e as ImportError {
-            summary = Self.message(for: e)
-            return false
+            return ImportOutcome(didChange: false, errorText: Self.message(for: e))
         } catch {
-            summary = "Не удалось прочитать файл."
-            return false
+            return ImportOutcome(didChange: false, errorText: "Не удалось прочитать файл.")
         }
     }
 
