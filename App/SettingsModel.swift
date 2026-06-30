@@ -17,20 +17,18 @@ final class SettingsModel: ObservableObject {
     @Published var settings: ManagerSettings
     @Published private(set) var warning: String?
     @Published private(set) var catalog: Catalog
-    @Published private(set) var lightThemes: [ThemeInfo]
-    @Published private(set) var darkThemes: [ThemeInfo]
-    @Published private(set) var fileTypeRows: [FileTypeRow]
     /// Идентификаторы импортированных языков и тем (из catalog-imported.json контейнера).
     @Published private(set) var importedIds: Set<String>
+
+    var lightThemes:  [ThemeInfo]   { catalog.themes.filter { !$0.isDark } }
+    var darkThemes:   [ThemeInfo]   { catalog.themes.filter { $0.isDark } }
+    var fileTypeRows: [FileTypeRow] { Self.makeFileTypeRows(catalog: catalog) }
 
     private let store: SettingsStore?
 
     init() {
         let (loadedCatalog, loadedImportedIds) = Self.loadCatalog()
         self.catalog = loadedCatalog
-        self.lightThemes = loadedCatalog.themes.filter { !$0.isDark }
-        self.darkThemes = loadedCatalog.themes.filter { $0.isDark }
-        self.fileTypeRows = Self.makeFileTypeRows(catalog: loadedCatalog)
         self.importedIds = loadedImportedIds
 
         // Хранилище — в общем контейнере. Нет контейнера → окно работает,
@@ -52,9 +50,6 @@ final class SettingsModel: ObservableObject {
     func reloadCatalog() {
         let (newCatalog, newImportedIds) = Self.loadCatalog()
         catalog = newCatalog
-        lightThemes = newCatalog.themes.filter { !$0.isDark }
-        darkThemes = newCatalog.themes.filter { $0.isDark }
-        fileTypeRows = Self.makeFileTypeRows(catalog: newCatalog)
         importedIds = newImportedIds
     }
 
@@ -69,14 +64,7 @@ final class SettingsModel: ObservableObject {
         if let container = quickLookersContainerURL() {
             let lib = ImportedLibrary(containerURL: container)
             let importedSidecars = lib.sidecarURLsForCatalog()
-            // Собираем id из импортированного сайдкара для пометки в UI.
-            if let sidecarURL = importedSidecars.first,
-               let data = try? Data(contentsOf: sidecarURL),
-               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                let langs = (obj["languages"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
-                let themes = (obj["themes"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
-                importedIds = Set(langs + themes)
-            }
+            importedIds = lib.importedIds()
             sidecars += importedSidecars
         }
 

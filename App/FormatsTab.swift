@@ -4,7 +4,7 @@ import QuickLookersImportKit
 /// Слой 1 — библиотека: какие языки умеем красить (opt-out).
 struct FormatsTab: View {
     @ObservedObject var model: SettingsModel
-    @StateObject private var importModel = ImportModel()
+    @ObservedObject var importModel: ImportModel
 
     var body: some View {
         Form {

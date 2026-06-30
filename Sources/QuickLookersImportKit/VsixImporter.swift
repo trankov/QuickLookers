@@ -16,7 +16,7 @@ public struct VsixImporter {
         guard names.contains("extension/package.json") else { throw ImportError.noManifest }
         // Сырой ZipError (повреждённая/нечитаемая запись) трактуем как noManifest —
         // наружу из callAsFunction выходит только ImportError.
-        guard let pkg = (try? reader.entry("extension/package.json", in: vsixData)) ?? nil
+        guard let pkg = readEntry("package.json", in: vsixData)
         else { throw ImportError.noManifest }
 
         let manifest: VsixManifest
@@ -30,7 +30,7 @@ public struct VsixImporter {
 
         // Темы.
         for t in manifest.themes {
-            guard let raw = (try? reader.entry("extension/" + clean(t.path), in: vsixData)) ?? nil else {
+            guard let raw = readEntry(t.path, in: vsixData) else {
                 skips.append(.init(item: "тема «\(t.label)»", reason: "нет файла \(t.path)")); continue
             }
             let n = ThemeNormalizer.normalize(label: t.label, uiTheme: t.uiTheme,
@@ -49,7 +49,7 @@ public struct VsixImporter {
         let normalizer = GrammarNormalizer(bundledGrammarsDir: bundledGrammarsDir)
         for g in manifest.grammars {
             guard let lang = g.language else { continue }
-            if let raw = (try? reader.entry("extension/" + clean(g.path), in: vsixData)) ?? nil,
+            if let raw = readEntry(g.path, in: vsixData),
                let json = try? normalizer.toJSON(raw, path: g.path) {
                 siblings[lang] = json
             }
@@ -78,6 +78,11 @@ public struct VsixImporter {
         }
 
         return ImportResult(artifacts: artifacts, skips: skips)
+    }
+
+    /// Содержимое записи .vsix по относительному пути из package.json (с префиксом extension/).
+    private func readEntry(_ relPath: String, in data: Data) -> Data? {
+        try? reader.entry("extension/" + clean(relPath), in: data)
     }
 
     /// Путь из package.json часто начинается с "./" — убираем для склейки с "extension/".

@@ -5,7 +5,7 @@ import QuickLookersImportKit
 /// Выбор темы: следовать за системой (светлая+тёмная) либо фиксированная.
 struct ThemesTab: View {
     @ObservedObject var model: SettingsModel
-    @StateObject private var importModel = ImportModel()
+    @ObservedObject var importModel: ImportModel
 
     var body: some View {
         Form {

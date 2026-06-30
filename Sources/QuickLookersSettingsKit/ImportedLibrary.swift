@@ -16,6 +16,12 @@ public struct ImportedLibrary {
         FileManager.default.fileExists(atPath: sidecarURL.path) ? [sidecarURL] : []
     }
 
+    /// id всех импортированных языков и тем (для пометки «импортированное» в UI).
+    public func importedIds() -> Set<String> {
+        let s = loadSidecar()
+        return Set(s.languages.keys).union(s.themes.keys)
+    }
+
     /// Пишет файлы артефактов и доливает их записи в сайдкар (слияние по id).
     public func write(_ result: ImportResult) throws {
         let fm = FileManager.default
@@ -66,8 +72,8 @@ public struct ImportedLibrary {
 
     private func saveSidecar(_ s: Sidecar) throws {
         let obj: [String: Any] = [
-            "languages": s.languages.values.sorted { ($0["id"] as! String) < ($1["id"] as! String) },
-            "themes": s.themes.values.sorted { ($0["id"] as! String) < ($1["id"] as! String) },
+            "languages": s.languages.sorted { $0.key < $1.key }.map(\.value),
+            "themes":    s.themes.sorted    { $0.key < $1.key }.map(\.value),
         ]
         try JSONSerialization.data(withJSONObject: obj).write(to: sidecarURL, options: .atomic)
     }
