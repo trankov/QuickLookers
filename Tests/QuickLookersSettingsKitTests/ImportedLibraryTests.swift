@@ -65,4 +65,41 @@ final class ImportedLibraryTests: XCTestCase {
         XCTAssertEqual(Set((sidecar?["themes"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }),
                        ["a", "b"])
     }
+
+    func test_removeNonexistentIdIsHarmless() throws {
+        // Сайдкара и файлов вообще нет — remove() не должен падать.
+        let lib = ImportedLibrary(containerURL: try tempContainer())
+        XCTAssertNoThrow(try lib.remove(kind: .theme, id: "ghost"))
+        XCTAssertEqual(lib.importedIds(), [])
+    }
+
+    func test_removeNonexistentIdAmongExistingIsHarmless() throws {
+        let lib = ImportedLibrary(containerURL: try tempContainer())
+        try lib.write(ImportResult(artifacts: [
+            .init(kind: .theme, id: "a", displayName: "A", isDark: true, json: Data("{}".utf8)),
+        ], skips: []))
+        try lib.remove(kind: .theme, id: "ghost")
+        // Существующая запись осталась нетронутой.
+        XCTAssertEqual(lib.importedIds(), ["a"])
+    }
+
+    func test_importedIdsUnionsLanguagesAndThemes() throws {
+        let lib = ImportedLibrary(containerURL: try tempContainer())
+        try lib.write(ImportResult(artifacts: [
+            .init(kind: .theme, id: "cool", displayName: "Cool", isDark: true, json: Data("{}".utf8)),
+            .init(kind: .grammar, id: "toy", displayName: "Toy", isDark: false, json: Data("[]".utf8)),
+        ], skips: []))
+        XCTAssertEqual(lib.importedIds(), ["cool", "toy"])
+    }
+
+    func test_importedIdsEmptyWhenNoSidecar() throws {
+        let lib = ImportedLibrary(containerURL: try tempContainer())
+        XCTAssertEqual(lib.importedIds(), [])
+    }
+
+    func test_sidecarURLsForCatalogEmptyBeforeFirstWrite() throws {
+        // Свежий контейнер (первый запуск приложения) — сайдкара ещё нет.
+        let lib = ImportedLibrary(containerURL: try tempContainer())
+        XCTAssertEqual(lib.sidecarURLsForCatalog(), [])
+    }
 }

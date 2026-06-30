@@ -149,6 +149,39 @@ final class CatalogSourceTests: XCTestCase {
         XCTAssertEqual(catalog.languages, [LanguageInfo(id: "json", displayName: "JSON")])
     }
 
+    func test_missingGrammarsDirectory_throwsWhenNoSidecar() throws {
+        let missingGrammars = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ql-missing-\(UUID().uuidString)")
+        let themes = try makeTempDir()
+        let source = FileCatalogSource(grammarsDirectory: missingGrammars, themesDirectory: themes)
+        XCTAssertThrowsError(try source.loadCatalog())
+    }
+
+    func test_jsonFiles_ignoresNonJSONFiles() throws {
+        let grammars = try makeTempDir()
+        let themes = try makeTempDir()
+        try "это не json".write(to: grammars.appendingPathComponent("readme.txt"),
+                                atomically: true, encoding: .utf8)
+        try #"[{"name":"json","displayName":"JSON"}]"#
+            .write(to: grammars.appendingPathComponent("json.json"), atomically: true, encoding: .utf8)
+        let source = FileCatalogSource(grammarsDirectory: grammars, themesDirectory: themes)
+        let catalog = try source.loadCatalog()
+        XCTAssertEqual(catalog.languages, [LanguageInfo(id: "json", displayName: "JSON")])
+    }
+
+    func test_malformedGrammarFile_isSkippedInDirectoryScan() throws {
+        let grammars = try makeTempDir()
+        let themes = try makeTempDir()
+        try "{ битый json".write(to: grammars.appendingPathComponent("bad.json"),
+                                 atomically: true, encoding: .utf8)
+        try #"[{"name":"json","displayName":"JSON"}]"#
+            .write(to: grammars.appendingPathComponent("json.json"), atomically: true, encoding: .utf8)
+        let source = FileCatalogSource(grammarsDirectory: grammars, themesDirectory: themes)
+        let catalog = try source.loadCatalog()
+        // Битый файл грамматики молча пропущен, валидный — прочитан.
+        XCTAssertEqual(catalog.languages, [LanguageInfo(id: "json", displayName: "JSON")])
+    }
+
     func test_twoSidecars_lastOverridesByID() throws {
         let dir = try makeTempDir()
         let grammars = try makeTempDir()

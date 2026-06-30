@@ -33,25 +33,25 @@
 | Sources/QuickLookersImportKit/VsixManifest.swift | VsixManifest.parse(packageJSON:) | | | | |
 | Sources/QuickLookersImportKit/ZipReader.swift | ZipReader.entryNames(in:) | | | | |
 | Sources/QuickLookersImportKit/ZipReader.swift | ZipReader.entry(_:in:) | | | | |
-| Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.loadCatalog() | | | | |
-| Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.catalogFromSidecars() | | | | |
-| Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.catalogFromDirectories() | | | | |
-| Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.jsonFiles(in:) | | | | |
-| Sources/QuickLookersSettingsKit/DeclaredTypes.swift | DeclaredTypes.languageId(forPathExtension:) | | | | |
-| Sources/QuickLookersSettingsKit/DeclaredTypes.swift | isLanguageEnabled(_:settings:) | | | | |
-| Sources/QuickLookersSettingsKit/DeclaredTypes.swift | isPreviewEnabled(_:settings:) | | | | |
-| Sources/QuickLookersSettingsKit/DeclaredTypes.swift | previewLanguageId(forPathExtension:settings:) | | | | |
-| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.sidecarURLsForCatalog() | | | | |
-| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.importedIds() | | | | |
-| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.write(_:) | | | | |
-| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.remove(kind:id:) | | | | |
-| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.loadSidecar() | | | | |
-| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.saveSidecar(_:) | | | | |
-| Sources/QuickLookersSettingsKit/ManagerSettings.swift | FontSettings.clampSize(_:) | | | | |
-| Sources/QuickLookersSettingsKit/SettingsStore.swift | SettingsStore.load() | | | | |
-| Sources/QuickLookersSettingsKit/SettingsStore.swift | SettingsStore.save(_:) | | | | |
-| Sources/QuickLookersSettingsKit/SettingsStore.swift | resolvedThemeId(activeThemeId:availableThemeIds:) | | | | |
-| Sources/QuickLookersSettingsKit/SettingsStore.swift | quickLookersContainerURL() | | | | |
+| Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.loadCatalog() | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.catalogFromSidecars() | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.catalogFromDirectories() | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersSettingsKit/CatalogSource.swift | FileCatalogSource.jsonFiles(in:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/DeclaredTypes.swift | DeclaredTypes.languageId(forPathExtension:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/DeclaredTypes.swift | isLanguageEnabled(_:settings:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/DeclaredTypes.swift | isPreviewEnabled(_:settings:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/DeclaredTypes.swift | previewLanguageId(forPathExtension:settings:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.sidecarURLsForCatalog() | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.importedIds() | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.write(_:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.remove(kind:id:) | 🟡 | | 🟢 | 🟢 |
+| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.loadSidecar() | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/ImportedLibrary.swift | ImportedLibrary.saveSidecar(_:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/ManagerSettings.swift | FontSettings.clampSize(_:) | 🟡 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/SettingsStore.swift | SettingsStore.load() | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersSettingsKit/SettingsStore.swift | SettingsStore.save(_:) | 🟢 | | 🟢 | 🟢 |
+| Sources/QuickLookersSettingsKit/SettingsStore.swift | resolvedThemeId(activeThemeId:availableThemeIds:) | 🟢 | | 🟢 | |
+| Sources/QuickLookersSettingsKit/SettingsStore.swift | quickLookersContainerURL() | 🟡 | | 🟢 | |
 | Sources/QuickLookersEditorKit/EditorScanner.swift | EditorScanner.scan(applicationsDir:) | | | | |
 | Sources/QuickLookersEditorKit/EditorSettingsReader.swift | EditorSettingsReader.read(editor:appSupportDir:) | | | | |
 | Sources/QuickLookersEditorKit/EditorThemeResolver.swift | EditorThemeResolver.resolve(label:catalog:extensionsDir:) | | | | |
