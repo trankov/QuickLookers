@@ -11,9 +11,17 @@ struct ThemesTab: View {
     @StateObject private var fontPanel = FontPanelController()
     @State private var langIndex = 0
     @State private var errorText: String?
-    @State private var editors: [DetectedEditor] = []
-    @State private var showEditorPicker = false
+    @State private var editorChoices: EditorChoices?
+    @State private var hoveredEditorID: String?
     private let bookmarks = BookmarkStore()
+
+    /// Источник данных поповера выбора редактора. Поповер на `item` (а не на Bool +
+    /// отдельный @State-массив) пере-презентуется при смене item и читает редакторы
+    /// из него — поэтому список не бывает пустым «в первый раз».
+    private struct EditorChoices: Identifiable {
+        let editors: [DetectedEditor]
+        var id: String { editors.map(\.nameShort).joined(separator: "|") }
+    }
 
     private var snippets: [(id: String, name: String, code: String)] { PreviewSnippets.all }
 
@@ -124,34 +132,15 @@ struct ThemesTab: View {
                 let found = importModel.scanEditors(bookmarks)
                 if found.isEmpty {
                     errorText = "Редакторы не найдены или нет доступа к папке «Программы»."
+                    editorChoices = nil
                 } else {
-                    editors = found
-                    showEditorPicker = true
+                    errorText = nil
+                    editorChoices = EditorChoices(editors: found)
                 }
             }
-            .popover(isPresented: $showEditorPicker, arrowEdge: .bottom) {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(editors, id: \.nameShort) { ed in
-                        Button {
-                            let r = importModel.importFromEditor(ed, store: bookmarks,
-                                                                 catalog: model.catalogLookup)
-                            model.reloadCatalog()
-                            model.applyEditorResult(themeId: r.themeId, font: r.font)
-                            errorText = r.message
-                            showEditorPicker = false
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: ed.appURL.path))
-                                    .resizable().frame(width: 18, height: 18)
-                                Text(ed.nameLong)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(8)
-                .frame(minWidth: 200)
+            // arrowEdge .top — поповер раскрывается вверх (кнопка у нижнего края окна).
+            .popover(item: $editorChoices, arrowEdge: .top) { choices in
+                editorPicker(choices.editors)
             }
 
             if let errorText {
@@ -159,5 +148,41 @@ struct ThemesTab: View {
             }
             Spacer()
         }
+    }
+
+    /// Содержимое поповера: крупный список редакторов с иконками приложений.
+    /// Строки на onTapGesture (не Button) — чтобы не было синей рамки фокуса;
+    /// выделение даём ховером (HIG 6.1).
+    private func editorPicker(_ editors: [DetectedEditor]) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(editors, id: \.nameShort) { ed in
+                HStack(spacing: 10) {
+                    Image(nsImage: NSWorkspace.shared.icon(forFile: ed.appURL.path))
+                        .resizable().frame(width: 32, height: 32)
+                    Text(ed.nameLong)
+                    Spacer(minLength: 24)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .background(hoveredEditorID == ed.nameShort ? Color.accentColor.opacity(0.15) : .clear,
+                            in: RoundedRectangle(cornerRadius: 6))
+                .onHover { inside in hoveredEditorID = inside ? ed.nameShort : nil }
+                .onTapGesture { selectEditor(ed) }
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isButton)
+            }
+        }
+        .padding(6)
+        .frame(minWidth: 260)
+    }
+
+    /// Импорт из выбранного редактора: тема (если есть) + шрифт, сразу применить.
+    private func selectEditor(_ ed: DetectedEditor) {
+        let r = importModel.importFromEditor(ed, store: bookmarks, catalog: model.catalogLookup)
+        model.reloadCatalog()
+        model.applyEditorResult(themeId: r.themeId, font: r.font)
+        errorText = r.message
+        editorChoices = nil
     }
 }

@@ -27,9 +27,9 @@ struct FormatsTab: View {
                 .padding([.horizontal, .top])
                 .padding(.bottom, 8)
 
-            // Form с grouped-стилем даёт нативные компактные переключатели (как
-            // на других вкладках) и сам прокручивается внутри своей области.
-            Form {
+            // List (а не grouped-Form): grouped-Form на macOS центрирует содержимое
+            // с максимальной шириной и не растёт с окном; List занимает всю ширину.
+            List {
                 ForEach(filteredLanguages) { lang in
                     HStack {
                         Toggle(lang.displayName, isOn: Binding(
@@ -49,7 +49,6 @@ struct FormatsTab: View {
                     }
                 }
             }
-            .formStyle(.grouped)
 
             Divider()
 

@@ -5,7 +5,9 @@ struct FileTypesTab: View {
     @ObservedObject var model: SettingsModel
 
     var body: some View {
-        Form {
+        // List (а не grouped-Form): grouped-Form на macOS центрирует содержимое
+        // с максимальной шириной и не растёт с окном; List занимает всю ширину.
+        List {
             Section("Просмотр в Finder") {
                 ForEach(model.fileTypeRows) { row in
                     Toggle(isOn: Binding(
@@ -20,9 +22,6 @@ struct FileTypesTab: View {
                 }
             }
         }
-        .formStyle(.grouped)
-        .padding()
-        // Растягиваем на всю ширину окна — иначе список при расширении окна не растёт.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
