@@ -1,0 +1,6 @@
+{
+  // тема и шрифт
+  "workbench.colorTheme": "Seti Monokai: Original",
+  "editor.fontFamily": "FiraCode Nerd Font, Menlo, monospace",
+  "editor.fontSize": 13,
+}
