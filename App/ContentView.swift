@@ -27,8 +27,9 @@ struct ContentView: View {
                     .background(.bar)
             }
         }
-        // Шире, чтобы три подписи вкладок помещались в верхнюю панель и она
-        // не сворачивалась в «>>».
-        .frame(width: 620, height: 420)
+        // Резиновое окно под вертикальную витрину «превью + список». Минимум
+        // держит UI пригодным; превью растёт с окном (HIG 2.1).
+        .frame(minWidth: 480, idealWidth: 580, maxWidth: .infinity,
+               minHeight: 560, idealHeight: 680, maxHeight: .infinity)
     }
 }
