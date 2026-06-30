@@ -36,6 +36,13 @@ final class VsixImporterTests: XCTestCase {
         XCTAssertTrue(r.skips[0].item.contains("Missing"))
     }
 
+    func test_themeJSONCisNormalizedToStrictJSON() throws {
+        let r = try importer()(vsixData: try fixture("theme-jsonc.vsix"))
+        let theme = try XCTUnwrap(r.artifacts.first { $0.kind == .theme })
+        // Тема расширения была JSONC (комментарий + висячая запятая) — должна храниться строгим JSON.
+        XCTAssertNoThrow(try JSONSerialization.jsonObject(with: theme.json))
+    }
+
     func test_notArchiveThrows() throws {
         XCTAssertThrowsError(try importer()(vsixData: try fixture("not-a-vsix.vsix"))) { e in
             XCTAssertEqual(e as? ImportError, .notArchive)

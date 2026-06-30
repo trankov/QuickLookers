@@ -33,8 +33,10 @@ public struct VsixImporter {
             guard let raw = readEntry(t.path, in: vsixData) else {
                 skips.append(.init(item: "тема «\(t.label)»", reason: "нет файла \(t.path)")); continue
             }
+            // Темы расширений бывают JSONC → приводим к строгому JSON перед хранением/движком.
+            let strict = (try? JSONCParser.toStrictJSON(raw)) ?? raw
             let n = ThemeNormalizer.normalize(label: t.label, uiTheme: t.uiTheme,
-                                              themeJSON: raw, existingSlugs: themeSlugs)
+                                              themeJSON: strict, existingSlugs: themeSlugs)
             guard isSafeImportID(n.id) else {
                 skips.append(.init(item: "тема «\(t.label)»", reason: "недопустимый идентификатор"))
                 continue
