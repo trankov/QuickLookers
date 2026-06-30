@@ -51,4 +51,21 @@ final class ResolutionTests: XCTestCase {
         s.disabledLanguageIds = ["ruby"] // нет в каталоге
         XCTAssertTrue(isLanguageEnabled("swift", settings: s))
     }
+
+    func testEmptyExtensionGivesNil() {
+        XCTAssertNil(DeclaredTypes.languageId(forPathExtension: ""))
+        XCTAssertNil(previewLanguageId(forPathExtension: "", settings: .default))
+    }
+
+    func testBothDisabledFlagsSetForSameId() {
+        // Реалистично избыточная, но возможная комбинация настроек: язык одновременно
+        // в disabledLanguageIds и в previewDisabledLanguageIds. Поведение должно
+        // остаться тем же, что и при одном только disabledLanguageIds.
+        var s = ManagerSettings.default
+        s.disabledLanguageIds = ["json"]
+        s.previewDisabledLanguageIds = ["json"]
+        XCTAssertFalse(isLanguageEnabled("json", settings: s))
+        XCTAssertFalse(isPreviewEnabled("json", settings: s))
+        XCTAssertNil(previewLanguageId(forPathExtension: "json", settings: s))
+    }
 }

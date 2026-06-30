@@ -75,6 +75,9 @@ public struct ImportedLibrary {
             "languages": s.languages.sorted { $0.key < $1.key }.map(\.value),
             "themes":    s.themes.sorted    { $0.key < $1.key }.map(\.value),
         ]
+        // libraryDir может ещё не существовать (например remove() вызван до
+        // первого write()) — атомарная запись требует существующей директории.
+        try FileManager.default.createDirectory(at: libraryDir, withIntermediateDirectories: true)
         try JSONSerialization.data(withJSONObject: obj).write(to: sidecarURL, options: .atomic)
     }
 }

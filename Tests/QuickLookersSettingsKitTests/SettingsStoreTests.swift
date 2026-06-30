@@ -55,4 +55,17 @@ final class SettingsStoreTests: XCTestCase {
         let id = resolvedThemeId(activeThemeId: "monokai", availableThemeIds: ["light-plus", "dark-plus"])
         XCTAssertEqual(id, DefaultThemeIds.dark)
     }
+
+    func testResolvedThemeEmptyAvailableSetFallsBackToDark() {
+        // Каталог ещё не загружен/пуст — откат не должен падать или возвращать
+        // произвольный id.
+        let id = resolvedThemeId(activeThemeId: "github-dark", availableThemeIds: [])
+        XCTAssertEqual(id, DefaultThemeIds.dark)
+    }
+
+    func testContainerURLCallDoesNotCrash() {
+        // В тестовом окружении (бинарь без App Group entitlement) ожидаемо nil —
+        // это smoke-тест на то, что вызов безопасен и не падает.
+        _ = quickLookersContainerURL()
+    }
 }

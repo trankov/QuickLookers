@@ -24,4 +24,28 @@ final class ManagerSettingsTests: XCTestCase {
         let back = try JSONDecoder().decode(ManagerSettings.self, from: data)
         XCTAssertEqual(s, back)
     }
+
+    func testClampSizeAtBoundaries() {
+        XCTAssertEqual(FontSettings.clampSize(6), 6)
+        XCTAssertEqual(FontSettings.clampSize(48), 48)
+    }
+
+    func testClampSizeOutsideBoundaries() {
+        XCTAssertEqual(FontSettings.clampSize(5.999), 6)
+        XCTAssertEqual(FontSettings.clampSize(48.001), 48)
+        XCTAssertEqual(FontSettings.clampSize(-1000), 6)
+        XCTAssertEqual(FontSettings.clampSize(1_000_000), 48)
+    }
+
+    func testClampSizeNilStaysNil() {
+        XCTAssertNil(FontSettings.clampSize(nil))
+    }
+
+    func testClampSizeNaNPassesThroughUnclamped() {
+        // Документируем реальное поведение min/max со стандартной библиотекой:
+        // сравнения с NaN всегда false, поэтому NaN проходит зажим не тронутым.
+        // На практике это безопасно: оба источника значения (NSFont.pointSize
+        // и числа из JSON/JSONC) физически не производят NaN.
+        XCTAssertTrue(FontSettings.clampSize(Double.nan)?.isNaN ?? false)
+    }
 }
