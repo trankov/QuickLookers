@@ -9,6 +9,7 @@ let package = Package(
         .library(name: "QuickLookersPreviewKit", targets: ["QuickLookersPreviewKit"]),
         .library(name: "QuickLookersSettingsKit", targets: ["QuickLookersSettingsKit"]),
         .library(name: "QuickLookersImportKit", targets: ["QuickLookersImportKit"]),
+        .library(name: "QuickLookersEditorKit", targets: ["QuickLookersEditorKit"]),
     ],
     targets: [
         .target(
@@ -48,6 +49,15 @@ let package = Package(
         .testTarget(
             name: "QuickLookersImportKitTests",
             dependencies: ["QuickLookersImportKit"],
+            resources: [.copy("Fixtures")]
+        ),
+        .target(
+            name: "QuickLookersEditorKit",
+            dependencies: ["QuickLookersImportKit"]
+        ),
+        .testTarget(
+            name: "QuickLookersEditorKitTests",
+            dependencies: ["QuickLookersEditorKit"],
             resources: [.copy("Fixtures")]
         ),
     ]
