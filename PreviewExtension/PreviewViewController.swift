@@ -88,10 +88,8 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
             throw CocoaError(.featureUnsupported)
         }
 
-        let isDark = view.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let themeId = resolvedThemeId(settings.theme,
-                                      availableThemeIds: try Self.themeIds(),
-                                      appearanceIsDark: isDark)
+        let themeId = resolvedThemeId(activeThemeId: settings.activeThemeId,
+                                      availableThemeIds: try Self.themeIds())
 
         // Дешёвый ключ кэша: атрибуты файла без чтения содержимого.
         let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
@@ -99,6 +97,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         let size = (attrs[.size] as? Int) ?? 0
         let key = HTMLCacheKey(path: url.path, mtime: mtime, size: size,
                                languageId: lang, themeId: themeId,
+                               fontFamily: settings.font.family, fontSize: settings.font.size,
                                maxLines: Self.maxLines, bundleVersion: Self.bundleVersion)
 
         let cache = Self.sharedCache
@@ -117,7 +116,9 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
             let fragment = try engine.highlightToHTML(
                 HighlightRequest(code: trimmed, languageId: lang, themeId: themeId))
             let notice = truncated ? "Показаны первые \(Self.maxLines) строк" : nil
-            page = previewPageHTML(highlighted: fragment, truncatedNotice: notice)
+            page = previewPageHTML(highlighted: fragment,
+                                   fontFamily: settings.font.family, fontSize: settings.font.size,
+                                   truncatedNotice: notice)
             cache?.store(key, html: page)
         }
 
