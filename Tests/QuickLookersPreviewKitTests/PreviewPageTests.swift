@@ -33,4 +33,32 @@ final class PreviewPageTests: XCTestCase {
         let page = previewPageHTML(highlighted: "x")
         XCTAssertFalse(page.contains("ql-truncated"), "без обрезки плашки нет")
     }
+
+    func test_injectsFamilyAndSize() {
+        let html = previewPageHTML(highlighted: "<pre class=\"shiki\"></pre>",
+                                   fontFamily: "JetBrains Mono", fontSize: 15)
+        // Семейство из настроек — это уже готовый список (часто со своими кавычками),
+        // подставляем как есть + monospace-откат, не оборачивая целиком.
+        XCTAssertTrue(html.contains("font-family: JetBrains Mono, ui-monospace, monospace"))
+        XCTAssertTrue(html.contains("font-size: 15px"))
+    }
+
+    func test_nilFontKeepsDefaults() {
+        let html = previewPageHTML(highlighted: "x", fontFamily: nil, fontSize: nil)
+        XCTAssertTrue(html.contains("ui-monospace"))
+        XCTAssertFalse(html.contains("font-size: 0"))
+    }
+
+    func test_sanitizesDangerousFamily() {
+        let s = sanitizedFontFamily("Evil</style><script>;{}")
+        XCTAssertNotNil(s)
+        XCTAssertFalse(s!.contains("<"))
+        XCTAssertFalse(s!.contains("{"))
+        XCTAssertFalse(s!.contains(";"))
+    }
+
+    func test_rejectsAbsurdSize() {
+        let html = previewPageHTML(highlighted: "x", fontFamily: nil, fontSize: 9999)
+        XCTAssertFalse(html.contains("9999"))   // вне диапазона → размер не подставлен
+    }
 }

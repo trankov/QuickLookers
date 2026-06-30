@@ -11,6 +11,16 @@ final class HTMLCacheTests: XCTestCase {
                      themeId: themeId, maxLines: maxLines, bundleVersion: bundleVersion)
     }
 
+    func test_fileNameChangesByFont() {
+        func key(_ family: String?, _ size: Double?) -> HTMLCacheKey {
+            HTMLCacheKey(path: "/a", mtime: 1, size: 2, languageId: "swift", themeId: "dark-plus",
+                         fontFamily: family, fontSize: size, maxLines: 2000, bundleVersion: "1")
+        }
+        XCTAssertNotEqual(key("Menlo", 13).fileName, key("Menlo", 14).fileName)
+        XCTAssertNotEqual(key("Menlo", 13).fileName, key("SF Mono", 13).fileName)
+        XCTAssertEqual(key("Menlo", 13).fileName, key("Menlo", 13).fileName)
+    }
+
     func test_fileNameStableForSameInputs() {
         XCTAssertEqual(sampleKey().fileName, sampleKey().fileName)
         XCTAssertTrue(sampleKey().fileName.hasSuffix(".html"))

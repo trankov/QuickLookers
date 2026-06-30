@@ -2,7 +2,24 @@
 /// Фон и цвета несёт сам фрагмент (его `<pre>` от Shiki); здесь только сброс
 /// полей, моноширинный шрифт и перенос длинных строк, чтобы фон заполнял окно.
 /// `truncatedNotice` (если задан) дорисовывает внизу неинтерактивную плашку.
-public func previewPageHTML(highlighted: String, truncatedNotice: String? = nil) -> String {
+
+import Foundation
+
+/// Безопасное для CSS семейство шрифта: только буквы/цифры/пробел/-/_/,/'/" .
+/// Возвращает nil, если после чистки пусто.
+func sanitizedFontFamily(_ raw: String?) -> String? {
+    guard let raw else { return nil }
+    let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_,'\"")
+    let cleaned = String(raw.filter { allowed.contains($0) }).trimmingCharacters(in: .whitespaces)
+    return cleaned.isEmpty ? nil : cleaned
+}
+
+public func previewPageHTML(highlighted: String, fontFamily: String? = nil, fontSize: Double? = nil,
+                            truncatedNotice: String? = nil) -> String {
+    let family = sanitizedFontFamily(fontFamily)
+    let familyCSS = family.map { "\($0), ui-monospace, monospace" } ?? "ui-monospace, \"SF Mono\", Menlo, monospace"
+    let size = (fontSize.flatMap { (6...48).contains(Int($0)) ? Int($0) : nil }) ?? 12
+
     let notice = truncatedNotice.map { #"<div class="ql-truncated">\#($0)</div>"# } ?? ""
     let truncatedStyle = truncatedNotice != nil ? """
         .ql-truncated {
@@ -23,8 +40,8 @@ public func previewPageHTML(highlighted: String, truncatedNotice: String? = nil)
     pre.shiki {
         margin: 0;
         padding: 12px;
-        font-family: ui-monospace, "SF Mono", Menlo, monospace;
-        font-size: 12px;
+        font-family: \(familyCSS);
+        font-size: \(size)px;
         line-height: 1.5;
         tab-size: 4;
         white-space: pre-wrap;

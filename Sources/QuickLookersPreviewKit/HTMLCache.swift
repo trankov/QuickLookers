@@ -9,6 +9,8 @@ public struct HTMLCacheKey: Equatable {
     public let size: Int
     public let languageId: String
     public let themeId: String
+    public let fontFamily: String?
+    public let fontSize: Double?
     public let maxLines: Int
     public let bundleVersion: String
     /// Короткий стабильный хэш всех полей — имя файла записи в кэше.
@@ -17,15 +19,20 @@ public struct HTMLCacheKey: Equatable {
     public let fileName: String
 
     public init(path: String, mtime: TimeInterval, size: Int,
-                languageId: String, themeId: String, maxLines: Int, bundleVersion: String) {
+                languageId: String, themeId: String,
+                fontFamily: String? = nil, fontSize: Double? = nil,
+                maxLines: Int, bundleVersion: String) {
         self.path = path
         self.mtime = mtime
         self.size = size
         self.languageId = languageId
         self.themeId = themeId
+        self.fontFamily = fontFamily
+        self.fontSize = fontSize
         self.maxLines = maxLines
         self.bundleVersion = bundleVersion
-        let raw = "\(path)|\(mtime)|\(size)|\(languageId)|\(themeId)|\(maxLines)|\(bundleVersion)"
+        let fontSizeStr = fontSize.map { String($0) } ?? "-"
+        let raw = "\(path)|\(mtime)|\(size)|\(languageId)|\(themeId)|\(fontFamily ?? "-")|\(fontSizeStr)|\(maxLines)|\(bundleVersion)"
         let digest = SHA256.hash(data: Data(raw.utf8))
         self.fileName = digest.map { String(format: "%02x", $0) }.joined() + ".html"
     }
