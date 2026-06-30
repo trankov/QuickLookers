@@ -31,9 +31,14 @@ schemes:
     build:
       targets:
         QuickLookers: all
+        QuickLookersTests: [test]
     run:
       config: Debug
       executable: QuickLookers
+    test:
+      config: Debug
+      targets:
+        - QuickLookersTests
 
 targets:
   QuickLookers:
@@ -144,3 +149,18 @@ targets:
         product: QuickLookersPreviewKit
       - package: QuickLookersEngine
         product: QuickLookersSettingsKit
+
+  # Юнит-тесты чисто-логического кода App/ (без UI/AppKit-завязки):
+  # FragmentCache, ImportModel.message(for:), MonospaceFonts.families,
+  # CatalogLookup.themeId, BookmarkStore.AccessScope.* и т.п.
+  # Хостится в QuickLookers, чтобы можно было `@testable import QuickLookers`.
+  QuickLookersTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests/AppTests]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.quicklookers.QuickLookersTests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: QuickLookers
