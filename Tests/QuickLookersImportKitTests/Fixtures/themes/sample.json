@@ -1,0 +1,7 @@
+{
+  // образец
+  "name": "Sample JSON",
+  "type": "dark",
+  "colors": { "editor.background": "#001122" },
+  "tokenColors": [ { "scope": "keyword", "settings": { "foreground": "#cc66cc" } } ],
+}
