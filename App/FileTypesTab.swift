@@ -22,5 +22,7 @@ struct FileTypesTab: View {
         }
         .formStyle(.grouped)
         .padding()
+        // Растягиваем на всю ширину окна — иначе список при расширении окна не растёт.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

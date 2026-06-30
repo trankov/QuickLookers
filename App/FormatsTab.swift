@@ -70,5 +70,8 @@ struct FormatsTab: View {
             }
             .padding()
         }
+        // Иначе содержимое держит идеальную ширину: при сужении окна сжимается,
+        // а при расширении не растёт и оставляет пустую полосу справа.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

@@ -2,63 +2,10 @@ import Foundation
 
 /// Показательные сниппеты для живого превью темы. Порядок = порядок сегментов.
 /// Каждый несёт строки, числа, комментарии, ключевые слова — чтобы тема «играла».
+/// Набор подобран под частые форматы (TS опущен — он визуально как JS; Swift —
+/// его пишут в Xcode, превью не нужно).
 enum PreviewSnippets {
     static let all: [(id: String, name: String, code: String)] = [
-        ("swift", "Swift", #"""
-        import Foundation
-
-        struct Point: Equatable {            // модель точки
-            let x, y: Double
-            func distance(to p: Point) -> Double {
-                let dx = x - p.x, dy = y - p.y
-                return (dx * dx + dy * dy).squareRoot()
-            }
-        }
-
-        let origin = Point(x: 0, y: 0)
-        let target = Point(x: 3, y: 4)
-        print("distance = \(origin.distance(to: target))")  // 5.0
-        """#),
-
-        ("javascript", "JS", #"""
-        // подсчёт слов в строке
-        function wordCount(text) {
-          const words = text.trim().split(/\s+/);
-          return words.filter(Boolean).length;
-        }
-
-        const sample = `hello   world
-        from quicklookers`;
-        console.log(`words: ${wordCount(sample)}`); // words: 3
-        """#),
-
-        ("typescript", "TS", #"""
-        interface User {
-          id: number;
-          name: string;
-          roles: readonly string[];
-        }
-
-        function greet(u: User): string {
-          const isAdmin = u.roles.includes("admin");
-          return `Hi ${u.name}${isAdmin ? " (admin)" : ""}`;
-        }
-
-        const u: User = { id: 1, name: "Ada", roles: ["admin"] };
-        console.log(greet(u));
-        """#),
-
-        ("json", "JSON", #"""
-        {
-          "name": "quicklookers",
-          "version": 1,
-          "enabled": true,
-          "tags": ["code", "preview", "shiki"],
-          "limits": { "maxLines": 2000, "cacheMB": 5 },
-          "ratio": 0.75
-        }
-        """#),
-
         ("python", "Python", #"""
         from dataclasses import dataclass
 
@@ -103,6 +50,56 @@ enum PreviewSnippets {
         }
 
         .card:hover { transform: translateY(-2px); }
+        """#),
+
+        ("json", "JSON", #"""
+        {
+          "name": "quicklookers",
+          "version": 1,
+          "enabled": true,
+          "tags": ["code", "preview", "shiki"],
+          "limits": { "maxLines": 2000, "cacheMB": 5 },
+          "ratio": 0.75
+        }
+        """#),
+
+        ("javascript", "JS", #"""
+        // подсчёт слов в строке
+        function wordCount(text) {
+          const words = text.trim().split(/\s+/);
+          return words.filter(Boolean).length;
+        }
+
+        const sample = `hello   world
+        from quicklookers`;
+        console.log(`words: ${wordCount(sample)}`); // words: 3
+        """#),
+
+        ("sql", "SQL", #"""
+        -- активные пользователи с числом заказов
+        SELECT u.id, u.name, COUNT(o.id) AS orders
+        FROM users AS u
+        LEFT JOIN orders AS o ON o.user_id = u.id
+        WHERE u.active = TRUE
+          AND u.created_at >= '2025-01-01'
+        GROUP BY u.id, u.name
+        HAVING COUNT(o.id) > 3
+        ORDER BY orders DESC
+        LIMIT 10;
+        """#),
+
+        ("php", "PHP", #"""
+        <?php
+        // приветствие пользователя
+        function greet(string $name, int $count = 1): string {
+            $marks = str_repeat('!', $count);
+            return "Привет, {$name}{$marks}";
+        }
+
+        $users = ['Ada', 'Linus', 'Grace'];
+        foreach ($users as $i => $user) {
+            echo greet($user, $i + 1) . PHP_EOL;
+        }
         """#),
     ]
 }
