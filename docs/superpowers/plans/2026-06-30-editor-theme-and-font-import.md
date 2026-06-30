@@ -506,6 +506,61 @@ git commit -m "feat(import): ThemeFileLoader — .json/.jsonc и .tmTheme → с
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
+#### Step 7: `ThemeNormalizer` переписывает `name` темы на её id (важно!)
+
+Найдено при де-риске (Task 1): движок регистрирует тему под её JSON-полем `name`
+(`qlRegisterTheme` → `themes.set(theme.name, …)`), а ищет по id (`qlHighlight(themeName=id)`).
+Встроенные темы имеют `name == id`. Импортированная тема хранится под id-слагом, но её
+исходный `name` другой → движок выдаёт `theme not registered`. Значит при нормализации
+надо вписать `name = id`. Это чинит и латентный баг текущего `.vsix`-импорта.
+
+- [ ] **Step 7a: Падающий тест** — `Tests/QuickLookersImportKitTests/ThemeNormalizerTests.swift` (дополнить/создать):
+
+```swift
+func testNormalizeRewritesNameToId() throws {
+    let raw = Data(#"{ "name": "Seti Monokai: Original", "type": "dark", "tokenColors": [] }"#.utf8)
+    let n = ThemeNormalizer.normalize(label: "Seti Monokai: Original", uiTheme: "vs-dark",
+                                      themeJSON: raw, existingSlugs: [])
+    let obj = try JSONSerialization.jsonObject(with: n.json) as! [String: Any]
+    XCTAssertEqual(obj["name"] as? String, n.id)   // name == id, иначе движок не найдёт тему
+}
+```
+
+- [ ] **Step 7b: Запустить — падает** (`name` пока исходный).
+Run: `swift test --filter ThemeNormalizerTests/testNormalizeRewritesNameToId`
+Expected: FAIL.
+
+- [ ] **Step 7c: Реализация** — в `ThemeNormalizer.normalize`, перед `return`, переписать `name`:
+
+```swift
+let finalJSON = Self.withName(themeJSON, id) ?? themeJSON
+return NormalizedTheme(id: id, displayName: label, isDark: isDark(uiTheme: uiTheme), json: finalJSON)
+```
+
+и приватный хелпер:
+
+```swift
+/// Вписывает name = id в JSON темы (движок регистрирует тему по её name, а ищет по id).
+private static func withName(_ data: Data, _ id: String) -> Data? {
+    guard var obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+    obj["name"] = id
+    return try? JSONSerialization.data(withJSONObject: obj)
+}
+```
+
+- [ ] **Step 7d: Запустить — зелёный** (и весь ImportKit).
+Run: `swift test --filter QuickLookersImportKitTests`
+Expected: PASS.
+
+- [ ] **Step 7e: Коммит**
+
+```bash
+git add Sources/QuickLookersImportKit/ThemeNormalizer.swift Tests/QuickLookersImportKitTests/ThemeNormalizerTests.swift
+git commit -m "fix(import): ThemeNormalizer вписывает name=id — иначе движок не находит тему
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+```
+
 ---
 
 ### Task 4: Модель — `FontSettings` + `ManagerSettings.activeThemeId` (вместо `ThemeSelection`)
