@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 import QuickLookersEngine
 import QuickLookersImportKit
 import QuickLookersSettingsKit
+import QuickLookersEditorKit
 
 /// Результат попытки импорта для обратной связи во вкладке.
 struct ImportOutcome {
@@ -61,5 +62,60 @@ final class ImportModel: ObservableObject {
     func remove(kind: ImportArtifact.Kind, id: String) {
         guard let container = quickLookersContainerURL() else { return }
         try? ImportedLibrary(containerURL: container).remove(kind: kind, id: id)
+    }
+
+    // MARK: - Импорт из установленного редактора
+
+    /// Что применить после импорта из редактора.
+    struct EditorImportOutcome { let themeId: String?; let font: FontSettings; let message: String? }
+
+    /// Список установленных VS Code-подобных редакторов (грант на /Applications — лениво).
+    func scanEditors(_ store: BookmarkStore) -> [DetectedEditor] {
+        store.withAccess(.applications) { appsURL in
+            EditorScanner.scan(applicationsDir: appsURL)
+        } ?? []
+    }
+
+    /// Читает из редактора активную тему и шрифт, на .custom — импортирует тему,
+    /// возвращает что применить. Доступ к ~ берётся внутри (грант при первом разе).
+    func importFromEditor(_ editor: DetectedEditor, store: BookmarkStore,
+                          catalog: ThemeCatalogLookup) -> EditorImportOutcome {
+        let emptyFont = FontSettings(family: nil, size: nil)
+        guard let container = quickLookersContainerURL() else {
+            return EditorImportOutcome(themeId: nil, font: emptyFont,
+                                       message: "Нет общего контейнера — импорт недоступен.")
+        }
+        return store.withAccess(.home) { home in
+            let appSupport = home.appendingPathComponent("Library/Application Support")
+            let prefs = EditorSettingsReader.read(editor: editor, appSupportDir: appSupport)
+            let font = FontSettings(family: prefs.fontFamily, size: prefs.fontSize)
+            guard let label = prefs.colorThemeLabel else {
+                return EditorImportOutcome(themeId: nil, font: font,
+                                           message: "У редактора не задана тема — применён только шрифт.")
+            }
+            let extDir = home.appendingPathComponent("\(editor.dataFolderName)/extensions")
+            switch EditorThemeResolver.resolve(label: label, catalog: catalog, extensionsDir: extDir) {
+            case .bundled(let id):
+                return EditorImportOutcome(themeId: id, font: font, message: nil)
+            case .custom(let lbl, let uiTheme, let fileURL):
+                guard let raw = try? Data(contentsOf: fileURL),
+                      let strict = try? ThemeFileLoader.loadStrictThemeJSON(
+                          data: raw, fileExtension: fileURL.pathExtension, uiTheme: uiTheme) else {
+                    return EditorImportOutcome(themeId: nil, font: font,
+                                               message: "Тема «\(lbl)» не прочиталась — применён только шрифт.")
+                }
+                let existing = Set(ImportedLibrary(containerURL: container).importedIds())
+                let n = ThemeNormalizer.normalize(label: lbl, uiTheme: uiTheme,
+                                                  themeJSON: strict, existingSlugs: existing)
+                let artifact = ImportArtifact(kind: .theme, id: n.id, displayName: n.displayName,
+                                              isDark: n.isDark, json: n.json)
+                try? ImportedLibrary(containerURL: container).write(ImportResult(artifacts: [artifact], skips: []))
+                return EditorImportOutcome(themeId: n.id, font: font, message: nil)
+            case .notFound:
+                return EditorImportOutcome(themeId: nil, font: font,
+                                           message: "Тема «\(label)» не найдена — применён только шрифт.")
+            }
+        } ?? EditorImportOutcome(themeId: nil, font: emptyFont,
+                                 message: "Доступ к домашней папке не разрешён.")
     }
 }

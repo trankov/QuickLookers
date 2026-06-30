@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import QuickLookersEngine
 import QuickLookersSettingsKit
+import QuickLookersEditorKit
 
 /// Состояние окна: настройки в памяти + каталог доступного.
 /// Любое изменение сразу пишется в settings.json (с ростом settingsVersion).
@@ -115,6 +116,23 @@ final class SettingsModel: ObservableObject {
     func setPreviewOn(_ id: String, _ on: Bool) {
         update { s in
             if on { s.previewDisabledLanguageIds.remove(id) } else { s.previewDisabledLanguageIds.insert(id) }
+        }
+    }
+
+    /// Поиск id темы по отображаемому имени — для EditorThemeResolver.
+    struct CatalogLookup: ThemeCatalogLookup {
+        let themes: [ThemeInfo]
+        func themeId(forDisplayName name: String) -> String? {
+            themes.first { $0.displayName == name }?.id
+        }
+    }
+    var catalogLookup: CatalogLookup { CatalogLookup(themes: catalog.themes) }
+
+    /// Применить результат импорта из редактора: активная тема (если есть) + шрифт.
+    func applyEditorResult(themeId: String?, font: FontSettings) {
+        update { s in
+            if let themeId { s.activeThemeId = themeId }
+            s.font = font
         }
     }
 }
