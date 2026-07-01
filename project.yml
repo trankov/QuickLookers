@@ -118,6 +118,13 @@ targets:
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PreviewViewController
           NSExtensionAttributes:
             QLSupportedContentTypes:
+              # Невод «хвоста»: файлы, чей ТОЧНЫЙ листовой UTI — public.plain-text
+              # (generic-текст, .txt, неизвестные расширения, безрасширенные вроде
+              # Dockerfile). csv/md сюда НЕ попадают — у них собственные листовые
+              # UTI (public.comma-separated-values-text / net.daringfireball.markdown),
+              # а сопоставление идёт по точному листу. Незнакомое красится нейтральным
+              # текстом (Слой B), csv/md остаются системе/соседу.
+              - public.plain-text
               - public.python-script
               - com.netscape.javascript-source
               - org.nodejs.cjs
