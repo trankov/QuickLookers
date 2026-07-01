@@ -17,7 +17,11 @@ struct FileTypesTab: View {
         }
     }
 
-    private var languageIds: [String] { model.catalog.languages.map(\.id) }
+    private var languageChoices: [(id: String, name: String)] {
+        model.catalog.languages
+            .map { (id: $0.id, name: $0.displayName) }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -36,7 +40,7 @@ struct FileTypesTab: View {
                             Picker("", selection: Binding(
                                 get: { row.languageId },
                                 set: { model.setRuleLanguage(row, $0) })) {
-                                ForEach(languageIds, id: \.self) { Text($0).tag($0) }
+                                ForEach(languageChoices, id: \.id) { Text($0.name).tag($0.id) }
                             }
                             .labelsHidden()
                             Spacer()
@@ -57,7 +61,7 @@ struct FileTypesTab: View {
                             .frame(width: 140)
                         Picker("", selection: $newLang) {
                             Text("— язык —").tag("")
-                            ForEach(languageIds, id: \.self) { Text($0).tag($0) }
+                            ForEach(languageChoices, id: \.id) { Text($0.name).tag($0.id) }
                         }
                         .labelsHidden()
                         Spacer()
