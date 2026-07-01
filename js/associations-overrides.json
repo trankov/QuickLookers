@@ -1,0 +1,29 @@
+{
+  "languageAlias": {
+    "C++": "cpp",
+    "C#": "csharp",
+    "F#": "fsharp",
+    "Objective-C": "objective-c",
+    "Dockerfile": "docker"
+  },
+  "extensions": {
+    "h": "c",
+    "hpp": "cpp",
+    "hh": "cpp",
+    "cc": "cpp",
+    "cxx": "cpp",
+    "cjs": "javascript",
+    "mjs": "javascript",
+    "ts": "typescript",
+    "tsx": "tsx",
+    "jsx": "jsx"
+  },
+  "filenames": {
+    "Dockerfile": "docker",
+    "Makefile": "make",
+    "makefile": "make",
+    "Gemfile": "ruby",
+    "Rakefile": "ruby",
+    "CMakeLists.txt": "cmake"
+  }
+}
