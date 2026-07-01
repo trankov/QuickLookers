@@ -16,7 +16,14 @@
     "mjs": "javascript",
     "ts": "typescript",
     "tsx": "tsx",
-    "jsx": "jsx"
+    "jsx": "jsx",
+    "php": "php",
+    "sql": "sql",
+    "pl": "perl",
+    "bib": "bibtex",
+    "rkt": "racket",
+    "fs": "fsharp",
+    "m": "objective-c"
   },
   "filenames": {
     "Dockerfile": "docker",
