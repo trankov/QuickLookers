@@ -2,70 +2,93 @@ import XCTest
 import QuickLookersSettingsKit
 
 final class ResolutionTests: XCTestCase {
-    func testDeclaredLanguageByExtension() {
-        XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "swift"), "swift")
-        XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "JSON"), "json") // регистронезависимо
-        XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "js"), "javascript")
-        XCTAssertNil(DeclaredTypes.languageId(forPathExtension: "docx"))
+    private let assoc = FileTypeAssociations(
+        byExtension: ["swift": "swift", "py": "python", "json": "json"],
+        byFilename: ["Dockerfile": "docker"])
+
+    func testHighlightByExtension() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.swift", pathExtension: "swift", associations: assoc, settings: .default),
+            .highlight(languageId: "swift"))
     }
 
-    func testPreviewHappyPath() {
-        let s = ManagerSettings.default
-        XCTAssertEqual(previewLanguageId(forPathExtension: "swift", settings: s), "swift")
+    func testExtensionCaseInsensitive() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "A.SWIFT", pathExtension: "SWIFT", associations: assoc, settings: .default),
+            .highlight(languageId: "swift"))
     }
 
-    func testUnknownExtensionGivesNil() {
-        XCTAssertNil(previewLanguageId(forPathExtension: "docx", settings: .default))
+    func testHighlightByFilename() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "Dockerfile", pathExtension: "", associations: assoc, settings: .default),
+            .highlight(languageId: "docker"))
     }
 
-    func test_previewLanguageForExpandedExtensions() {
-        let s = ManagerSettings.default
-        XCTAssertEqual(previewLanguageId(forPathExtension: "py", settings: s), "python")
-        XCTAssertEqual(previewLanguageId(forPathExtension: "rs", settings: s), "rust")
-        XCTAssertEqual(previewLanguageId(forPathExtension: "yml", settings: s), "yaml")
-        XCTAssertEqual(previewLanguageId(forPathExtension: "tsx", settings: s), "tsx")
+    func testUnknownExtensionIsNeutral() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.docx", pathExtension: "docx", associations: assoc, settings: .default),
+            .neutral)
     }
 
-    func testDisabledLanguageGivesNil() {
+    func testDisabledExtensionIsNeutral() {
         var s = ManagerSettings.default
-        s.disabledLanguageIds = ["json"]
-        XCTAssertNil(previewLanguageId(forPathExtension: "json", settings: s))
+        s.disabledExtensions = ["json"]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.json", pathExtension: "json", associations: assoc, settings: s),
+            .neutral)
     }
 
-    func testPreviewDisabledLanguageGivesNil() {
+    func testDisabledFilenameIsNeutral() {
         var s = ManagerSettings.default
-        s.previewDisabledLanguageIds = ["json"]
-        XCTAssertNil(previewLanguageId(forPathExtension: "json", settings: s))
-        // но красить (Слой 1) язык по-прежнему можно
-        XCTAssertTrue(isLanguageEnabled("json", settings: s))
+        s.disabledFilenames = ["Dockerfile"]
+        XCTAssertEqual(
+            resolvePreview(fileName: "Dockerfile", pathExtension: "", associations: assoc, settings: s),
+            .neutral)
     }
 
-    func testDisabledLanguageAlsoDisablesPreview() {
+    func testDisabledLanguageLayer1IsNeutral() {
         var s = ManagerSettings.default
         s.disabledLanguageIds = ["swift"]
-        XCTAssertFalse(isPreviewEnabled("swift", settings: s))
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.swift", pathExtension: "swift", associations: assoc, settings: s),
+            .neutral)
     }
 
-    func testUnknownDisabledIdIsHarmless() {
+    func testExtensionOverrideWins() {
         var s = ManagerSettings.default
-        s.disabledLanguageIds = ["ruby"] // нет в каталоге
-        XCTAssertTrue(isLanguageEnabled("swift", settings: s))
+        s.extensionOverrides = ["json": "javascript"]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.json", pathExtension: "json", associations: assoc, settings: s),
+            .highlight(languageId: "javascript"))
     }
 
-    func testEmptyExtensionGivesNil() {
-        XCTAssertNil(DeclaredTypes.languageId(forPathExtension: ""))
-        XCTAssertNil(previewLanguageId(forPathExtension: "", settings: .default))
+    func testFilenameRuleWinsOverExtension() {
+        // Файл с именем из карты имён и одновременно расширением — имя приоритетнее.
+        let a = FileTypeAssociations(byExtension: ["txt": "plaintext"],
+                                     byFilename: ["CMakeLists.txt": "cmake"])
+        XCTAssertEqual(
+            resolvePreview(fileName: "CMakeLists.txt", pathExtension: "txt", associations: a, settings: .default),
+            .highlight(languageId: "cmake"))
     }
 
-    func testBothDisabledFlagsSetForSameId() {
-        // Реалистично избыточная, но возможная комбинация настроек: язык одновременно
-        // в disabledLanguageIds и в previewDisabledLanguageIds. Поведение должно
-        // остаться тем же, что и при одном только disabledLanguageIds.
+    func testAddedExtensionRuleForUnknown() {
+        var s = ManagerSettings.default
+        s.extensionOverrides = ["myext": "python"]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.myext", pathExtension: "myext", associations: assoc, settings: s),
+            .highlight(languageId: "python"))
+    }
+
+    func testEmptyExtensionNoFilenameIsNeutral() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "README", pathExtension: "", associations: assoc, settings: .default),
+            .neutral)
+    }
+
+    func testIsLanguageEnabled() {
         var s = ManagerSettings.default
         s.disabledLanguageIds = ["json"]
-        s.previewDisabledLanguageIds = ["json"]
         XCTAssertFalse(isLanguageEnabled("json", settings: s))
-        XCTAssertFalse(isPreviewEnabled("json", settings: s))
-        XCTAssertNil(previewLanguageId(forPathExtension: "json", settings: s))
+        XCTAssertTrue(isLanguageEnabled("swift", settings: s))
     }
 }
