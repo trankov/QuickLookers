@@ -5,7 +5,6 @@ final class ManagerSettingsTests: XCTestCase {
     func testDefaults() {
         let s = ManagerSettings.default
         XCTAssertTrue(s.disabledLanguageIds.isEmpty)
-        XCTAssertTrue(s.previewDisabledLanguageIds.isEmpty)
         XCTAssertEqual(s.activeThemeId, DefaultThemeIds.dark)
         XCTAssertNil(s.font.family)
         XCTAssertNil(s.font.size)
@@ -16,7 +15,6 @@ final class ManagerSettingsTests: XCTestCase {
     func testCodableRoundTrip() throws {
         var s = ManagerSettings.default
         s.disabledLanguageIds = ["javascript"]
-        s.previewDisabledLanguageIds = ["json"]
         s.activeThemeId = "github-dark"
         s.font = FontSettings(family: "JetBrains Mono", size: 13)
         s.settingsVersion = 7
@@ -47,5 +45,24 @@ final class ManagerSettingsTests: XCTestCase {
         // На практике это безопасно: оба источника значения (NSFont.pointSize
         // и числа из JSON/JSONC) физически не производят NaN.
         XCTAssertTrue(FontSettings.clampSize(Double.nan)?.isNaN ?? false)
+    }
+
+    func testDefaultHasEmptyRuleMaps() {
+        let s = ManagerSettings.default
+        XCTAssertEqual(s.schemaVersion, 2)
+        XCTAssertTrue(s.extensionOverrides.isEmpty)
+        XCTAssertTrue(s.filenameOverrides.isEmpty)
+        XCTAssertTrue(s.disabledExtensions.isEmpty)
+        XCTAssertTrue(s.disabledFilenames.isEmpty)
+    }
+
+    func testRoundTripEncodesNewFields() throws {
+        var s = ManagerSettings.default
+        s.extensionOverrides = ["conf": "ini"]
+        s.disabledExtensions = ["log"]
+        let data = try JSONEncoder().encode(s)
+        let back = try JSONDecoder().decode(ManagerSettings.self, from: data)
+        XCTAssertEqual(back.extensionOverrides["conf"], "ini")
+        XCTAssertTrue(back.disabledExtensions.contains("log"))
     }
 }
