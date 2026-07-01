@@ -1112,7 +1112,7 @@ git commit -m "feat(preview): Слой A — невод public.plain-text; сп�
         }
         XCTAssertTrue(model.isRuleOn(row))
         model.setRuleOn(row, false)
-        XCTAssertFalse(model.settings.disabledExtensions.contains("swift") == false)
+        XCTAssertTrue(model.settings.disabledExtensions.contains("swift"))
         XCTAssertFalse(model.isRuleOn(row))
     }
 
