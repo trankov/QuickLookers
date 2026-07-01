@@ -41,18 +41,40 @@ final class SettingsModelTests: XCTestCase {
         XCTAssertTrue(model.isLanguageOn(lang.id))
     }
 
-    func test_setPreviewOn_off_then_on_togglesIsPreviewOn() throws {
-        let model = SettingsModel(containerURL: try makeTempContainer())
-        guard let lang = model.catalog.languages.first else {
-            return XCTFail("ожидался непустой каталог языков")
+    @MainActor
+    func testRuleToggleWritesDisabledExtension() {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let model = SettingsModel(containerURL: dir)
+        guard let row = model.previewRules.first(where: { $0.key == "swift" && !$0.isFilename }) else {
+            return XCTFail("нет правила для .swift")
         }
-        XCTAssertTrue(model.isPreviewOn(lang.id))
+        XCTAssertTrue(model.isRuleOn(row))
+        model.setRuleOn(row, false)
+        XCTAssertTrue(model.settings.disabledExtensions.contains("swift"))
+        XCTAssertFalse(model.isRuleOn(row))
+    }
 
-        model.setPreviewOn(lang.id, false)
-        XCTAssertFalse(model.isPreviewOn(lang.id))
+    @MainActor
+    func testSetRuleLanguageWritesOverride() {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let model = SettingsModel(containerURL: dir)
+        guard let row = model.previewRules.first(where: { $0.key == "json" && !$0.isFilename }) else {
+            return XCTFail("нет правила для .json")
+        }
+        model.setRuleLanguage(row, "javascript")
+        XCTAssertEqual(model.settings.extensionOverrides["json"], "javascript")
+    }
 
-        model.setPreviewOn(lang.id, true)
-        XCTAssertTrue(model.isPreviewOn(lang.id))
+    @MainActor
+    func testAddExtensionRule() {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let model = SettingsModel(containerURL: dir)
+        model.addExtensionRule(ext: ".myext", languageId: "python")
+        XCTAssertEqual(model.settings.extensionOverrides["myext"], "python")
+        XCTAssertTrue(model.previewRules.contains { $0.key == "myext" && $0.languageId == "python" })
     }
 
     func test_update_persistsAcrossSubsequentReads() throws {
