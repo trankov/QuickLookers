@@ -71,11 +71,7 @@ final class SettingsModel: ObservableObject {
         let (loadedCatalog, loadedImportedIds) = Self.loadCatalog(containerURL: containerURL)
         self.catalog = loadedCatalog
         self.importedIds = loadedImportedIds
-        self.associations = {
-            guard let url = QuickLookersEngineResources.associationsURL(),
-                  let a = try? FileTypeAssociations(contentsOf: url) else { return .empty }
-            return a
-        }()
+        self.associations = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
 
         // Хранилище — в общем контейнере. Нет контейнера → окно работает,
         // но предупреждаем: подпись/entitlement не настроены.

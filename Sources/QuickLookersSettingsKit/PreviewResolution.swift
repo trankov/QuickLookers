@@ -18,16 +18,18 @@ public func isLanguageEnabled(_ id: String, settings: ManagerSettings) -> Bool {
 public func resolvePreview(fileName: String, pathExtension: String,
                            associations: FileTypeAssociations,
                            settings: ManagerSettings) -> PreviewResolution {
+    func resolution(languageId: String, isDisabledForPreview: Bool) -> PreviewResolution {
+        guard !isDisabledForPreview, isLanguageEnabled(languageId, settings: settings) else { return .neutral }
+        return .highlight(languageId: languageId)
+    }
     // 1) правило по имени файла (Dockerfile, CMakeLists.txt …)
     if let lang = settings.filenameOverrides[fileName] ?? associations.byFilename[fileName] {
-        if settings.disabledFilenames.contains(fileName) { return .neutral }
-        return isLanguageEnabled(lang, settings: settings) ? .highlight(languageId: lang) : .neutral
+        return resolution(languageId: lang, isDisabledForPreview: settings.disabledFilenames.contains(fileName))
     }
     // 2) правило по расширению
     let ext = pathExtension.lowercased()
     if !ext.isEmpty, let lang = settings.extensionOverrides[ext] ?? associations.byExtension[ext] {
-        if settings.disabledExtensions.contains(ext) { return .neutral }
-        return isLanguageEnabled(lang, settings: settings) ? .highlight(languageId: lang) : .neutral
+        return resolution(languageId: lang, isDisabledForPreview: settings.disabledExtensions.contains(ext))
     }
     // 3) дошло (напр. по public.plain-text), но неизвестно → нейтральный текст
     return .neutral

@@ -14,11 +14,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     private static var cachedThemeIds: Set<String>?
 
     // Таблица соответствий строится один раз на процесс (тёплый рантайм).
-    private static let associations: FileTypeAssociations = {
-        guard let url = QuickLookersEngineResources.associationsURL(),
-              let a = try? FileTypeAssociations(contentsOf: url) else { return .empty }
-        return a
-    }()
+    private static let associations = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
 
     // Пул тёплых вебвью. Один общий вебвью держать нельзя: Finder показывает
     // превью ПАРАЛЛЕЛЬНО (панель «Просмотр» + QuickLook-пробел, галерея) — один
@@ -94,6 +90,10 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         return trimToFirstLines(code, max: maxLines)
     }
 
+    private static func truncatedNotice(_ truncated: Bool) -> String? {
+        truncated ? "Показаны первые \(maxLines) строк" : nil
+    }
+
     func preparePreviewOfFile(at url: URL) async throws {
         let start = Date()
         let wasWarm = Self.cachedEngine != nil
@@ -131,10 +131,9 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
                 let (trimmed, truncated) = try Self.loadTrimmed(url, size: size)
                 let fragment = try Self.engine().highlightToHTML(
                     HighlightRequest(code: trimmed, languageId: lang, themeId: themeId))
-                let notice = truncated ? "Показаны первые \(Self.maxLines) строк" : nil
                 page = previewPageHTML(highlighted: fragment,
                                        fontFamily: settings.font.family, fontSize: settings.font.size,
-                                       truncatedNotice: notice)
+                                       truncatedNotice: Self.truncatedNotice(truncated))
                 cache?.store(key, html: page)
                 pruneCache = true
             }
@@ -143,10 +142,9 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
             logLang = "neutral"
             cacheHit = false
             let (trimmed, truncated) = try Self.loadTrimmed(url, size: size)
-            let notice = truncated ? "Показаны первые \(Self.maxLines) строк" : nil
             page = neutralPageHTML(code: trimmed,
                                    fontFamily: settings.font.family, fontSize: settings.font.size,
-                                   truncatedNotice: notice)
+                                   truncatedNotice: Self.truncatedNotice(truncated))
         }
 
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in

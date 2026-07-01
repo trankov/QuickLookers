@@ -41,11 +41,8 @@ final class SettingsModelTests: XCTestCase {
         XCTAssertTrue(model.isLanguageOn(lang.id))
     }
 
-    @MainActor
-    func testRuleToggleWritesDisabledExtension() {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let model = SettingsModel(containerURL: dir)
+    func testRuleToggleWritesDisabledExtension() throws {
+        let model = SettingsModel(containerURL: try makeTempContainer())
         guard let row = model.previewRules.first(where: { $0.key == "swift" && !$0.isFilename }) else {
             return XCTFail("нет правила для .swift")
         }
@@ -55,11 +52,8 @@ final class SettingsModelTests: XCTestCase {
         XCTAssertFalse(model.isRuleOn(row))
     }
 
-    @MainActor
-    func testSetRuleLanguageWritesOverride() {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let model = SettingsModel(containerURL: dir)
+    func testSetRuleLanguageWritesOverride() throws {
+        let model = SettingsModel(containerURL: try makeTempContainer())
         guard let row = model.previewRules.first(where: { $0.key == "json" && !$0.isFilename }) else {
             return XCTFail("нет правила для .json")
         }
@@ -67,11 +61,8 @@ final class SettingsModelTests: XCTestCase {
         XCTAssertEqual(model.settings.extensionOverrides["json"], "javascript")
     }
 
-    @MainActor
-    func testAddExtensionRule() {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let model = SettingsModel(containerURL: dir)
+    func testAddExtensionRule() throws {
+        let model = SettingsModel(containerURL: try makeTempContainer())
         model.addExtensionRule(ext: ".myext", languageId: "python")
         XCTAssertEqual(model.settings.extensionOverrides["myext"], "python")
         XCTAssertTrue(model.previewRules.contains { $0.key == "myext" && $0.languageId == "python" })

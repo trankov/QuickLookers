@@ -34,4 +34,14 @@ final class FileTypeAssociationsTests: XCTestCase {
         XCTAssertTrue(FileTypeAssociations.empty.byExtension.isEmpty)
         XCTAssertTrue(FileTypeAssociations.empty.byFilename.isEmpty)
     }
+
+    func testLoadedFromValidURL() throws {
+        let url = try write(#"{"version":1,"languages":[{"id":"swift","extensions":["swift"],"filenames":[]}]}"#)
+        XCTAssertEqual(FileTypeAssociations.loaded(from: url).byExtension["swift"], "swift")
+    }
+
+    func testLoadedFallsBackToEmpty() {
+        XCTAssertEqual(FileTypeAssociations.loaded(from: nil), .empty)
+        XCTAssertEqual(FileTypeAssociations.loaded(from: URL(fileURLWithPath: "/nonexistent.json")), .empty)
+    }
 }

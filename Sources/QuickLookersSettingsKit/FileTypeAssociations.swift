@@ -16,6 +16,13 @@ public struct FileTypeAssociations: Equatable {
 
     public static let empty = FileTypeAssociations(byExtension: [:], byFilename: [:])
 
+    /// Загружает датасет по URL, отдавая `.empty` на отсутствующем контейнере
+    /// или битом файле — вызывающая сторона не должна падать из-за него.
+    public static func loaded(from url: URL?) -> FileTypeAssociations {
+        guard let url, let associations = try? FileTypeAssociations(contentsOf: url) else { return .empty }
+        return associations
+    }
+
     // DTO отделён от домена: во внешнем JSON — списки по языкам, внутри — обратные карты.
     private struct DTO: Decodable {
         struct Language: Decodable { let id: String; let extensions: [String]; let filenames: [String] }
