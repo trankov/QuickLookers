@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync } from 'fs'
 import yaml from 'js-yaml'
 import { bundledLanguagesInfo } from 'shiki'
 
-const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '')
+const norm = (s) => String(s).toLowerCase().replace(/\+/g, 'p').replace(/#/g, 'sharp').replace(/[^a-z0-9]/g, '')
 const shiki = bundledLanguagesInfo
 const shikiIds = new Set(shiki.map((l) => l.id))
 
@@ -82,8 +82,14 @@ for (const [fn, cands] of fileCandidates) {
   if (shikiIds.has(id)) fileOwner.set(fn, id)
 }
 // overrides могут вводить ext/filename, которых не было в кандидатах
-for (const [ext, id] of Object.entries(overrides.extensions ?? {})) if (shikiIds.has(id)) extOwner.set(ext, id)
-for (const [fn, id] of Object.entries(overrides.filenames ?? {})) if (shikiIds.has(id)) fileOwner.set(fn, id)
+for (const [ext, id] of Object.entries(overrides.extensions ?? {})) {
+  if (shikiIds.has(id)) extOwner.set(ext, id)
+  else console.warn(`override ext .${ext} → неизвестный shiki id: ${id}`)
+}
+for (const [fn, id] of Object.entries(overrides.filenames ?? {})) {
+  if (shikiIds.has(id)) fileOwner.set(fn, id)
+  else console.warn(`override file ${fn} → неизвестный shiki id: ${id}`)
+}
 
 // 4) инверсия в списки по языкам
 const byLang = new Map()
