@@ -46,6 +46,13 @@ public func previewPageHTML(highlighted: String, fontFamily: String? = nil, font
     pre.shiki {
         margin: 0;
         padding: 12px;
+        /* Фон темы Shiki вешает инлайн-стилем на сам <pre>. У короткого кода
+           <pre> ровно по высоте текста, ниже виден голый фон вебвью («подвал»
+           другого цвета). Тянем <pre> минимум на всю высоту окна тем же фоном.
+           box-sizing: border-box обязателен — иначе 100vh + padding дают
+           переполнение (100vh + 24px) и лишний вертикальный скролл. */
+        box-sizing: border-box;
+        min-height: 100vh;
         font-size: \(size)px;
         line-height: 1.5;
         tab-size: 4;

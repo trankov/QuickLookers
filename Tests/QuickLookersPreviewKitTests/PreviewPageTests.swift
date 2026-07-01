@@ -11,6 +11,18 @@ final class PreviewPageTests: XCTestCase {
         XCTAssertTrue(page.contains(fragment), "фрагмент вставлен дословно")
     }
 
+    func test_backgroundStretchesToFullWindowHeight() {
+        // Короткий код не должен оставлять снизу «подвал» другого цвета:
+        // <pre.shiki>, несущий цвет фона темы, тянется на всю высоту окна,
+        // а border-box не даёт padding'у переполнить высоту (лишний скролл).
+        let page = previewPageHTML(
+            highlighted: #"<pre class="shiki" style="background-color:#1e1e1e">x</pre>"#)
+        XCTAssertTrue(page.contains("min-height: 100vh"),
+                      "фон растянут на всю высоту окна")
+        XCTAssertTrue(page.contains("box-sizing: border-box"),
+                      "padding не должен давать переполнение по высоте")
+    }
+
     func test_fragmentIsNotDoubleEscaped() {
         let fragment = #"<span style="color:#569cd6">let</span>"#
         let page = previewPageHTML(highlighted: fragment)
