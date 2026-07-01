@@ -1,4 +1,5 @@
 import XCTest
+import Foundation
 import QuickLookersEngine
 
 final class EngineResourcesTests: XCTestCase {
@@ -21,5 +22,13 @@ final class EngineResourcesTests: XCTestCase {
             XCTAssertEqual(url.lastPathComponent, "catalog.json")
             XCTAssertTrue(FileManager.default.fileExists(atPath: url.path), "сайдкар не существует: \(url)")
         }
+    }
+
+    func testAssociationsURLResolvesAndDecodes() throws {
+        let url = try XCTUnwrap(QuickLookersEngineResources.associationsURL())
+        let data = try Data(contentsOf: url)
+        let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        XCTAssertEqual(obj?["version"] as? Int, 1)
+        XCTAssertNotNil(obj?["languages"])
     }
 }
