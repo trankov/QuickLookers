@@ -104,6 +104,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
                                         associations: Self.associations,
                                         settings: settings)
 
+        // Дешёвый ключ кэша: атрибуты файла без чтения содержимого.
         let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
         let mtime = (attrs[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0
         let size = (attrs[.size] as? Int) ?? 0
@@ -111,6 +112,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         let page: String
         let cacheHit: Bool
         let logLang: String
+        var pruneCache = false
 
         switch resolution {
         case .highlight(let lang):
@@ -134,8 +136,8 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
                                        fontFamily: settings.font.family, fontSize: settings.font.size,
                                        truncatedNotice: notice)
                 cache?.store(key, html: page)
+                pruneCache = true
             }
-            if !cacheHit { cache?.evictIfNeeded() }
 
         case .neutral:
             logLang = "neutral"
@@ -151,6 +153,9 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
             self.loadContinuation = cont
             self.webView.loadHTMLString(page, baseURL: nil)
         }
+
+        // Вытеснение — после показа, вне горячего пути.
+        if pruneCache { Self.sharedCache?.evictIfNeeded() }
 
         let ms = Date().timeIntervalSince(start) * 1000
         Self.log.info("""
