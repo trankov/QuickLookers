@@ -24,6 +24,8 @@
 		<dict>
 			<key>QLSupportedContentTypes</key>
 			<array>
+				<string>public.plain-text</string>
+				<string>public.data</string>
 				<string>public.python-script</string>
 				<string>com.netscape.javascript-source</string>
 				<string>org.nodejs.cjs</string>
@@ -47,6 +49,39 @@
 				<string>public.toml</string>
 				<string>public.json</string>
 				<string>org.iso.sql</string>
+				<string>com.quicklookers.source-code</string>
+				<string>public.ada-source</string>
+				<string>com.apple.applescript.text</string>
+				<string>public.bash-script</string>
+				<string>public.ksh-script</string>
+				<string>public.zsh-script</string>
+				<string>public.shell-script</string>
+				<string>com.apple.terminal.shell-script</string>
+				<string>public.css</string>
+				<string>public.html</string>
+				<string>public.xhtml</string>
+				<string>public.xml</string>
+				<string>public.patch-file</string>
+				<string>public.fortran-source</string>
+				<string>public.fortran-77-source</string>
+				<string>public.fortran-90-source</string>
+				<string>public.fortran-95-source</string>
+				<string>public.pascal-source</string>
+				<string>public.objective-c-source</string>
+				<string>public.objective-c-plus-plus-source</string>
+				<string>public.assembly-source</string>
+				<string>public.nasm-assembly-source</string>
+				<string>public.protobuf-source</string>
+				<string>public.make-source</string>
+				<string>com.microsoft.ini</string>
+				<string>com.microsoft.hlsl</string>
+				<string>org.khronos.glsl-source</string>
+				<string>org.khronos.glsl.fragment-shader</string>
+				<string>org.khronos.glsl.vertex-shader</string>
+				<string>org.khronos.glsl.geometry-shader</string>
+				<string>com.microsoft.typescript</string>
+				<string>public.mpeg-2-transport-stream</string>
+				<string>com.apple.rez-source</string>
 			</array>
 			<key>QLSupportsSearchableItems</key>
 			<false/>

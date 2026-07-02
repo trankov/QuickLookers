@@ -15,6 +15,12 @@ public enum QuickLookersEngineResources {
         Bundle.module.url(forResource: "catalog", withExtension: "json").map { [$0] } ?? []
     }
 
+    /// URL встроенного датасета соответствий «расширение/имя файла → язык».
+    /// nil, если ресурс не собран (тогда потребитель работает с пустой таблицей).
+    public static func associationsURL() -> URL? {
+        Bundle.module.url(forResource: "associations", withExtension: "json")
+    }
+
     private static func resourceDirectory(_ name: String) throws -> URL {
         guard let url = Bundle.module.url(forResource: name, withExtension: nil) else {
             throw EngineError.resourceNotFound(name)

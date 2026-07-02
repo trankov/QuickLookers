@@ -1,71 +1,158 @@
 import XCTest
+import QuickLookersEngine
 import QuickLookersSettingsKit
 
 final class ResolutionTests: XCTestCase {
-    func testDeclaredLanguageByExtension() {
-        XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "swift"), "swift")
-        XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "JSON"), "json") // регистронезависимо
-        XCTAssertEqual(DeclaredTypes.languageId(forPathExtension: "js"), "javascript")
-        XCTAssertNil(DeclaredTypes.languageId(forPathExtension: "docx"))
+    private let assoc = FileTypeAssociations(
+        byExtension: ["swift": "swift", "py": "python", "json": "json"],
+        byFilename: ["Dockerfile": "docker"])
+
+    // Боевой датасет парсим один раз на весь класс (а не заново в каждом тесте).
+    private static let datasetAssoc =
+        FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
+
+    // MARK: - Невод public.data: безрасширенные файлы (Dockerfile/Makefile) по имени
+
+    func test_resolve_dockerfile_byName_highlightsDocker() throws {
+        let assoc = Self.datasetAssoc
+        let r = resolvePreview(fileName: "Dockerfile", pathExtension: "",
+                               associations: assoc, settings: .default)
+        XCTAssertEqual(r, .highlight(languageId: "docker"))
     }
 
-    func testPreviewHappyPath() {
-        let s = ManagerSettings.default
-        XCTAssertEqual(previewLanguageId(forPathExtension: "swift", settings: s), "swift")
+    func test_resolve_unknownExtensionlessName_isNeutral() throws {
+        let assoc = Self.datasetAssoc
+        let r = resolvePreview(fileName: ".gitignore", pathExtension: "",
+                               associations: assoc, settings: .default)
+        XCTAssertEqual(r, .neutral)   // .gitignore нет в датасете → нейтральный текст, не бросок
     }
 
-    func testUnknownExtensionGivesNil() {
-        XCTAssertNil(previewLanguageId(forPathExtension: "docx", settings: .default))
+    func testHighlightByExtension() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.swift", pathExtension: "swift", associations: assoc, settings: .default),
+            .highlight(languageId: "swift"))
     }
 
-    func test_previewLanguageForExpandedExtensions() {
-        let s = ManagerSettings.default
-        XCTAssertEqual(previewLanguageId(forPathExtension: "py", settings: s), "python")
-        XCTAssertEqual(previewLanguageId(forPathExtension: "rs", settings: s), "rust")
-        XCTAssertEqual(previewLanguageId(forPathExtension: "yml", settings: s), "yaml")
-        XCTAssertEqual(previewLanguageId(forPathExtension: "tsx", settings: s), "tsx")
+    func testExtensionCaseInsensitive() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "A.SWIFT", pathExtension: "SWIFT", associations: assoc, settings: .default),
+            .highlight(languageId: "swift"))
     }
 
-    func testDisabledLanguageGivesNil() {
+    func testHighlightByFilename() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "Dockerfile", pathExtension: "", associations: assoc, settings: .default),
+            .highlight(languageId: "docker"))
+    }
+
+    func testUnknownExtensionIsNeutral() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.docx", pathExtension: "docx", associations: assoc, settings: .default),
+            .neutral)
+    }
+
+    func testDisabledExtensionIsNeutral() {
         var s = ManagerSettings.default
-        s.disabledLanguageIds = ["json"]
-        XCTAssertNil(previewLanguageId(forPathExtension: "json", settings: s))
+        s.disabledExtensions = ["json"]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.json", pathExtension: "json", associations: assoc, settings: s),
+            .neutral)
     }
 
-    func testPreviewDisabledLanguageGivesNil() {
+    func testDisabledFilenameIsNeutral() {
         var s = ManagerSettings.default
-        s.previewDisabledLanguageIds = ["json"]
-        XCTAssertNil(previewLanguageId(forPathExtension: "json", settings: s))
-        // но красить (Слой 1) язык по-прежнему можно
-        XCTAssertTrue(isLanguageEnabled("json", settings: s))
+        s.disabledFilenames = ["Dockerfile"]
+        XCTAssertEqual(
+            resolvePreview(fileName: "Dockerfile", pathExtension: "", associations: assoc, settings: s),
+            .neutral)
     }
 
-    func testDisabledLanguageAlsoDisablesPreview() {
+    func testDisabledLanguageLayer1IsNeutral() {
         var s = ManagerSettings.default
         s.disabledLanguageIds = ["swift"]
-        XCTAssertFalse(isPreviewEnabled("swift", settings: s))
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.swift", pathExtension: "swift", associations: assoc, settings: s),
+            .neutral)
     }
 
-    func testUnknownDisabledIdIsHarmless() {
+    func testExtensionOverrideWins() {
         var s = ManagerSettings.default
-        s.disabledLanguageIds = ["ruby"] // нет в каталоге
+        s.extensionOverrides = ["json": "javascript"]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.json", pathExtension: "json", associations: assoc, settings: s),
+            .highlight(languageId: "javascript"))
+    }
+
+    func testFilenameRuleWinsOverExtension() {
+        // Файл с именем из карты имён и одновременно расширением — имя приоритетнее.
+        let a = FileTypeAssociations(byExtension: ["txt": "plaintext"],
+                                     byFilename: ["CMakeLists.txt": "cmake"])
+        XCTAssertEqual(
+            resolvePreview(fileName: "CMakeLists.txt", pathExtension: "txt", associations: a, settings: .default),
+            .highlight(languageId: "cmake"))
+    }
+
+    func testAddedExtensionRuleForUnknown() {
+        var s = ManagerSettings.default
+        s.extensionOverrides = ["myext": "python"]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.myext", pathExtension: "myext", associations: assoc, settings: s),
+            .highlight(languageId: "python"))
+    }
+
+    func testEmptyExtensionNoFilenameIsNeutral() {
+        XCTAssertEqual(
+            resolvePreview(fileName: "README", pathExtension: "", associations: assoc, settings: .default),
+            .neutral)
+    }
+
+    func testIsLanguageEnabled() {
+        var s = ManagerSettings.default
+        s.disabledLanguageIds = ["json"]
+        XCTAssertFalse(isLanguageEnabled("json", settings: s))
         XCTAssertTrue(isLanguageEnabled("swift", settings: s))
     }
 
-    func testEmptyExtensionGivesNil() {
-        XCTAssertNil(DeclaredTypes.languageId(forPathExtension: ""))
-        XCTAssertNil(previewLanguageId(forPathExtension: "", settings: .default))
+    // MARK: - Свободные (dyn.*) расширения: свой UTI com.quicklookers.source-code (механизм 1b)
+
+    func test_resolve_freeExtensions_mapToLanguages() throws {
+        let assoc = Self.datasetAssoc
+        let cases: [(String, String)] = [("a.kt","kotlin"), ("a.kts","kotlin"),
+                                          ("a.graphql","graphql"), ("a.gql","graphql"),
+                                          ("a.dart","dart"), ("a.nim","nim"), ("a.zig","zig")]
+        for (name, lang) in cases {
+            let ext = (name as NSString).pathExtension
+            XCTAssertEqual(resolvePreview(fileName: name, pathExtension: ext,
+                                          associations: assoc, settings: .default),
+                           .highlight(languageId: lang), "\(name)")
+        }
     }
 
-    func testBothDisabledFlagsSetForSameId() {
-        // Реалистично избыточная, но возможная комбинация настроек: язык одновременно
-        // в disabledLanguageIds и в previewDisabledLanguageIds. Поведение должно
-        // остаться тем же, что и при одном только disabledLanguageIds.
-        var s = ManagerSettings.default
-        s.disabledLanguageIds = ["json"]
-        s.previewDisabledLanguageIds = ["json"]
-        XCTAssertFalse(isLanguageEnabled("json", settings: s))
-        XCTAssertFalse(isPreviewEnabled("json", settings: s))
-        XCTAssertNil(previewLanguageId(forPathExtension: "json", settings: s))
+    // MARK: - Системные UTI, объявленные для «чужетипных» расширений (механизм 1a)
+
+    func test_resolve_1a_extensions_mapToLanguages() throws {
+        let assoc = Self.datasetAssoc
+        let cases: [(String, String)] = [("app.ts","typescript"), ("model.r","r"),
+                                          ("u.pas","pascal"), ("page.html","html"),
+                                          ("a.m","objective-c"), ("s.f90","fortran-free-form"),
+                                          ("v.proto","proto")]
+        for (name, lang) in cases {
+            let ext = (name as NSString).pathExtension
+            XCTAssertEqual(resolvePreview(fileName: name, pathExtension: ext,
+                                          associations: assoc, settings: .default),
+                           .highlight(languageId: lang), "\(name)")
+        }
+    }
+
+    // Живая проверка вскрыла пробелы: Makefile (лист public.make-source, по имени) и
+    // .ini (лист com.microsoft.ini, по расширению) — оба добавлены в 1a-невод.
+    func test_resolve_makefile_and_ini() throws {
+        let assoc = Self.datasetAssoc
+        XCTAssertEqual(resolvePreview(fileName: "Makefile", pathExtension: "",
+                                      associations: assoc, settings: .default),
+                       .highlight(languageId: "make"))
+        XCTAssertEqual(resolvePreview(fileName: "app.ini", pathExtension: "ini",
+                                      associations: assoc, settings: .default),
+                       .highlight(languageId: "ini"))
     }
 }

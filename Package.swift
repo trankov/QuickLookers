@@ -19,6 +19,7 @@ let package = Package(
                 .copy("Resources/grammars"),
                 .copy("Resources/themes"),
                 .copy("Resources/catalog.json"),
+                .copy("Resources/associations.json"),
             ]
         ),
         .testTarget(

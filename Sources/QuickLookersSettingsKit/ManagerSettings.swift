@@ -19,26 +19,36 @@ public struct FontSettings: Codable, Equatable {
     }
 }
 
-/// Настройки менеджера. Модель opt-out: храним выключенное, пусто = всё включено.
+/// Настройки менеджера. Модель opt-out: храним выключенное/переопределённое,
+/// пусто = поведение по умолчанию (из сгенерированного датасета).
 public struct ManagerSettings: Codable, Equatable {
     public var schemaVersion: Int
     public var settingsVersion: Int
-    public var disabledLanguageIds: Set<String>
+    public var disabledLanguageIds: Set<String>          // Слой 1: язык выключен в библиотеке
     public var activeThemeId: String
     public var font: FontSettings
-    public var previewDisabledLanguageIds: Set<String>
+    // Слой 2: правила просмотра поверх датасета.
+    public var extensionOverrides: [String: String]      // ext(lower) → languageId
+    public var filenameOverrides: [String: String]       // filename → languageId
+    public var disabledExtensions: Set<String>           // ext(lower), убран из просмотра
+    public var disabledFilenames: Set<String>            // filename, убран из просмотра
 
     public init(schemaVersion: Int, settingsVersion: Int, disabledLanguageIds: Set<String>,
-                activeThemeId: String, font: FontSettings, previewDisabledLanguageIds: Set<String>) {
+                activeThemeId: String, font: FontSettings,
+                extensionOverrides: [String: String], filenameOverrides: [String: String],
+                disabledExtensions: Set<String>, disabledFilenames: Set<String>) {
         self.schemaVersion = schemaVersion
         self.settingsVersion = settingsVersion
         self.disabledLanguageIds = disabledLanguageIds
         self.activeThemeId = activeThemeId
         self.font = font
-        self.previewDisabledLanguageIds = previewDisabledLanguageIds
+        self.extensionOverrides = extensionOverrides
+        self.filenameOverrides = filenameOverrides
+        self.disabledExtensions = disabledExtensions
+        self.disabledFilenames = disabledFilenames
     }
 
-    public static let currentSchemaVersion = 1
+    public static let currentSchemaVersion = 2
 
     public static let `default` = ManagerSettings(
         schemaVersion: currentSchemaVersion,
@@ -46,6 +56,9 @@ public struct ManagerSettings: Codable, Equatable {
         disabledLanguageIds: [],
         activeThemeId: DefaultThemeIds.dark,
         font: FontSettings(family: nil, size: nil),
-        previewDisabledLanguageIds: []
+        extensionOverrides: [:],
+        filenameOverrides: [:],
+        disabledExtensions: [],
+        disabledFilenames: []
     )
 }

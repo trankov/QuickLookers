@@ -53,6 +53,8 @@ macOS-приложение, возвращающее превью кода по 
 
 Группа A (тёплый WebView, перенос по строкам, обрезка) и кэш HTML — **сделаны в фазе 5** (см. п.5). Исходный список рычагов — в `docs/superpowers/notes/2026-06-28-preview-thin-slice-spikes.md`.
 
+**7. Сопоставление файл→язык (фаза сопоставления, ветка `feat/file-type-mapping`)** — **реализовано, хвост закрыт Задачей 5b** (спека `docs/superpowers/specs/2026-07-02-file-type-language-mapping-design.md`, план `docs/superpowers/plans/2026-07-02-file-type-language-mapping.md`). Спайк (`parent-uti-preview`) установил железный факт: `QLSupportedContentTypes` ловит по **точному листовому UTI**, конформанс вверх не работает (родитель `public.source-code` не ловит `public.swift-source` и т. п.) — зонтичная стратегия отвергнута. Взамен — **два слоя**. **Слой A** (маршрутизация, статичный `Info.plist`): список точных UTI, живым Спайком D подтверждено — невод `public.plain-text` ловит только файлы, которые сама система уже типизирует как текст (`.txt`, безрасширенные вроде `README`), а НЕ безрасширенные конфиги (`Dockerfile`/`.gitignore` система метит `public.data`) и НЕ неизвестные расширения (`dyn.*`); `csv`/`md` намеренно не объявлены — у них свой листовой UTI, остаются системе/соседним расширениям. Этот остаточный хвост закрыт Задачей 5b тремя механизмами поверх плюс базового набора `public.*`/вендорных UTI и невода plain-text: **(1)** невод `public.data` — ловит безрасширенные конфиги по имени файла (`Dockerfile`, `.gitignore`); бинарь (не-UTF-8) бросает → системный дженерик; **(2)** ~30 выверенных системных UTI, где системный тип и есть код/текст (Pascal/Fortran/GLSL/Objective-C/HTML/CSS/XML/Assembly/Protobuf/HLSL/шелл-скрипты/…), плюс два намеренных перехвата «ложных друзей» — `.ts`→typescript (система метит видео MPEG-2) и `.r`→R (Apple Rez); другие «ложные друзья» с реальным не-кодом за расширением (`.app`/`.pf`/`.dds`/`.gp`/`.potx`/`.mts`/…) **намеренно не объявлены** (объявить — сломать чужие настоящие файлы); **(3)** собственный экспортируемый UTI `com.quicklookers.source-code` — один тип на все свободные (`dyn.*`) расширения датасета, **652 штуки** (`kt`, `dart`, `graphql`, `nim`, `zig`, `vala`, `gleam`, …), `conformsTo public.source-code + public.plain-text`; экспортёром стал **хост**-таргет (не расширение — тип нужно откуда-то декларировать), поэтому хост перешёл на явный `info:`-блок в `project.yml` (`GENERATE_INFOPLIST_FILE: NO`), артефакт — `App/Info.plist`. Список для (3) генерирует dev-утилита **`Scripts/audit-extension-utis.swift --emit-tags`** (по `associations.json` резолвит листовой UTI каждого расширения и категоризирует; снимок — `docs/superpowers/notes/2026-07-03-extension-uti-audit.md`); **грабля** — после сборки/регистрации собственного UTI в LaunchServices эти расширения на машине разработки резолвятся уже в `com.quicklookers.source-code`, а не в `dyn.*` (самоконтаминация) → повторный аудит `--emit-tags` покажет почти пусто, гнать аудит ДО сборки или на чистой машине. Занятое установленным сторонним QL-приложением расширение (в спайке — `.nim` у sbarex) собственным UTI не отнять — держит сам факт экспорта типа в LaunchServices даже при выключенном чужом QL-расширении; принятое ограничение, ссылаться на чужой UTI конкурента в своём Info.plist намеренно не делаем. Железные факты механики хвоста (нет тега UTI на имя файла целиком — офиц. доки Apple; занятое не отнять; свободное `dyn.*` забирает чисто, подтверждено живым тестом после удаления sbarex) — Спайк E, `docs/superpowers/notes/2026-06-28-intercept-spikes.md`. **Слой B** (назначение языка, рантайм): таблица «расширение/имя файла → язык» из датасета `associations.json`, сгенерированного из `github-linguist` (`js/generate-associations.mjs` + `js/vendor/linguist-languages.yml`, т.к. у Shiki `fileTypes` есть лишь у 91/218 языков), плюс пользовательские правила (`extensionOverrides`/`filenameOverrides`/`disabledExtensions`/`disabledFilenames` в `ManagerSettings`, схема v2) поверх датасета. `resolvePreview` в `PreviewResolution.swift` решает: правило по имени файла приоритетнее правила по расширению; выключенный или неопознанный формат — **нейтральный показ** (`NeutralPage.swift`: моноширинный текст на системном фоне, не системный дженерик-превью) вместо броска. Вкладка «Просмотр в Finder» (`FileTypesTab.swift`) — таблица правил с поиском, выбором языка (именами из каталога, не id), тумблером и добавлением своего правила. **Ждёт живой проверки пользователем:** прогон App-тестов ⌘U и визуальная проверка хвоста (три механизма Задачи 5b) на живой сборке.
+
 **Замеры производительности:**
 - Голый движок на 200 строках Swift: холодный ≈440 мс, тёплый ≈190 мс (release ≈ debug — стоимость в JS-слое JSC). Детали — `docs/superpowers/notes/2026-06-28-engine-benchmark.md`.
 - Полный конвейер показа в расширении (движок + WKWebView), тёплый: **~85–175 мс** на коротких файлах, около ориентира ~100 мс. Тёплый процесс между показами **подтверждён**. Выбросы 1–2,6 с — холодный старт WebContent (рычаг: держать вебвью тёплым). Детали — `docs/superpowers/notes/2026-06-28-preview-thin-slice-spikes.md`.
@@ -73,15 +75,18 @@ Sources/QuickLookersEngine/
   Resources/
     shiki-bundle.js                    # СОБИРАЕТСЯ из js/, не править вручную
     catalog.json                       # СОБИРАЕТСЯ extract-resources.mjs: индекс {languages,themes}, не править вручную
+    associations.json                  # СОБИРАЕТСЯ js/generate-associations.mjs: датасет {язык → extensions/filenames} из linguist, не править вручную
     grammars/*.json                    # грамматики Shiki: МАССИВ [главная + встроенные] (имя файла = id языка), 218 шт.
     themes/*.json                      # темы Shiki
 Sources/QuickLookersPreviewKit/        # тестируемая presentation-логика расширения
   PreviewPage.swift                    # previewPageHTML(highlighted:fontFamily:fontSize:truncatedNotice:) — HTML-страница; шрифт накрывает и <code>
   CodeTrim.swift                       # trimToFirstLines (обрезка до N строк) + readBoundedPrefix (огранич. чтение больших файлов)
   HTMLCache.swift                      # HTMLCacheKey (ключ из атрибутов файла+тема+язык+ШРИФТ) + HTMLCache (lookup/store/evict, LRU, потолок 5 МБ)
+  NeutralPage.swift                    # neutralPageHTML — нейтральный моноширинный показ для выключенного/неопознанного формата
 Sources/QuickLookersSettingsKit/       # настройки, каталог языков/тем, App Group
-  ManagerSettings.swift                # модель настроек: opt-out по языкам + activeThemeId + FontSettings (семейство/размер, 6…48)
-  DeclaredTypes.swift                  # объявленные типы файлов, разрешение языка и признака просмотра
+  ManagerSettings.swift                # модель настроек (схема v2): opt-out по языкам + activeThemeId + FontSettings + правила Слоя 2 (extensionOverrides/filenameOverrides/disabledExtensions/disabledFilenames)
+  FileTypeAssociations.swift           # датасет «расширение/имя файла → язык» из associations.json (SettingsKit не зависит от движка, URL передаёт вызывающий)
+  PreviewResolution.swift              # resolvePreview — правило файла/расширения + пользовательские правки → highlight(language) | neutral
   Catalog.swift                        # каталог языков и тем из JSON-дескрипторов
   CatalogSource.swift                  # FileCatalogSource: читает grammars/ и themes/ из пакета
   SettingsStore.swift                  # атомарная запись settings.json, разрешение темы (resolvedThemeId), App Group
@@ -95,10 +100,14 @@ Sources/QuickLookersEditorKit/         # обнаружение редактор
   EditorScanner.swift                  # поиск VS Code-подобных в /Applications по product.json
   EditorSettingsReader.swift           # чтение editor.fontFamily/fontSize/colorTheme из settings.json (JSONC)
   EditorThemeResolver.swift            # тема редактора → встроенная id / своя кастомная / не найдена
-js/                                    # шаг сборки JS-бандла (Node, только для сборки)
+js/                                    # шаг сборки JS-бандла и датасета (Node, только для сборки)
   src/highlight.mjs                    # точка входа: вешает globalThis.ql*
   build.mjs                            # esbuild → Resources/shiki-bundle.js
+  generate-associations.mjs            # linguist-languages.yml (+associations-overrides.json) → Resources/associations.json
+  vendor/linguist-languages.yml        # вендоренный датасет github-linguist (расширения/имена файлов по языкам)
+  associations-overrides.json          # точечные правки/добавления поверх linguist перед генерацией
   test/smoke.mjs                       # node-смоук готового бандла
+  test/associations.smoke.mjs          # node-смоук сгенерированного associations.json
 Tests/QuickLookersEngineTests/         # XCTest, TDD (движок)
 Tests/QuickLookersPreviewKitTests/     # XCTest, TDD (PreviewKit)
 Tests/QuickLookersSettingsKitTests/    # XCTest, TDD (SettingsKit)
@@ -107,6 +116,7 @@ Tests/QuickLookersEditorKitTests/      # XCTest, TDD (EditorKit: поиск, ч�
 
 # Xcode-часть (генерируется XcodeGen, .xcodeproj в .gitignore)
 project.yml                            # спека XcodeGen: хост-приложение + расширение Preview
+App/Info.plist                         # NSExtension… + UTExportedTypeDeclarations (com.quicklookers.source-code, Задача 5b; генерит XcodeGen)
 App/QuickLookersApp.swift              # точка входа SwiftUI-приложения
 App/SettingsModel.swift                # модель окна: SettingsStore + каталог; applyEditorResult, FragmentCache
 App/ContentView.swift                  # три вкладки: Темы / Форматы / Просмотр; резиновое окно
@@ -125,6 +135,8 @@ PreviewExtension/
   Info.plist                           # NSExtension + QLSupportedContentTypes (генерит XcodeGen)
   QuickLookersPreview.entitlements     # App Sandbox + network.client
 
+Scripts/audit-extension-utis.swift     # dev-утилита (Задача 5b): по associations.json резолвит листовой UTI каждого расширения, категоризирует под три механизма хвоста Слоя A; `--emit-tags` печатает список для UTExportedTypeDeclarations
+
 docs/superpowers/                      # specs/ (дизайн), plans/ (планы), notes/ (замеры)
 ```
 
@@ -137,6 +149,9 @@ swift test --filter RuntimeTests
 
 # Пересборка JS-бандла Shiki (после правок js/src/*)
 cd js && npm install && npm run build && npm test
+
+# Пересборка датасета «расширение/имя файла → язык» (после правок js/vendor/*.yml или overrides)
+cd js && node generate-associations.mjs && node test/associations.smoke.mjs
 
 # Xcode-проект: сгенерировать из project.yml (нужен `brew install xcodegen`)
 xcodegen generate

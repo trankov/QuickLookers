@@ -8,11 +8,13 @@ import QuickLookersEditorKit
 /// Любое изменение сразу пишется в settings.json (с ростом settingsVersion).
 @MainActor
 final class SettingsModel: ObservableObject {
-    /// Язык с объявленным типом: имя для показа и его расширения.
-    struct FileTypeRow: Identifiable {
-        let id: String          // languageId
-        let displayName: String
-        let extensions: String  // ".swift", ".json" …
+    /// Строка таблицы правил Слоя 2.
+    struct PreviewRuleRow: Identifiable {
+        let id: String          // "ext:py" / "file:Dockerfile"
+        let key: String         // "py" / "Dockerfile"
+        let isFilename: Bool
+        let languageId: String
+        let languageName: String
     }
 
     @Published var settings: ManagerSettings
@@ -21,9 +23,32 @@ final class SettingsModel: ObservableObject {
     /// Идентификаторы импортированных языков и тем (из catalog-imported.json контейнера).
     @Published private(set) var importedIds: Set<String>
 
+    /// Датасет соответствий «расширение/имя файла → язык» (из движка).
+    let associations: FileTypeAssociations
+
     var lightThemes:  [ThemeInfo]   { catalog.themes.filter { !$0.isDark } }
     var darkThemes:   [ThemeInfo]   { catalog.themes.filter { $0.isDark } }
-    var fileTypeRows: [FileTypeRow] { Self.makeFileTypeRows(catalog: catalog) }
+
+    var previewRules: [PreviewRuleRow] {
+        let names = Dictionary(uniqueKeysWithValues: catalog.languages.map { ($0.id, $0.displayName) })
+        func name(_ id: String) -> String { names[id] ?? id }
+
+        // База: датасет + пользовательские override/добавления.
+        var exts = associations.byExtension
+        for (k, v) in settings.extensionOverrides { exts[k] = v }
+        var files = associations.byFilename
+        for (k, v) in settings.filenameOverrides { files[k] = v }
+
+        let extRows = exts.map { (ext, lang) in
+            PreviewRuleRow(id: "ext:\(ext)", key: ext, isFilename: false,
+                           languageId: lang, languageName: name(lang))
+        }
+        let fileRows = files.map { (fn, lang) in
+            PreviewRuleRow(id: "file:\(fn)", key: fn, isFilename: true,
+                           languageId: lang, languageName: name(lang))
+        }
+        return (extRows + fileRows).sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+    }
 
     private let store: SettingsStore?
     /// Контейнер App Group, с которым работает эта модель — нужен, чтобы reloadCatalog()
@@ -46,6 +71,7 @@ final class SettingsModel: ObservableObject {
         let (loadedCatalog, loadedImportedIds) = Self.loadCatalog(containerURL: containerURL)
         self.catalog = loadedCatalog
         self.importedIds = loadedImportedIds
+        self.associations = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
 
         // Хранилище — в общем контейнере. Нет контейнера → окно работает,
         // но предупреждаем: подпись/entitlement не настроены.
@@ -98,16 +124,6 @@ final class SettingsModel: ObservableObject {
         return (loadedCatalog, importedIds)
     }
 
-    /// Строки вкладки «Сопоставление»: объявленные языки + их расширения.
-    private static func makeFileTypeRows(catalog: Catalog) -> [FileTypeRow] {
-        let byLanguage = Dictionary(grouping: DeclaredTypes.all, by: { $0.languageId })
-        return byLanguage.keys.sorted().map { lang in
-            let exts = byLanguage[lang]!.map { ".\($0.pathExtension)" }.joined(separator: ", ")
-            let name = catalog.languages.first { $0.id == lang }?.displayName ?? lang
-            return FileTypeRow(id: lang, displayName: name, extensions: exts)
-        }
-    }
-
     /// Изменить настройки и сразу сохранить.
     func update(_ mutate: (inout ManagerSettings) -> Void) {
         mutate(&settings)
@@ -119,7 +135,6 @@ final class SettingsModel: ObservableObject {
 
     // Удобные производные для вкладок.
     func isLanguageOn(_ id: String) -> Bool { isLanguageEnabled(id, settings: settings) }
-    func isPreviewOn(_ id: String) -> Bool { isPreviewEnabled(id, settings: settings) }
 
     /// Включить/выключить язык в библиотеке (Слой 1).
     func setLanguageOn(_ id: String, _ on: Bool) {
@@ -128,11 +143,36 @@ final class SettingsModel: ObservableObject {
         }
     }
 
-    /// Включить/выключить просмотр языка в Finder (Слой 2).
-    func setPreviewOn(_ id: String, _ on: Bool) {
+    func isRuleOn(_ row: PreviewRuleRow) -> Bool {
+        guard isLanguageEnabled(row.languageId, settings: settings) else { return false }
+        return row.isFilename
+            ? !settings.disabledFilenames.contains(row.key)
+            : !settings.disabledExtensions.contains(row.key)
+    }
+
+    func setRuleOn(_ row: PreviewRuleRow, _ on: Bool) {
         update { s in
-            if on { s.previewDisabledLanguageIds.remove(id) } else { s.previewDisabledLanguageIds.insert(id) }
+            if row.isFilename {
+                if on { s.disabledFilenames.remove(row.key) } else { s.disabledFilenames.insert(row.key) }
+            } else {
+                if on { s.disabledExtensions.remove(row.key) } else { s.disabledExtensions.insert(row.key) }
+            }
         }
+    }
+
+    func setRuleLanguage(_ row: PreviewRuleRow, _ languageId: String) {
+        update { s in
+            if row.isFilename { s.filenameOverrides[row.key] = languageId }
+            else { s.extensionOverrides[row.key] = languageId }
+        }
+    }
+
+    /// Добавить/переопределить правило по расширению (ведущая точка допускается).
+    func addExtensionRule(ext: String, languageId: String) {
+        let key = ext.hasPrefix(".") ? String(ext.dropFirst()) : ext
+        let norm = key.lowercased()
+        guard !norm.isEmpty else { return }
+        update { s in s.extensionOverrides[norm] = languageId }
     }
 
     /// Поиск id темы по отображаемому имени — для EditorThemeResolver.

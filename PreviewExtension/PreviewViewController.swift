@@ -13,6 +13,9 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     private static var cachedEngine: HighlightEngine?
     private static var cachedThemeIds: Set<String>?
 
+    // Таблица соответствий строится один раз на процесс (тёплый рантайм).
+    private static let associations = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
+
     // Пул тёплых вебвью. Один общий вебвью держать нельзя: Finder показывает
     // превью ПАРАЛЛЕЛЬНО (панель «Просмотр» + QuickLook-пробел, галерея) — один
     // вебвью не обслужит два показа сразу: второй перехватит делегата и навигацию,
@@ -78,48 +81,70 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         }
     }
 
+    /// Читает файл (с ограничением префикса для больших) и режет до maxLines.
+    /// Бросает на нечитаемом/не-UTF-8 файле → системный дженерик.
+    private static func loadTrimmed(_ url: URL, size: Int) throws -> (code: String, truncated: Bool) {
+        let code = size > largeFileThreshold
+            ? try readBoundedPrefix(of: url, maxBytes: largeFileThreshold)
+            : try String(contentsOf: url, encoding: .utf8)
+        return trimToFirstLines(code, max: maxLines)
+    }
+
+    private static func truncatedNotice(_ truncated: Bool) -> String? {
+        truncated ? "Показаны первые \(maxLines) строк" : nil
+    }
+
     func preparePreviewOfFile(at url: URL) async throws {
         let start = Date()
         let wasWarm = Self.cachedEngine != nil
-
         let settings = Self.settings()
-        guard let lang = previewLanguageId(forPathExtension: url.pathExtension, settings: settings) else {
-            // Не наш тип / язык выключен / убран из просмотра — отдаём системе.
-            throw CocoaError(.featureUnsupported)
-        }
 
-        let themeId = resolvedThemeId(activeThemeId: settings.activeThemeId,
-                                      availableThemeIds: try Self.themeIds())
+        let resolution = resolvePreview(fileName: url.lastPathComponent,
+                                        pathExtension: url.pathExtension,
+                                        associations: Self.associations,
+                                        settings: settings)
 
         // Дешёвый ключ кэша: атрибуты файла без чтения содержимого.
         let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
         let mtime = (attrs[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0
         let size = (attrs[.size] as? Int) ?? 0
-        let key = HTMLCacheKey(path: url.path, mtime: mtime, size: size,
-                               languageId: lang, themeId: themeId,
-                               fontFamily: settings.font.family, fontSize: settings.font.size,
-                               maxLines: Self.maxLines, bundleVersion: Self.bundleVersion)
 
-        let cache = Self.sharedCache
         let page: String
         let cacheHit: Bool
-        if let cached = cache?.lookup(key) {
-            page = cached
-            cacheHit = true
-        } else {
-            cacheHit = false
-            let code = size > Self.largeFileThreshold
-                ? try readBoundedPrefix(of: url, maxBytes: Self.largeFileThreshold)
-                : try String(contentsOf: url, encoding: .utf8)
-            let (trimmed, truncated) = trimToFirstLines(code, max: Self.maxLines)
-            let engine = try Self.engine()
-            let fragment = try engine.highlightToHTML(
-                HighlightRequest(code: trimmed, languageId: lang, themeId: themeId))
-            let notice = truncated ? "Показаны первые \(Self.maxLines) строк" : nil
-            page = previewPageHTML(highlighted: fragment,
+        let logLang: String
+        var pruneCache = false
+
+        switch resolution {
+        case .highlight(let lang):
+            logLang = lang
+            let themeId = resolvedThemeId(activeThemeId: settings.activeThemeId,
+                                          availableThemeIds: try Self.themeIds())
+            let key = HTMLCacheKey(path: url.path, mtime: mtime, size: size,
+                                   languageId: lang, themeId: themeId,
                                    fontFamily: settings.font.family, fontSize: settings.font.size,
-                                   truncatedNotice: notice)
-            cache?.store(key, html: page)
+                                   maxLines: Self.maxLines, bundleVersion: Self.bundleVersion)
+            let cache = Self.sharedCache
+            if let cached = cache?.lookup(key) {
+                page = cached; cacheHit = true
+            } else {
+                cacheHit = false
+                let (trimmed, truncated) = try Self.loadTrimmed(url, size: size)
+                let fragment = try Self.engine().highlightToHTML(
+                    HighlightRequest(code: trimmed, languageId: lang, themeId: themeId))
+                page = previewPageHTML(highlighted: fragment,
+                                       fontFamily: settings.font.family, fontSize: settings.font.size,
+                                       truncatedNotice: Self.truncatedNotice(truncated))
+                cache?.store(key, html: page)
+                pruneCache = true
+            }
+
+        case .neutral:
+            logLang = "neutral"
+            cacheHit = false
+            let (trimmed, truncated) = try Self.loadTrimmed(url, size: size)
+            page = neutralPageHTML(code: trimmed,
+                                   fontFamily: settings.font.family, fontSize: settings.font.size,
+                                   truncatedNotice: Self.truncatedNotice(truncated))
         }
 
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
@@ -128,13 +153,12 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         }
 
         // Вытеснение — после показа, вне горячего пути.
-        if !cacheHit { cache?.evictIfNeeded() }
+        if pruneCache { Self.sharedCache?.evictIfNeeded() }
 
         let ms = Date().timeIntervalSince(start) * 1000
         Self.log.info("""
             preview pid=\(getpid()) warm=\(wasWarm, privacy: .public) \
-            cache=\(cacheHit, privacy: .public) lang=\(lang, privacy: .public) \
-            theme=\(themeId, privacy: .public) \
+            cache=\(cacheHit, privacy: .public) lang=\(logLang, privacy: .public) \
             ms=\(ms, format: .fixed(precision: 1), privacy: .public)
             """)
     }
