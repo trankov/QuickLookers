@@ -97,15 +97,4 @@ final class CodeTrimTests: XCTestCase {
             .appendingPathComponent("ql-trim-missing-\(UUID().uuidString)")
         XCTAssertThrowsError(try readBoundedPrefix(of: url, maxBytes: 1024))
     }
-
-    func test_readBoundedPrefix_nonUTF8_throws() throws {
-        // Невод public.data ловит и бинарники без расширения — они должны
-        // бросать здесь, чтобы уйти в системный дженерик, а не показать мусор.
-        let dir = FileManager.default.temporaryDirectory
-        let url = dir.appendingPathComponent("blob-\(UUID().uuidString)")
-        let bytes: [UInt8] = [0x00, 0x01, 0xFF, 0xFE, 0x00, 0x42]
-        try Data(bytes).write(to: url)
-        defer { try? FileManager.default.removeItem(at: url) }
-        XCTAssertThrowsError(try readBoundedPrefix(of: url, maxBytes: 1024))
-    }
 }

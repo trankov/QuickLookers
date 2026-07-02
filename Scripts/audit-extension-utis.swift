@@ -38,8 +38,8 @@ for (e, u) in declare { print("  .\(e) → \(u)  (\(extToLang[e] ?? "?"))") }
 
 if CommandLine.arguments.contains("--emit-tags") {
     // Только свободные (dyn.*) расширения — готовый flow-массив для public.filename-extension.
-    var tags = own
-    if !tags.contains("nim") { tags.append("nim") }
-    tags.sort()
-    print("[" + tags.joined(separator: ", ") + "]")
+    // На ЧИСТОЙ машине список полон: nim и прочий хвост приходят через категорию 1b сами.
+    // На машине, где уже собран наш билд, LaunchServices вернёт эти расширения как наш UTI
+    // (самоконтаминация) → гнать утилиту ДО сборки / на чистой машине (см. заметку аудита).
+    print("[" + own.sorted().joined(separator: ", ") + "]")
 }
