@@ -119,12 +119,17 @@ targets:
           NSExtensionAttributes:
             QLSupportedContentTypes:
               # Невод «хвоста»: файлы, чей ТОЧНЫЙ листовой UTI — public.plain-text
-              # (generic-текст, .txt, неизвестные расширения, безрасширенные вроде
-              # Dockerfile). csv/md сюда НЕ попадают — у них собственные листовые
-              # UTI (public.comma-separated-values-text / net.daringfireball.markdown),
+              # (generic-текст, .txt, неизвестные текстовые расширения). csv/md сюда
+              # НЕ попадают — у них собственные листовые UTI
+              # (public.comma-separated-values-text / net.daringfireball.markdown),
               # а сопоставление идёт по точному листу. Незнакомое красится нейтральным
               # текстом (Слой B), csv/md остаются системе/соседу.
               - public.plain-text
+              # Невод безрасширенных конфигов (Dockerfile, Makefile): их точный лист —
+              # public.data (проверено URLResourceValues; тега на имя файла нет). Внутри
+              # resolvePreview красит по имени (docker/make) или нейтралью; бинарь (не-UTF-8)
+              # бросает → системный дженерик. Неизвестные РАСШИРЕНИЯ (dyn.*) сюда НЕ попадают.
+              - public.data
               - public.python-script
               - com.netscape.javascript-source
               - org.nodejs.cjs

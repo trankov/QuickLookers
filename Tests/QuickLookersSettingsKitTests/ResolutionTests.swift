@@ -1,10 +1,27 @@
 import XCTest
+import QuickLookersEngine
 import QuickLookersSettingsKit
 
 final class ResolutionTests: XCTestCase {
     private let assoc = FileTypeAssociations(
         byExtension: ["swift": "swift", "py": "python", "json": "json"],
         byFilename: ["Dockerfile": "docker"])
+
+    // MARK: - Невод public.data: безрасширенные файлы (Dockerfile/Makefile) по имени
+
+    func test_resolve_dockerfile_byName_highlightsDocker() throws {
+        let assoc = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
+        let r = resolvePreview(fileName: "Dockerfile", pathExtension: "",
+                               associations: assoc, settings: .default)
+        XCTAssertEqual(r, .highlight(languageId: "docker"))
+    }
+
+    func test_resolve_unknownExtensionlessName_isNeutral() throws {
+        let assoc = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
+        let r = resolvePreview(fileName: ".gitignore", pathExtension: "",
+                               associations: assoc, settings: .default)
+        XCTAssertEqual(r, .neutral)   // .gitignore нет в датасете → нейтральный текст, не бросок
+    }
 
     func testHighlightByExtension() {
         XCTAssertEqual(
