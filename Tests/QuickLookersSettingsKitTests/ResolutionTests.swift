@@ -139,4 +139,16 @@ final class ResolutionTests: XCTestCase {
                            .highlight(languageId: lang), "\(name)")
         }
     }
+
+    // Живая проверка вскрыла пробелы: Makefile (лист public.make-source, по имени) и
+    // .ini (лист com.microsoft.ini, по расширению) — оба добавлены в 1a-невод.
+    func test_resolve_makefile_and_ini() throws {
+        let assoc = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
+        XCTAssertEqual(resolvePreview(fileName: "Makefile", pathExtension: "",
+                                      associations: assoc, settings: .default),
+                       .highlight(languageId: "make"))
+        XCTAssertEqual(resolvePreview(fileName: "app.ini", pathExtension: "ini",
+                                      associations: assoc, settings: .default),
+                       .highlight(languageId: "ini"))
+    }
 }

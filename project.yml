@@ -201,6 +201,8 @@ targets:
               - public.assembly-source                  # .s → asm
               - public.nasm-assembly-source             # .nasm → asm
               - public.protobuf-source                  # .proto → proto
+              - public.make-source                      # Makefile/.mak/.make/.mk → make (лист Makefile = public.make-source, не public.data)
+              - com.microsoft.ini                       # .ini → ini (конфиг-текст)
               - com.microsoft.hlsl                      # .hlsl → hlsl
               - org.khronos.glsl-source                 # .glsl → glsl
               - org.khronos.glsl.fragment-shader        # .frag/.fsh (и .fs=fsharp — по расширению)
@@ -209,7 +211,12 @@ targets:
               - com.microsoft.typescript                # .tsx → tsx (public.tsx лист может не совпадать)
               # Два намеренных перехвата «ложных друзей» (подтверждено пользователем):
               # редкие настоящие .ts-видео/.r-Rez деградируют до дженерика — принято.
-              - public.mpeg-2-transport-stream          # .ts → typescript
+              # ОГОВОРКА (живая проверка): если установлен VLC, у него свой QL-провайдер
+              # на public.mpeg-2-transport-stream, и система предпочитает ЕГО нашему —
+              # .ts тогда показывает VLC, не код (конфликт ПРОВАЙДЕРОВ, не типов;
+              # решается галочкой в «Системные настройки → Быстрый просмотр»). На машине
+              # без такого провайдера .ts достаётся нам. .r перехват подтверждён вживую.
+              - public.mpeg-2-transport-stream          # .ts → typescript (может перебить VLC)
               - com.apple.rez-source                    # .r  → r
             QLSupportsSearchableItems: false
     dependencies:
