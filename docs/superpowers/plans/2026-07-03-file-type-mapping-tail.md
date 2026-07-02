@@ -228,38 +228,73 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 Добавить в `PreviewResolutionTests.swift`:
 
+Добавить в `Tests/QuickLookersSettingsKitTests/ResolutionTests.swift` (хелпер URL — `QuickLookersEngineResources.associationsURL()`):
+
 ```swift
-func test_resolve_ts_isTypescript() throws {
-    let assoc = FileTypeAssociations.loaded(from: associationsTestURL())
-    XCTAssertEqual(resolvePreview(fileName: "app.ts", pathExtension: "ts",
-                                  associations: assoc, settings: .default),
-                   .highlight(languageId: "typescript"))
-}
-func test_resolve_r_isR() throws {
-    let assoc = FileTypeAssociations.loaded(from: associationsTestURL())
-    XCTAssertEqual(resolvePreview(fileName: "model.r", pathExtension: "r",
-                                  associations: assoc, settings: .default),
-                   .highlight(languageId: "r"))
+func test_resolve_1a_extensions_mapToLanguages() throws {
+    let assoc = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
+    let cases: [(String, String)] = [("app.ts","typescript"), ("model.r","r"),
+                                      ("u.pas","pascal"), ("page.html","html"),
+                                      ("a.m","objective-c"), ("s.f90","fortran"),
+                                      ("v.proto","proto")]
+    for (name, lang) in cases {
+        let ext = (name as NSString).pathExtension
+        XCTAssertEqual(resolvePreview(fileName: name, pathExtension: ext,
+                                      associations: assoc, settings: .default),
+                       .highlight(languageId: lang), "\(name)")
+    }
 }
 ```
 
 - [ ] **Step 2: Запустить**
 
-Run: `swift test --filter PreviewResolutionTests`
-Expected: PASS (датасет уже содержит ts→typescript, r→r — подтверждено). Если упало — расширение отсутствует в `associations.json`; добавить через `js/associations-overrides.json` и пересобрать (`cd js && node generate-associations.mjs && node test/associations.smoke.mjs`), затем вернуться.
+Run: `swift test --filter ResolutionTests`
+Expected: PASS (датасет содержит эти пары). Если какая-то пара упала — язык-id в датасете иной (сверься с `associations.json`: например objective-c/fortran/proto могут иметь другой id); поправь ОЖИДАНИЕ теста под реальный id датасета (не датасет). НЕ добавляй расширения-«ложные друзья».
 
-- [ ] **Step 3: Добавить системные UTI в невод**
+- [ ] **Step 3: Добавить ВЫВЕРЕННЫЕ системные UTI в невод**
 
-В `project.yml`, в `QLSupportedContentTypes`, добавить (точные строки — из отчёта Task 1; ниже базовый минимум):
+Аудит (Task 1) показал: категория 1a — минное поле. Объявляем ТОЛЬКО системные UTI, где тип и есть код/текст (чистый выигрыш), плюс два намеренных перехвата (`ts`/`r`, подтверждено пользователем). «Ложных друзей» (реальный не-код) и семантические расхождения — НЕ объявляем. В `project.yml`, в `QLSupportedContentTypes` расширения, добавить дословно:
 
 ```yaml
-              # «Чужетипные» расширения: система даёт им лист не по смыслу (ts=видео
-              # MPEG-2, r=Apple Rez). Свой UTI на них ненадёжен (может проиграть системному),
-              # но точный лист МЫ перехватываем (Спайк B: побеждаем систему). Язык берётся
-              # по расширению в resolvePreview (ts→typescript, r→r). Актуальные строки — из
-              # docs/.../2026-07-03-extension-uti-audit.md (категория 1a).
-              - public.mpeg-2-transport-stream   # .ts (TypeScript)
-              - com.apple.rez-source             # .r  (R)
+              # Выверенные системные UTI (категория 1a аудита): тип = код/текст, объявление —
+              # чистый выигрыш; язык берётся по расширению в resolvePreview. Точный лист мы
+              # перехватываем (Спайк B: побеждаем систему). Список выверен вручную —
+              # docs/.../2026-07-03-extension-uti-audit.md. НЕ добавлять «ложных друзей»
+              # (реальный не-код): .app/.pf/.dds/.gp/.pot(x)/.sdc/.mts/.mod/.pls/.as/.url/.exs/
+              # .scpt/.storyboard/.xib, а также семантические расхождения (.l/.yy/.i/.cl) и
+              # вне-области (markdown/csv).
+              - public.ada-source                       # .ada/.adb/.ads → ada
+              - com.apple.applescript.text              # .applescript → applescript (НЕ .scpt — бинарь)
+              - public.bash-script                      # .bash → shellscript
+              - public.ksh-script                       # .ksh → shellscript
+              - public.zsh-script                       # .zsh → shellscript
+              - public.shell-script                     # .sh → shellscript
+              - com.apple.terminal.shell-script         # .command/.tool → shellscript
+              - public.css                              # .css → css
+              - public.html                             # .html/.htm → html
+              - public.xhtml                            # .xhtml/.xht → html
+              - public.xml                              # .xml → xml
+              - public.patch-file                       # .diff/.patch → diff
+              - public.fortran-source                   # .f/.for → fortran
+              - public.fortran-77-source                # .f77 → fortran
+              - public.fortran-90-source                # .f90 → fortran
+              - public.fortran-95-source                # .f95 → fortran
+              - public.pascal-source                    # .pas → pascal
+              - public.objective-c-source               # .m → objective-c
+              - public.objective-c-plus-plus-source     # .mm → objective-cpp
+              - public.assembly-source                  # .s → asm
+              - public.nasm-assembly-source             # .nasm → asm
+              - public.protobuf-source                  # .proto → proto
+              - com.microsoft.hlsl                      # .hlsl → hlsl
+              - org.khronos.glsl-source                 # .glsl → glsl
+              - org.khronos.glsl.fragment-shader        # .frag/.fsh (и .fs=fsharp — по расширению)
+              - org.khronos.glsl.vertex-shader          # .vert/.vsh (и .vs)
+              - org.khronos.glsl.geometry-shader        # .geom/.gsh (и .gs=genie)
+              - com.microsoft.typescript                # .tsx → tsx (public.tsx лист может не совпадать)
+              # Два намеренных перехвата «ложных друзей» (подтверждено пользователем):
+              # редкие настоящие .ts-видео/.r-Rez деградируют до дженерика — принято.
+              - public.mpeg-2-transport-stream          # .ts → typescript
+              - com.apple.rez-source                    # .r  → r
 ```
 
 - [ ] **Step 4: Перегенерировать и собрать**
@@ -273,8 +308,8 @@ Expected: `** BUILD SUCCEEDED **`.
 - [ ] **Step 5: Коммит**
 
 ```bash
-git add project.yml PreviewExtension/Info.plist Tests/QuickLookersSettingsKitTests/PreviewResolutionTests.swift
-git commit -m "feat(preview): перехват ts/r через их системный UTI — язык по расширению
+git add project.yml PreviewExtension/Info.plist Tests/QuickLookersSettingsKitTests/ResolutionTests.swift
+git commit -m "feat(preview): выверенные системные UTI (Pascal/Fortran/GLSL/Obj-C/HTML/… + ts/r) — язык по расширению
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -299,11 +334,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 - [ ] **Step 1: Тест — свободные расширения ведут к своим языкам**
 
-Добавить в `PreviewResolutionTests.swift`:
+Добавить в `Tests/QuickLookersSettingsKitTests/ResolutionTests.swift` (реальное имя файла; хелпер URL — `QuickLookersEngineResources.associationsURL()`, как уже принято в этом файле после Task 2):
 
 ```swift
 func test_resolve_freeExtensions_mapToLanguages() throws {
-    let assoc = FileTypeAssociations.loaded(from: associationsTestURL())
+    let assoc = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
     let cases: [(String, String)] = [("a.kt","kotlin"), ("a.kts","kotlin"),
                                       ("a.graphql","graphql"), ("a.gql","graphql"),
                                       ("a.dart","dart"), ("a.nim","nim"), ("a.zig","zig")]
@@ -318,12 +353,26 @@ func test_resolve_freeExtensions_mapToLanguages() throws {
 
 - [ ] **Step 2: Запустить**
 
-Run: `swift test --filter PreviewResolutionTests`
+Run: `swift test --filter ResolutionTests`
 Expected: PASS (датасет содержит все эти пары — подтверждено grep'ом).
 
-- [ ] **Step 3: Хосту — явный `info`-блок с экспортом типа**
+- [ ] **Step 3: Расширить утилиту аудита — выдавать список свободных расширений в виде YAML-тегов**
 
-В `project.yml` у таргета `QuickLookers`: в `settings.base` заменить `GENERATE_INFOPLIST_FILE: YES` на `NO`; после блока `settings:` добавить `info:` (генерируемый plist так расширить нельзя — нужен явный; проверено спайком: `CFBundlePackageType=APPL` и запуск сохраняются). Список расширений — из отчёта Task 1 (ниже базовый):
+Свободных (`dyn.*`) расширений — **652** (пользователь подтвердил: берём ВЕСЬ свободный список, не подмножество). Вручную такой список не набирают — пусть утилита из Task 1 его печатает. Добавить в `Scripts/audit-extension-utis.swift` в самый конец режим по флагу `--emit-tags`: если он есть, печатать ТОЛЬКО отсортированный список свободных (категория 1b) расширений как YAML-элементы для flow-массива (через запятую, в квадратных скобках) — плюс `.nim` (артефакт среды, но целевое 1b). Вставить после существующего вывода:
+
+```swift
+if CommandLine.arguments.contains("--emit-tags") {
+    // Только свободные (dyn.*) расширения — готовый flow-массив для public.filename-extension.
+    let tags = own.sorted()
+    print("[" + tags.joined(separator: ", ") + "]")
+}
+```
+
+(`own` уже собран выше по категории 1b. `.nim` на этой машине попал в 1a как артефакт старой сборки — добавь его в `own` явной строкой перед печатью, если его там нет: `var tags = own; if !tags.contains("nim") { tags.append("nim") }; tags.sort()`.)
+
+- [ ] **Step 4: Хосту — явный `info`-блок с экспортом типа (полный список из утилиты)**
+
+Получить список: `swift Scripts/audit-extension-utis.swift --emit-tags` — он печатает flow-массив всех свободных расширений. В `project.yml` у таргета `QuickLookers`: в `settings.base` заменить `GENERATE_INFOPLIST_FILE: YES` на `NO`; после блока `settings:` добавить `info:` (генерируемый plist так расширить нельзя — нужен явный; проверено спайком: `CFBundlePackageType=APPL` и запуск сохраняются). В `public.filename-extension` вставить ВЫВОД утилиты дословно (flow-массив; НЕ набирать руками):
 
 ```yaml
         GENERATE_INFOPLIST_FILE: NO   # был YES; нужен явный Info.plist для UTExportedTypeDeclarations
@@ -332,19 +381,21 @@ Expected: PASS (датасет содержит все эти пары — по�
       properties:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
-        # Один экспортируемый тип на все СВОБОДНЫЕ (dyn.*) расширения. Лист свободного
-        # расширения становится нашим (Спайк E). Язык внутри берётся по расширению из
-        # associations.json, поэтому один UTI на много языков — норм (маршрутизация, не
-        # семантика). Список — docs/.../2026-07-03-extension-uti-audit.md (категория 1b).
+        # Один экспортируемый тип на ВСЕ СВОБОДНЫЕ (dyn.*) расширения (652 шт., пользователь
+        # подтвердил полный список). Лист свободного расширения становится нашим (Спайк E).
+        # Язык внутри берётся по расширению из associations.json — один UTI на много языков
+        # норм (это маршрутизация, не семантика). Список ГЕНЕРИТСЯ:
+        # `swift Scripts/audit-extension-utis.swift --emit-tags` (снимок в
+        # docs/.../2026-07-03-extension-uti-audit.md, категория 1b). Руками не редактировать.
         UTExportedTypeDeclarations:
           - UTTypeIdentifier: com.quicklookers.source-code
             UTTypeDescription: Source code (QuickLookers)
             UTTypeConformsTo: [public.source-code, public.plain-text]
             UTTypeTagSpecification:
-              public.filename-extension: [kt, kts, graphql, gql, dart, nim, zig]
+              public.filename-extension: [<ВЫВОД `--emit-tags` ДОСЛОВНО — 652 расширения>]
 ```
 
-- [ ] **Step 4: Расширению — объявить наш UTI в неводе**
+- [ ] **Step 5: Расширению — объявить наш UTI в неводе**
 
 В `project.yml`, в `QLSupportedContentTypes` расширения, добавить:
 
@@ -353,7 +404,7 @@ Expected: PASS (датасет содержит все эти пары — по�
               - com.quicklookers.source-code
 ```
 
-- [ ] **Step 5: Перегенерировать и проверить, что хост-плист корректен**
+- [ ] **Step 6: Перегенерировать и проверить, что хост-плист корректен**
 
 ```bash
 xcodegen generate
@@ -363,16 +414,16 @@ xcodebuild -project QuickLookers.xcodeproj -scheme QuickLookers -destination 'pl
 ```
 Expected: `APPL`, `com.quicklookers.source-code`, `** BUILD SUCCEEDED **`.
 
-- [ ] **Step 6: Коммит**
+- [ ] **Step 7: Коммит**
 
 ```bash
-git add project.yml PreviewExtension/Info.plist App/Info.plist Tests/QuickLookersSettingsKitTests/PreviewResolutionTests.swift
-git commit -m "feat(preview): свой UTI com.quicklookers.source-code на свободные расширения (kt/graphql/dart/nim/zig…)
+git add project.yml PreviewExtension/Info.plist App/Info.plist Scripts/audit-extension-utis.swift Tests/QuickLookersSettingsKitTests/ResolutionTests.swift
+git commit -m "feat(preview): свой UTI com.quicklookers.source-code на все свободные расширения (652)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 7: Живая проверка (пользователь, ⌘R)**
+- [ ] **Step 8: Живая проверка (пользователь, ⌘R)**
 
 ⌘R (регистрирует и тип, и расширение). Создать `a.kt` (`fun main() {}`), `a.graphql` (`type Q { a: Int }`), `a.dart`, `a.nim`, `a.zig`. Пробел. Ожидание: наше превью с подсветкой (лог `lang=kotlin`/`graphql`/`dart`/`nim`/`zig`). Если какое-то расширение занято сторонним просмотрщиком на этой машине — оно спорное (принятое ограничение), зафиксировать.
 
