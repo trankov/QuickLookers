@@ -172,6 +172,45 @@ targets:
               - org.iso.sql
               # Наш экспортируемый тип на свободные (dyn.*) расширения — см. UTExportedTypeDeclarations хоста.
               - com.quicklookers.source-code
+              # Выверенные системные UTI (категория 1a аудита): тип = код/текст, объявление —
+              # чистый выигрыш; язык берётся по расширению в resolvePreview. Точный лист мы
+              # перехватываем (Спайк B: побеждаем систему). Список выверен вручную —
+              # docs/.../2026-07-03-extension-uti-audit.md. НЕ добавлять «ложных друзей»
+              # (реальный не-код): .app/.pf/.dds/.gp/.pot(x)/.sdc/.mts/.mod/.pls/.as/.url/.exs/
+              # .scpt/.storyboard/.xib, а также семантические расхождения (.l/.yy/.i/.cl) и
+              # вне-области (markdown/csv).
+              - public.ada-source                       # .ada/.adb/.ads → ada
+              - com.apple.applescript.text              # .applescript → applescript (НЕ .scpt — бинарь)
+              - public.bash-script                      # .bash → shellscript
+              - public.ksh-script                       # .ksh → shellscript
+              - public.zsh-script                       # .zsh → shellscript
+              - public.shell-script                     # .sh → shellscript
+              - com.apple.terminal.shell-script         # .command/.tool → shellscript
+              - public.css                              # .css → css
+              - public.html                             # .html/.htm → html
+              - public.xhtml                            # .xhtml/.xht → html
+              - public.xml                              # .xml → xml
+              - public.patch-file                       # .diff/.patch → diff
+              - public.fortran-source                   # .f/.for → fortran
+              - public.fortran-77-source                # .f77 → fortran
+              - public.fortran-90-source                # .f90 → fortran
+              - public.fortran-95-source                # .f95 → fortran
+              - public.pascal-source                    # .pas → pascal
+              - public.objective-c-source               # .m → objective-c
+              - public.objective-c-plus-plus-source     # .mm → objective-cpp
+              - public.assembly-source                  # .s → asm
+              - public.nasm-assembly-source             # .nasm → asm
+              - public.protobuf-source                  # .proto → proto
+              - com.microsoft.hlsl                      # .hlsl → hlsl
+              - org.khronos.glsl-source                 # .glsl → glsl
+              - org.khronos.glsl.fragment-shader        # .frag/.fsh (и .fs=fsharp — по расширению)
+              - org.khronos.glsl.vertex-shader          # .vert/.vsh (и .vs)
+              - org.khronos.glsl.geometry-shader        # .geom/.gsh (и .gs=genie)
+              - com.microsoft.typescript                # .tsx → tsx (public.tsx лист может не совпадать)
+              # Два намеренных перехвата «ложных друзей» (подтверждено пользователем):
+              # редкие настоящие .ts-видео/.r-Rez деградируют до дженерика — принято.
+              - public.mpeg-2-transport-stream          # .ts → typescript
+              - com.apple.rez-source                    # .r  → r
             QLSupportsSearchableItems: false
     dependencies:
       - package: QuickLookersEngine

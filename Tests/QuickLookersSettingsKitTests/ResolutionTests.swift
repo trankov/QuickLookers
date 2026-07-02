@@ -123,4 +123,20 @@ final class ResolutionTests: XCTestCase {
                            .highlight(languageId: lang), "\(name)")
         }
     }
+
+    // MARK: - Системные UTI, объявленные для «чужетипных» расширений (механизм 1a)
+
+    func test_resolve_1a_extensions_mapToLanguages() throws {
+        let assoc = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
+        let cases: [(String, String)] = [("app.ts","typescript"), ("model.r","r"),
+                                          ("u.pas","pascal"), ("page.html","html"),
+                                          ("a.m","objective-c"), ("s.f90","fortran-free-form"),
+                                          ("v.proto","proto")]
+        for (name, lang) in cases {
+            let ext = (name as NSString).pathExtension
+            XCTAssertEqual(resolvePreview(fileName: name, pathExtension: ext,
+                                          associations: assoc, settings: .default),
+                           .highlight(languageId: lang), "\(name)")
+        }
+    }
 }
