@@ -108,4 +108,19 @@ final class ResolutionTests: XCTestCase {
         XCTAssertFalse(isLanguageEnabled("json", settings: s))
         XCTAssertTrue(isLanguageEnabled("swift", settings: s))
     }
+
+    // MARK: - Свободные (dyn.*) расширения: свой UTI com.quicklookers.source-code (механизм 1b)
+
+    func test_resolve_freeExtensions_mapToLanguages() throws {
+        let assoc = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
+        let cases: [(String, String)] = [("a.kt","kotlin"), ("a.kts","kotlin"),
+                                          ("a.graphql","graphql"), ("a.gql","graphql"),
+                                          ("a.dart","dart"), ("a.nim","nim"), ("a.zig","zig")]
+        for (name, lang) in cases {
+            let ext = (name as NSString).pathExtension
+            XCTAssertEqual(resolvePreview(fileName: name, pathExtension: ext,
+                                          associations: assoc, settings: .default),
+                           .highlight(languageId: lang), "\(name)")
+        }
+    }
 }

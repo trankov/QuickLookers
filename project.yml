@@ -48,13 +48,30 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.quicklookers.QuickLookers
-        GENERATE_INFOPLIST_FILE: YES
+        GENERATE_INFOPLIST_FILE: NO   # был YES; нужен явный Info.plist для UTExportedTypeDeclarations
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
         # libarchive приходит транзитивно от CLibArchive.systemLibrary (link "archive"
         # в module.modulemap). Явный флаг — страховка на случай, если линкер Xcode
         # не подхватит транзитивную зависимость.
         OTHER_LDFLAGS: -larchive
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        # Один экспортируемый тип на ВСЕ СВОБОДНЫЕ (dyn.*) расширения (652 шт., пользователь
+        # подтвердил полный список). Лист свободного расширения становится нашим (Спайк E).
+        # Язык внутри берётся по расширению из associations.json — один UTI на много языков
+        # норм (это маршрутизация, не семантика). Список ГЕНЕРИТСЯ:
+        # `swift Scripts/audit-extension-utis.swift --emit-tags` (снимок в
+        # docs/.../2026-07-03-extension-uti-audit.md, категория 1b). Руками не редактировать.
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.quicklookers.source-code
+            UTTypeDescription: Source code (QuickLookers)
+            UTTypeConformsTo: [public.source-code, public.plain-text]
+            UTTypeTagSpecification:
+              public.filename-extension: [4dform, 4dproject, 6pl, 6pm, _coffee, _emacs, _js, a51, abap, abbrev_defs, acl, ad, adml, admx, ado, adoc, adp, al, ant, apacheconf, apex, apl, apla, aplc, aplf, apli, apln, aplo, ara, asc, asciidoc, asd, asdf, asm, astro, auk, aux, avsc, aw, awk, axaml, axml, bal, bat, bats, bb, bbx, bdy, be, beancount, bib, bibtex, bicep, bicepparam, blade, bones, boot, bsl, builder, builds, cairo, cake, cask, cats, cbl, cblcpy, cblle, cblsrce, cbx, ccp, ccproj, ccxml, cdc, cdf, cgi, cginc, cjs, cjsx, cl2, clang-format, clar, clixml, clj, cljc, cljs, cljscm, cljx, cls, cmake, cmd, cnf, cob, cobcopy, cobol, code-snippets, code-workspace, coffee, conf, copybook, coq, cppm, cproject, cpy, cql, cr, cs, cscfg, csdef, cshtml, csl, csproj, csx, ct, ctp, cts, cue, cyp, cypher, d, dart, ddl, def, depproj, desktop, dfm, di, dita, ditamap, ditaval, dm, dme, dml, do, dockerfile, dof, doh, dotsettings, dpk, dpp, dpr, dtx, dump, dyalog, dyapp, edge, el, elc, eld, eliom, eliomi, elm, emacs, env, envvars, erb, erl, es, es6, escript, ex, eye, f03, f08, f18, fastcgi_params, fcgi, fd, feature, filters, fish, fmx, fnc, fnl, fp, fpp, frg, fshader, fsi, fsproj, fst, fsti, fsx, ftl, fx, fxh, fxml, gawk, gd, gdshader, gemspec, geo, gjs, glade, gleam, glslf, glslv, gml, gmx, gnu, gnuplot, gnus, go, god, gql, graphcool, graphql, graphqls, groovy, grt, grxml, gshader, gst, gtpl, gts, gvy, gyp, gypi, hack, haml, handlebars, har, hbs, hcl, hhi, hic, hjson, hlean, hlsli, hrl, hs, hs-boot, hsc, hsig, hta, htaccess, htgroups, htpasswd, http, hx, hxml, hxsl, hy, hzp, ice, iced, idc, ihlp, imba, imba2, iml, inc, ino, ins, ivy, ixx, j2, jade, jake, jbuilder, jelly, jinja, jinja2, jison, jl, jsb, jscad, jsfl, jsh, jslib, jsm, json5, jsonc, jsonl, jsonnet, jspre, jsproj, jss, jssm, jssm_state, jsx, kml, kojo, kql, kt, ktm, kts, kusto, launch, lbx, lean, lektorproject, less, lfm, libsonnet, linq, liquid, lisp, lks, lmi, lpr, lsp, ltx, lua, luau, ma, makefile, marko, mata, matah, mathematica, matlab, mawk, mcmeta, mdpolicy, mediawiki, mermaid, mipage, mips, mir, mjml, mkfile, mkii, mkiv, mkvi, ml, ml4, mli, mll, mly, mojo, move, mspec, mt, mxml, mysql, nas, natvis, nawk, nb, nbp, ncl, ndproj, nf, nginx, nginxconf, ngx, nim, nimble, nimrod, nims, nix, njs, nomad, nproj, nqp, nse, nu, nuspec, ny, odd, os, osm, p, p6, p6l, p6m, p8, pac, pascal, pck, pco, pcss, pd_lua, pdv, perl, ph, php5, phps, phpt, pkb, pkgproj, pkh, pks, pl6, plb, plot, plsql, plt, pluginspec, plx, pm6, po, podsl, podspec, polar, postcss, pq, pqm, prawn, prc, prefs, prisma, pro, proj, prolog, properties, props, ps1, ps1xml, psc1, psd1, psgi, psm1, pt, pug, purs, py3, pyde, pyi, pyp, pyt, pyw, qbs, qhelp, ql, qll, qml, query, rabl, rake, raku, rakumod, razor, rbi, rbuild, rbx, rbxs, rchit, rd, rdf, re, reek, reg, regex, regexp, res, rest, resx, rhtml, riscv, rkt, rktd, rktl, rmiss, rockspec, ronn, rpy, rq, rs, rst, rsx, ru, ruby, rviz, sarif, sas, sass, sbt, sc, scala, scb, scbl, scd, scgi_params, sch, scm, scrbl, scss, scxml, sdbl, sel, service, sexp, sfproj, sh-session, shader, shproj, sjs, sld, sls, sol, soy, spacemacs, sparql, spc, spec, spim, spl, splunk, sps, sq, sqlcblle, src, srdf, ss, ssh_config, sshd_config, ssjs, st, sthlp, story, sty, styl, stylus, sublime-build, sublime-color-scheme, sublime-commands, sublime-completions, sublime-keymap, sublime-macro, sublime-menu, sublime-mousemap, sublime-project, sublime-settings, sublime-snippet, sublime-syntax, sublime-theme, sublime-workspace, sublime_metrics, sublime_session, sv, svelte, svh, sw, syntax, t, tab, tac, talon, targets, tasl, tcc, tcl, templ, tesc, tese, tex, tf, tfstate, tfvars, thor, tm, tml, tmux, toc, topojson, tpb, tpp, tps, trg, trigger, tsp, ttl, turtle, twig, txx, typ, udf, ui, urdf, uwsgi_params, ux, v, vala, vapi, vb, vba, vbhtml, vbproj, vcxproj, veo, vh, vhd, vhdl, vhf, vhi, vho, vhost, vhs, vht, vhw, vim, vimrc, viper, viw, vmb, vrx, vshader, vsixmanifest, vssettings, vstemplate, vue, vv, vw, vxml, vy, wast, wat, watchr, webapp, webmanifest, wgsl, wiki, wikitext, wixproj, wks, wl, wls, wlt, wlua, workbook, workflow, wsdl, wsf, wsgi, wxi, wxl, wxs, x3d, xacro, xaml, xdc, xmi, xproj, xpy, xrl, xsd, xsjs, xsjslib, xsl, xslt, xspec, xul, yap, yasm, yrl, yyp, zcml, zig, zon, zs, zsh-theme]
     entitlements:
       path: App/QuickLookers.entitlements
       properties:
@@ -153,6 +170,8 @@ targets:
               - public.toml
               - public.json
               - org.iso.sql
+              # Наш экспортируемый тип на свободные (dyn.*) расширения — см. UTExportedTypeDeclarations хоста.
+              - com.quicklookers.source-code
             QLSupportsSearchableItems: false
     dependencies:
       - package: QuickLookersEngine

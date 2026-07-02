@@ -35,3 +35,11 @@ for ext in extToLang.keys.sorted() {
 print("\n=== 1b свои UTI (dyn) ===\n" + own.joined(separator: ", "))
 print("\n=== 1a объявить системный UTI ===")
 for (e, u) in declare { print("  .\(e) → \(u)  (\(extToLang[e] ?? "?"))") }
+
+if CommandLine.arguments.contains("--emit-tags") {
+    // Только свободные (dyn.*) расширения — готовый flow-массив для public.filename-extension.
+    var tags = own
+    if !tags.contains("nim") { tags.append("nim") }
+    tags.sort()
+    print("[" + tags.joined(separator: ", ") + "]")
+}

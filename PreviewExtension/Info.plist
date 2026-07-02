@@ -49,6 +49,7 @@
 				<string>public.toml</string>
 				<string>public.json</string>
 				<string>org.iso.sql</string>
+				<string>com.quicklookers.source-code</string>
 			</array>
 			<key>QLSupportsSearchableItems</key>
 			<false/>
