@@ -43,8 +43,9 @@ struct FileTypesTab: View {
                     editing = PreviewRule(pattern: "", action: .assign(languageId: ""))
                     addingNew = true
                 } label: { Label("Добавить правило", systemImage: "plus") }
-                .padding(8)
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
             .background(.bar)
         }
         .sheet(item: $editing) { rule in
@@ -70,7 +71,7 @@ struct FileTypesTab: View {
     private func mineSection(_ results: SettingsModel.RuleSearchResults) -> some View {
         Section("Мои правила") {
             ForEach(results.mine) { rule in
-                HStack {
+                HStack(spacing: 12) {
                     Text(rule.pattern).frame(width: 160, alignment: .leading)
                     Image(systemName: "arrow.right").foregroundStyle(.tertiary)
                     Text(ruleTarget(rule)).foregroundStyle(.secondary)
@@ -79,6 +80,12 @@ struct FileTypesTab: View {
                         get: { rule.isEnabled },
                         set: { model.toggleRule(rule, on: $0) }))
                         .labelsHidden().toggleStyle(.switch).controlSize(.mini)
+                        .help(rule.isEnabled ? "Выключить правило" : "Включить правило")
+                    Button(role: .destructive) { model.deleteRule(rule) } label: {
+                        Image(systemName: "trash")
+                    }
+                    .buttonStyle(.borderless).foregroundStyle(.secondary)
+                    .help("Удалить правило")
                 }
                 .contextMenu {
                     Button("Изменить") { editing = rule; addingNew = false }
