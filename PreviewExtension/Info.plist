@@ -82,6 +82,7 @@
 				<string>com.microsoft.typescript</string>
 				<string>public.mpeg-2-transport-stream</string>
 				<string>com.apple.rez-source</string>
+				<string>com.apple.applesingle-archive</string>
 			</array>
 			<key>QLSupportsSearchableItems</key>
 			<false/>

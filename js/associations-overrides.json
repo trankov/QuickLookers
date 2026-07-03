@@ -23,7 +23,9 @@
     "bib": "bibtex",
     "rkt": "racket",
     "fs": "fsharp",
-    "m": "objective-c"
+    "m": "objective-c",
+    "djhtml": "html",
+    "djhtm": "html"
   },
   "filenames": {
     "Dockerfile": "docker",
