@@ -99,6 +99,35 @@ final class GlobMatcherTests: XCTestCase {
         XCTAssertNil(GlobMatcher("*.config.js").probeExtension)       // wildcard + точка → неопределимо
         XCTAssertNil(GlobMatcher("Dockerfile").probeExtension)        // нет точки
     }
+
+    func test_optional_matchesZeroOrOne() {
+        // Семьи расширений: htm/html, yml/yaml — одним шаблоном.
+        XCTAssertTrue(GlobMatcher("*.htm~").matches(fileName: "a.htm"))    // ноль
+        XCTAssertTrue(GlobMatcher("*.htm~").matches(fileName: "a.html"))   // один
+        XCTAssertTrue(GlobMatcher("*.y~ml").matches(fileName: "a.yml"))    // ноль
+        XCTAssertTrue(GlobMatcher("*.y~ml").matches(fileName: "a.yaml"))   // один
+    }
+
+    func test_escape_tildeIsLiteral() {
+        let m = GlobMatcher("backup/~")     // /~ → обычная тильда
+        XCTAssertTrue(m.matches(fileName: "backup~"))
+        XCTAssertFalse(m.matches(fileName: "backup"))    // тильда обязательна как литерал
+        XCTAssertFalse(m.matches(fileName: "backupX"))
+        XCTAssertNil(m.probeExtension)
+        XCTAssertEqual(m.exactFilename, "backup~")        // экранированная тильда — литерал → точное имя
+    }
+
+    func test_escape_starIsLiteral() {
+        let m = GlobMatcher("a/*b")         // /* → звёздочка-литерал
+        XCTAssertTrue(m.matches(fileName: "a*b"))
+        XCTAssertFalse(m.matches(fileName: "axb"))
+    }
+
+    func test_optional_countsAsWildcard_forSpecificityAndExactName() {
+        XCTAssertNil(GlobMatcher("*.htm~").exactFilename)                 // есть wildcard
+        XCTAssertNil(GlobMatcher("*.htm~").fastExtension)                 // ~ в остатке → не быстрый путь
+        XCTAssertLessThan(GlobMatcher("*.htm~").specificity, GlobMatcher("index.html").specificity)
+    }
 }
 ```
 
@@ -113,38 +142,75 @@ Expected: FAIL — «cannot find 'GlobMatcher' in scope».
 // Sources/QuickLookersSettingsKit/GlobMatcher.swift
 import Foundation
 
-/// Сопоставление полного имени файла с простым glob-шаблоном (`*` — любая
-/// последовательность, `?` — один символ). Классов `[...]` и регулярок нет.
-/// Сопоставление регистронезависимо (дружелюбнее для настроек пользователя).
+/// Сопоставление полного имени файла с glob-шаблоном. Три подстановочных знака:
+///   `*` — ноль или больше любых символов;
+///   `?` — ровно один любой символ;
+///   `~` — ноль или один любой символ (необязательный, для семей `.htm/.html`, `.yml/.yaml`).
+/// Экранирование: `/` перед символом делает его литералом (`/~` → обычная тильда,
+/// `/*` → звёздочка). `/` выбран экранирующим — в имени файла он не встречается.
+/// Классов `[...]` и регулярок нет. Сопоставление регистронезависимо.
 public struct GlobMatcher: Equatable {
     public let pattern: String
+    private let tokens: [Token]
 
-    public init(_ pattern: String) { self.pattern = pattern }
+    enum Token: Equatable { case literal(Character); case star; case one; case optional }
 
-    private var hasWildcard: Bool { pattern.contains("*") || pattern.contains("?") }
+    public init(_ pattern: String) {
+        self.pattern = pattern
+        self.tokens = Self.parse(pattern)
+    }
+
+    /// Разбор шаблона в токены с учётом экранирования `/`.
+    private static func parse(_ pattern: String) -> [Token] {
+        let chars = Array(pattern)
+        var out: [Token] = []
+        var i = 0
+        while i < chars.count {
+            let c = chars[i]
+            if c == "/", i + 1 < chars.count {   // экранирование: /X → литерал X
+                out.append(.literal(chars[i + 1])); i += 2; continue
+            }
+            switch c {
+            case "*": out.append(.star)
+            case "?": out.append(.one)
+            case "~": out.append(.optional)
+            default:  out.append(.literal(c))
+            }
+            i += 1
+        }
+        return out
+    }
+
+    private var wildcardCount: Int {
+        tokens.reduce(0) { if case .literal = $1 { return $0 } else { return $0 + 1 } }
+    }
+    private var hasWildcard: Bool { wildcardCount > 0 }
+    private var literalCount: Int { tokens.count - wildcardCount }
 
     public func matches(fileName: String) -> Bool {
-        Self.wildcard(Array(pattern.lowercased()), Array(fileName.lowercased()))
+        Self.match(tokens, 0, Array(fileName.lowercased()), 0)
     }
 
     /// Чем больше литералов и меньше wildcard — тем специфичнее. Точное имя
     /// (без wildcard) всегда выше любого glob.
-    public var specificity: Int {
-        let literals = pattern.reduce(0) { $1 == "*" || $1 == "?" ? $0 : $0 + 1 }
-        return hasWildcard ? literals : 1000 + literals
-    }
+    public var specificity: Int { hasWildcard ? literalCount : 1000 + literalCount }
 
     /// «*.ext» одним сегментом (без точки/wildcard в остатке) → «ext» (lower). Иначе nil.
     public var fastExtension: String? {
-        guard pattern.hasPrefix("*.") else { return nil }
-        let rest = pattern.dropFirst(2)
-        guard !rest.isEmpty, !rest.contains(where: { $0 == "*" || $0 == "?" || $0 == "." })
-        else { return nil }
-        return rest.lowercased()
+        guard tokens.count >= 3, tokens[0] == .star, tokens[1] == .literal(".") else { return nil }
+        var ext = ""
+        for tk in tokens.dropFirst(2) {
+            guard case .literal(let c) = tk, c != "." else { return nil }
+            ext.append(c)
+        }
+        return ext.isEmpty ? nil : ext.lowercased()
     }
 
-    /// Шаблон без wildcard — это точное имя файла.
-    public var exactFilename: String? { hasWildcard ? nil : pattern }
+    /// Шаблон без wildcard — это точное имя файла (с раскрытыми экранированиями).
+    public var exactFilename: String? {
+        guard !hasWildcard else { return nil }
+        return String(tokens.compactMap { if case .literal(let c) = $0 { return c } else { return nil } })
+    }
 
     /// Расширение, по которому можно проверить перехват; nil если неопределимо.
     public var probeExtension: String? {
@@ -155,22 +221,19 @@ public struct GlobMatcher: Equatable {
         return nil
     }
 
-    /// fnmatch для `*` и `?` с бэктрекингом по `*`.
-    private static func wildcard(_ pat: [Character], _ str: [Character]) -> Bool {
-        var p = 0, s = 0, star = -1, mark = 0
-        while s < str.count {
-            if p < pat.count, pat[p] == "?" || pat[p] == str[s] {
-                p += 1; s += 1
-            } else if p < pat.count, pat[p] == "*" {
-                star = p; mark = s; p += 1
-            } else if star != -1 {
-                p = star + 1; mark += 1; s = mark
-            } else {
-                return false
-            }
+    /// Рекурсивный матчер: `*` (ноль+), `?` (ровно один), `~` (ноль или один).
+    private static func match(_ t: [Token], _ ti: Int, _ s: [Character], _ si: Int) -> Bool {
+        if ti == t.count { return si == s.count }
+        switch t[ti] {
+        case .literal(let c):
+            return si < s.count && String(c).lowercased() == String(s[si]) && match(t, ti + 1, s, si + 1)
+        case .one:
+            return si < s.count && match(t, ti + 1, s, si + 1)
+        case .optional:
+            return match(t, ti + 1, s, si) || (si < s.count && match(t, ti + 1, s, si + 1))
+        case .star:
+            return match(t, ti + 1, s, si) || (si < s.count && match(t, ti, s, si + 1))
         }
-        while p < pat.count, pat[p] == "*" { p += 1 }
-        return p == pat.count
     }
 }
 ```
@@ -178,13 +241,13 @@ public struct GlobMatcher: Equatable {
 - [ ] **Step 4: Запустить — зелёный**
 
 Run: `swift test --filter GlobMatcherTests 2>&1 | tail -20`
-Expected: PASS (10 тестов).
+Expected: PASS (14 тестов).
 
 - [ ] **Step 5: Коммит**
 
 ```bash
 git add Sources/QuickLookersSettingsKit/GlobMatcher.swift Tests/QuickLookersSettingsKitTests/GlobMatcherTests.swift
-git commit -m "feat(settings): GlobMatcher — glob-сопоставление имени файла (маски *, ?)
+git commit -m "feat(settings): GlobMatcher — glob-маски (*, ?, ~) + экранирование /
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ```
@@ -1167,6 +1230,8 @@ struct AddRuleSheet: View {
             VStack(alignment: .leading, spacing: 4) {
                 TextField("Шаблон, например *.djhtml или Dockerfile.*", text: $draft.pattern)
                     .textFieldStyle(.roundedBorder)
+                Text("* — любые символы · ? — один · ~ — необязательный · /~ — обычная тильда")
+                    .font(.caption2).foregroundStyle(.tertiary)
                 Text(defaultHint).font(.caption).foregroundStyle(.secondary)
                 if let status = statusHint {
                     Label(status.text, systemImage: status.icon)
