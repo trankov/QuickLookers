@@ -104,12 +104,12 @@ struct AddRuleSheet: View {
         guard let status = model.interceptionStatus(forPattern: draft.pattern) else { return nil }
         switch status {
         case .intercepted:
-            return ("Такие файлы мы перехватим.", "checkmark.circle", .secondary)
+            return ("Такие файлы покажем по пробелу в Finder.", "checkmark.circle", .secondary)
         case .systemNonCode(let name):
-            return ("Система считает это «\(name)» — перехватить нельзя, правило не сработает.",
+            return ("Система открывает это как «\(name)» — по пробелу не покажем, правило не сработает.",
                     "exclamationmark.triangle", .orange)
         case .unknownNotDeclared:
-            return ("Это расширение приложение пока не перехватывает — правило не сработает.",
+            return ("Это расширение приложение пока не показывает по пробелу — правило не сработает.",
                     "exclamationmark.triangle", .orange)
         }
     }

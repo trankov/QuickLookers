@@ -33,7 +33,7 @@ struct FileTypesTab: View {
                 if model.userRules.isEmpty && query.isEmpty {
                     emptyState
                 } else {
-                    mineSection
+                    if !results.mine.isEmpty { mineSection }
                     if !query.isEmpty { defaultsSection }
                 }
             }
