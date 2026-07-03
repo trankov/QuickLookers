@@ -12,12 +12,10 @@ struct FileTypesTab: View {
 
     private let datasetLimit = 50
 
-    private var results: SettingsModel.RuleSearchResults {
-        model.searchRules(query: query, limit: datasetLimit)
-    }
-
     var body: some View {
-        VStack(spacing: 0) {
+        // Один расчёт на отрисовку: и секции, и проверки читают этот результат.
+        let results = model.searchRules(query: query, limit: datasetLimit)
+        return VStack(spacing: 0) {
             HStack {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                 TextField("Найти расширение, имя файла или язык…", text: $query)
@@ -33,8 +31,8 @@ struct FileTypesTab: View {
                 if model.userRules.isEmpty && query.isEmpty {
                     emptyState
                 } else {
-                    if !results.mine.isEmpty { mineSection }
-                    if !query.isEmpty { defaultsSection }
+                    if !results.mine.isEmpty { mineSection(results) }
+                    if !query.isEmpty { defaultsSection(results) }
                 }
             }
         }
@@ -69,7 +67,7 @@ struct FileTypesTab: View {
         .padding(.vertical, 8)
     }
 
-    private var mineSection: some View {
+    private func mineSection(_ results: SettingsModel.RuleSearchResults) -> some View {
         Section("Мои правила") {
             ForEach(results.mine) { rule in
                 HStack {
@@ -90,7 +88,7 @@ struct FileTypesTab: View {
         }
     }
 
-    private var defaultsSection: some View {
+    private func defaultsSection(_ results: SettingsModel.RuleSearchResults) -> some View {
         Section("По умолчанию (показаны первые \(datasetLimit))") {
             ForEach(results.defaults) { match in
                 HStack {

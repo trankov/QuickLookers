@@ -151,7 +151,9 @@ final class SettingsModel: ObservableObject {
         let p = pattern.trimmingCharacters(in: .whitespaces)
         guard !p.isEmpty else { return }
         update { s in
-            if let i = s.previewRules.firstIndex(where: { $0.pattern == p }) {
+            // Сравнение шаблонов регистронезависимо — как и само glob-сопоставление
+            // (иначе *.SWIFT и *.swift дали бы два правила на одни файлы).
+            if let i = s.previewRules.firstIndex(where: { $0.pattern.caseInsensitiveCompare(p) == .orderedSame }) {
                 s.previewRules[i].action = action
                 s.previewRules[i].isEnabled = true
             } else {

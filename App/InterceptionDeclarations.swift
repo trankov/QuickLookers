@@ -7,10 +7,11 @@ enum InterceptionDeclarations {
     /// Набор перехвата из Info.plist хоста (экспортные расширения) и расширения
     /// Preview (системные UTI). При недоступности части — деградируем к пустому.
     static func load() -> DeclaredInterceptSet {
-        DeclaredInterceptSet(
+        let utis = systemUTIs()   // читаем plist расширения один раз
+        return DeclaredInterceptSet(
             exportedExtensions: exportedExtensions(),
-            systemUTIs: systemUTIs(),
-            hasPlainTextDragnet: systemUTIs().contains("public.plain-text"))
+            systemUTIs: utis,
+            hasPlainTextDragnet: utis.contains("public.plain-text"))
     }
 
     /// UTType-вердикт системы по расширению.
