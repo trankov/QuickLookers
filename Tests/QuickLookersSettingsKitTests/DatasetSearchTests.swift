@@ -41,4 +41,11 @@ final class DatasetSearchTests: XCTestCase {
         let r = searchDataset(query: "j", limit: 50, associations: assoc, languageName: name)
         XCTAssertEqual(r.map(\.id), r.map(\.id).sorted())
     }
+
+    func test_keyMatchOutranksLanguageNameMatch() {
+        let a = FileTypeAssociations(byExtension: ["json": "json", "avsc": "json"], byFilename: [:])
+        let r = searchDataset(query: "json", limit: 1, associations: a,
+                              languageName: { $0 == "json" ? "JSON" : nil })
+        XCTAssertEqual(r.first?.key, .ext("json"))   // ключевое совпадение впереди name-only
+    }
 }
