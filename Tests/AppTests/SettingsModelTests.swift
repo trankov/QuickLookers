@@ -41,31 +41,53 @@ final class SettingsModelTests: XCTestCase {
         XCTAssertTrue(model.isLanguageOn(lang.id))
     }
 
-    func testRuleToggleWritesDisabledExtension() throws {
+    func test_addRule_appendsEnabledRule() throws {
         let model = SettingsModel(containerURL: try makeTempContainer())
-        guard let row = model.previewRules.first(where: { $0.key == "swift" && !$0.isFilename }) else {
-            return XCTFail("нет правила для .swift")
-        }
-        XCTAssertTrue(model.isRuleOn(row))
-        model.setRuleOn(row, false)
-        XCTAssertTrue(model.settings.disabledExtensions.contains("swift"))
-        XCTAssertFalse(model.isRuleOn(row))
+        model.addRule(pattern: "*.djhtml", action: .assign(languageId: "python"))
+        let rule = try XCTUnwrap(model.userRules.first { $0.pattern == "*.djhtml" })
+        XCTAssertEqual(rule.action, .assign(languageId: "python"))
+        XCTAssertTrue(rule.isEnabled)
     }
 
-    func testSetRuleLanguageWritesOverride() throws {
+    func test_addRule_samePattern_updatesInsteadOfDuplicating() throws {
         let model = SettingsModel(containerURL: try makeTempContainer())
-        guard let row = model.previewRules.first(where: { $0.key == "json" && !$0.isFilename }) else {
-            return XCTFail("нет правила для .json")
-        }
-        model.setRuleLanguage(row, "javascript")
-        XCTAssertEqual(model.settings.extensionOverrides["json"], "javascript")
+        model.addRule(pattern: "*.log", action: .assign(languageId: "python"))
+        model.addRule(pattern: "*.log", action: .neutral)
+        XCTAssertEqual(model.userRules.filter { $0.pattern == "*.log" }.count, 1)
+        XCTAssertEqual(model.userRules.first { $0.pattern == "*.log" }?.action, .neutral)
     }
 
-    func testAddExtensionRule() throws {
+    func test_toggleRule_off_persists() throws {
         let model = SettingsModel(containerURL: try makeTempContainer())
-        model.addExtensionRule(ext: ".myext", languageId: "python")
-        XCTAssertEqual(model.settings.extensionOverrides["myext"], "python")
-        XCTAssertTrue(model.previewRules.contains { $0.key == "myext" && $0.languageId == "python" })
+        model.addRule(pattern: "*.swift", action: .assign(languageId: "javascript"))
+        let rule = try XCTUnwrap(model.userRules.first)
+        model.toggleRule(rule, on: false)
+        XCTAssertFalse(try XCTUnwrap(model.userRules.first).isEnabled)
+    }
+
+    func test_deleteRule_removesIt() throws {
+        let model = SettingsModel(containerURL: try makeTempContainer())
+        model.addRule(pattern: "*.swift", action: .neutral)
+        let rule = try XCTUnwrap(model.userRules.first)
+        model.deleteRule(rule)
+        XCTAssertTrue(model.userRules.isEmpty)
+    }
+
+    func test_searchRules_returnsDatasetDefaultsCapped() throws {
+        let model = SettingsModel(containerURL: try makeTempContainer())
+        let results = model.searchRules(query: "json", limit: 5)
+        XCTAssertLessThanOrEqual(results.defaults.count, 5)
+        XCTAssertTrue(results.defaults.contains { $0.key == .ext("json") })
+    }
+
+    func test_currentDefault_knownExtension_reportsLanguage() throws {
+        let model = SettingsModel(containerURL: try makeTempContainer())
+        // .json есть в боевом датасете.
+        if case .language(let id) = model.currentDefault(forPattern: "*.json") {
+            XCTAssertEqual(id, "json")
+        } else {
+            XCTFail("ожидался .language для *.json")
+        }
     }
 
     func test_update_persistsAcrossSubsequentReads() throws {
