@@ -53,7 +53,7 @@ final class ResolutionTests: XCTestCase {
 
     func testDisabledExtensionIsNeutral() {
         var s = ManagerSettings.default
-        s.disabledExtensions = ["json"]
+        s.previewRules = [PreviewRule(pattern: "*.json", action: .neutral)]
         XCTAssertEqual(
             resolvePreview(fileName: "a.json", pathExtension: "json", associations: assoc, settings: s),
             .neutral)
@@ -61,7 +61,7 @@ final class ResolutionTests: XCTestCase {
 
     func testDisabledFilenameIsNeutral() {
         var s = ManagerSettings.default
-        s.disabledFilenames = ["Dockerfile"]
+        s.previewRules = [PreviewRule(pattern: "Dockerfile", action: .neutral)]
         XCTAssertEqual(
             resolvePreview(fileName: "Dockerfile", pathExtension: "", associations: assoc, settings: s),
             .neutral)
@@ -77,7 +77,7 @@ final class ResolutionTests: XCTestCase {
 
     func testExtensionOverrideWins() {
         var s = ManagerSettings.default
-        s.extensionOverrides = ["json": "javascript"]
+        s.previewRules = [PreviewRule(pattern: "*.json", action: .assign(languageId: "javascript"))]
         XCTAssertEqual(
             resolvePreview(fileName: "a.json", pathExtension: "json", associations: assoc, settings: s),
             .highlight(languageId: "javascript"))
@@ -94,7 +94,7 @@ final class ResolutionTests: XCTestCase {
 
     func testAddedExtensionRuleForUnknown() {
         var s = ManagerSettings.default
-        s.extensionOverrides = ["myext": "python"]
+        s.previewRules = [PreviewRule(pattern: "*.myext", action: .assign(languageId: "python"))]
         XCTAssertEqual(
             resolvePreview(fileName: "a.myext", pathExtension: "myext", associations: assoc, settings: s),
             .highlight(languageId: "python"))
@@ -154,5 +154,51 @@ final class ResolutionTests: XCTestCase {
         XCTAssertEqual(resolvePreview(fileName: "app.ini", pathExtension: "ini",
                                       associations: assoc, settings: .default),
                        .highlight(languageId: "ini"))
+    }
+
+    // MARK: - Правила пользователя (Task 3): специфичность, маска, тумблер
+
+    func test_userRule_beatsDataset() {
+        var s = ManagerSettings.default
+        s.previewRules = [PreviewRule(pattern: "*.swift", action: .assign(languageId: "javascript"))]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.swift", pathExtension: "swift", associations: assoc, settings: s),
+            .highlight(languageId: "javascript"))
+    }
+
+    func test_moreSpecificRuleWins() {
+        var s = ManagerSettings.default
+        s.previewRules = [
+            PreviewRule(pattern: "*.js", action: .assign(languageId: "javascript")),
+            PreviewRule(pattern: "*.config.js", action: .assign(languageId: "json"))
+        ]
+        XCTAssertEqual(
+            resolvePreview(fileName: "webpack.config.js", pathExtension: "js", associations: assoc, settings: s),
+            .highlight(languageId: "json"))
+    }
+
+    func test_disabledRule_isIgnored_fallsToDataset() {
+        var s = ManagerSettings.default
+        s.previewRules = [PreviewRule(pattern: "*.swift", action: .assign(languageId: "javascript"), isEnabled: false)]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.swift", pathExtension: "swift", associations: assoc, settings: s),
+            .highlight(languageId: "swift"))   // правило выключено → датасет
+    }
+
+    func test_ruleAssignsDisabledLayer1Language_isNeutral() {
+        var s = ManagerSettings.default
+        s.disabledLanguageIds = ["javascript"]
+        s.previewRules = [PreviewRule(pattern: "*.swift", action: .assign(languageId: "javascript"))]
+        XCTAssertEqual(
+            resolvePreview(fileName: "a.swift", pathExtension: "swift", associations: assoc, settings: s),
+            .neutral)
+    }
+
+    func test_prefixMask_matchesCompoundFilename() {
+        var s = ManagerSettings.default
+        s.previewRules = [PreviewRule(pattern: "Dockerfile.*", action: .assign(languageId: "docker"))]
+        XCTAssertEqual(
+            resolvePreview(fileName: "Dockerfile.dev", pathExtension: "dev", associations: assoc, settings: s),
+            .highlight(languageId: "docker"))
     }
 }

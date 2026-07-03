@@ -47,22 +47,19 @@ final class ManagerSettingsTests: XCTestCase {
         XCTAssertTrue(FontSettings.clampSize(Double.nan)?.isNaN ?? false)
     }
 
-    func testDefaultHasEmptyRuleMaps() {
+    func testDefaultHasEmptyRules() {
         let s = ManagerSettings.default
-        XCTAssertEqual(s.schemaVersion, 2)
-        XCTAssertTrue(s.extensionOverrides.isEmpty)
-        XCTAssertTrue(s.filenameOverrides.isEmpty)
-        XCTAssertTrue(s.disabledExtensions.isEmpty)
-        XCTAssertTrue(s.disabledFilenames.isEmpty)
+        XCTAssertEqual(s.schemaVersion, 3)
+        XCTAssertTrue(s.previewRules.isEmpty)
     }
 
-    func testRoundTripEncodesNewFields() throws {
+    func testRoundTripEncodesPreviewRules() throws {
         var s = ManagerSettings.default
-        s.extensionOverrides = ["conf": "ini"]
-        s.disabledExtensions = ["log"]
-        let data = try JSONEncoder().encode(s)
-        let back = try JSONDecoder().decode(ManagerSettings.self, from: data)
-        XCTAssertEqual(back.extensionOverrides["conf"], "ini")
-        XCTAssertTrue(back.disabledExtensions.contains("log"))
+        s.previewRules = [
+            PreviewRule(pattern: "*.djhtml", action: .assign(languageId: "django-html")),
+            PreviewRule(pattern: "*.log", action: .neutral, isEnabled: false)
+        ]
+        let back = try JSONDecoder().decode(ManagerSettings.self, from: JSONEncoder().encode(s))
+        XCTAssertEqual(back.previewRules, s.previewRules)
     }
 }
