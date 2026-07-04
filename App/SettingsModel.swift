@@ -17,6 +17,15 @@ final class SettingsModel: ObservableObject {
     /// Датасет соответствий «расширение/имя файла → язык» (из движка).
     let associations: FileTypeAssociations
 
+    /// Имя языка по id за O(1). Иначе линейный скан каталога в цикле поиска датасета
+    /// давал бы O(датасет × языки) на каждый символ ввода. Пересобирается при смене
+    /// каталога (init/reloadCatalog).
+    private var languageNamesById: [String: String]
+
+    private static func namesById(_ catalog: Catalog) -> [String: String] {
+        Dictionary(catalog.languages.map { ($0.id, $0.displayName) }) { first, _ in first }
+    }
+
     var lightThemes:  [ThemeInfo]   { catalog.themes.filter { !$0.isDark } }
     var darkThemes:   [ThemeInfo]   { catalog.themes.filter { $0.isDark } }
 
@@ -41,6 +50,7 @@ final class SettingsModel: ObservableObject {
         let (loadedCatalog, loadedImportedIds) = Self.loadCatalog(containerURL: containerURL)
         self.catalog = loadedCatalog
         self.importedIds = loadedImportedIds
+        self.languageNamesById = Self.namesById(loadedCatalog)
         self.associations = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
 
         // Хранилище — в общем контейнере. Нет контейнера → окно работает,
@@ -63,6 +73,7 @@ final class SettingsModel: ObservableObject {
         let (newCatalog, newImportedIds) = Self.loadCatalog(containerURL: containerURL)
         catalog = newCatalog
         importedIds = newImportedIds
+        languageNamesById = Self.namesById(newCatalog)
         fragmentCache.invalidate()   // после импорта тема под тем же id могла смениться
     }
 
@@ -123,7 +134,7 @@ final class SettingsModel: ObservableObject {
     struct RuleSearchResults { let mine: [PreviewRule]; let defaults: [DatasetMatch] }
 
     func languageDisplayName(_ id: String) -> String {
-        catalog.languages.first { $0.id == id }?.displayName ?? id
+        languageNamesById[id] ?? id
     }
 
     /// Поиск: свои правила (по шаблону/языку) + совпадения датасета (капнутые).
@@ -139,7 +150,9 @@ final class SettingsModel: ObservableObject {
         return RuleSearchResults(mine: mine, defaults: defaults)
     }
 
-    private func ruleLanguageName(_ rule: PreviewRule) -> String {
+    /// Отображение действия правила (язык или «не подсвечивать») — используют и поиск,
+    /// и вкладка правил (не дублировать в вью).
+    func ruleLanguageName(_ rule: PreviewRule) -> String {
         switch rule.action {
         case .assign(let id): return languageDisplayName(id)
         case .neutral:        return "не подсвечивать"

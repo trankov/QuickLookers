@@ -18,7 +18,7 @@ struct FileTypesTab: View {
         return VStack(spacing: 0) {
             HStack {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("Найти расширение, имя файла или язык…", text: $query)
+                TextField("Найти расширение/имя файла, или язык подсветки…", text: $query)
                     .textFieldStyle(.plain)
                 if !query.isEmpty {
                     Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }
@@ -74,7 +74,7 @@ struct FileTypesTab: View {
                 HStack(spacing: 12) {
                     Text(rule.pattern).frame(width: 160, alignment: .leading)
                     Image(systemName: "arrow.right").foregroundStyle(.tertiary)
-                    Text(ruleTarget(rule)).foregroundStyle(.secondary)
+                    Text(model.ruleLanguageName(rule)).foregroundStyle(.secondary)
                     Spacer()
                     Toggle("", isOn: Binding(
                         get: { rule.isEnabled },
@@ -107,13 +107,6 @@ struct FileTypesTab: View {
                         .buttonStyle(.borderless)
                 }
             }
-        }
-    }
-
-    private func ruleTarget(_ rule: PreviewRule) -> String {
-        switch rule.action {
-        case .assign(let id): return model.languageDisplayName(id)
-        case .neutral:        return "не подсвечивать"
         }
     }
 

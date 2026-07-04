@@ -33,28 +33,17 @@ public final class ShikiEngine: HighlightEngine {
     /// это совпадает (`name == id`), но импортированные из `.vsix` держат витринное
     /// имя VS Code («Django HTML» вместо `django-html`) → показ падает
     /// `lang not registered`. Приводим `name` ГЛАВНОЙ грамматики к id; вложенные
-    /// (в массиве [главная + вложенные]) не трогаем — на них ссылаются по их именам.
-    /// Главная — та, чьё `name` уже == id (тогда ничего не делаем); иначе первый
-    /// элемент (соглашение массива). При любом сбое разбора — JSON как есть, показ не рушим.
+    /// не трогаем — на них ссылаются по их именам. Грамматика всегда массив
+    /// [главная + вложенные]; главная — та, чьё `name` уже == id (тогда no-op),
+    /// иначе первый элемент (соглашение массива). При сбое разбора — JSON как есть.
     static func forcingMainName(_ json: String, to id: String) -> String {
         guard let data = json.data(using: .utf8),
-              let parsed = try? JSONSerialization.jsonObject(with: data) else { return json }
-        func serialized(_ obj: Any) -> String {
-            guard let out = try? JSONSerialization.data(withJSONObject: obj),
-                  let s = String(data: out, encoding: .utf8) else { return json }
-            return s
-        }
-        if var arr = parsed as? [[String: Any]] {
-            guard !arr.isEmpty,
-                  !arr.contains(where: { ($0["name"] as? String) == id }) else { return json }
-            arr[0]["name"] = id
-            return serialized(arr)
-        }
-        if var obj = parsed as? [String: Any] {
-            guard (obj["name"] as? String) != id else { return json }
-            obj["name"] = id
-            return serialized(obj)
-        }
-        return json
+              var arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+              !arr.isEmpty,
+              !arr.contains(where: { ($0["name"] as? String) == id }) else { return json }
+        arr[0]["name"] = id
+        guard let out = try? JSONSerialization.data(withJSONObject: arr),
+              let s = String(data: out, encoding: .utf8) else { return json }
+        return s
     }
 }
