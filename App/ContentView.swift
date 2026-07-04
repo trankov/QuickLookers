@@ -11,11 +11,11 @@ struct ContentView: View {
         // TabView в VStack (иначе панель схлопывается в overflow-шеврон «>>»).
         TabView {
             ThemesTab(model: model, importModel: importModel)
-                .tabItem { Label("Тема", systemImage: "circle.lefthalf.filled") }
+                .tabItem { Label("Theme", systemImage: "circle.lefthalf.filled") }
             FormatsTab(model: model, importModel: importModel)
-                .tabItem { Label("Форматы", systemImage: "paintbrush") }
+                .tabItem { Label("Formats", systemImage: "paintbrush") }
             FileTypesTab(model: model)
-                .tabItem { Label("Шаблоны", systemImage: "eye") }
+                .tabItem { Label("Patterns", systemImage: "eye") }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             if let warning = model.warning {

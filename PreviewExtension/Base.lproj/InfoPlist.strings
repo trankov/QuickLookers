@@ -1,0 +1,3 @@
+/* Маркер локали для XcodeGen: наличие *.lproj заносит регион в knownRegions,
+   иначе String Catalog (Localizable.xcstrings) не соберёт русский вариант.
+   Ключей Info.plist здесь пока нет — файл намеренно пустой. */

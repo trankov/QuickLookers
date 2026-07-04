@@ -22,7 +22,7 @@ struct FormatsTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TextField("Поиск формата подсветки", text: $query)
+            TextField("Search highlighting formats", text: $query)
                 .textFieldStyle(.roundedBorder)
                 .padding([.horizontal, .top])
                 .padding(.bottom, 8)
@@ -49,7 +49,7 @@ struct FormatsTab: View {
                                 Image(systemName: "minus.circle")
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Удалить импортированный «\(lang.displayName)»")
+                            .accessibilityLabel(String(localized: "Remove imported '\(lang.displayName)'"))
                         }
                     }
                 }
@@ -58,7 +58,7 @@ struct FormatsTab: View {
             Divider()
 
             HStack(spacing: 12) {
-                Button("Импортировать .vsix…") {
+                Button("Import .vsix…") {
                     if let outcome = importModel.runImport() {
                         if outcome.didChange { model.reloadCatalog(); errorText = nil }
                         else { errorText = outcome.errorText }

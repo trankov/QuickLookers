@@ -27,7 +27,7 @@ struct ThemesTab: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            Picker("Язык образца", selection: $langIndex) {
+            Picker("Sample language", selection: $langIndex) {
                 ForEach(snippets.indices, id: \.self) { i in Text(snippets[i].name).tag(i) }
             }
             .pickerStyle(.segmented)
@@ -52,7 +52,7 @@ struct ThemesTab: View {
                             .opacity(theme.id == model.settings.activeThemeId ? 1 : 0)
                         Text(theme.displayName)
                         if model.importedIds.contains(theme.id) {
-                            Text("импортирована").font(.caption).foregroundStyle(.secondary)
+                            Text("imported").font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
                         if model.importedIds.contains(theme.id) {
@@ -77,12 +77,12 @@ struct ThemesTab: View {
 
     private var fontRow: some View {
         HStack {
-            Text("Шрифт:")
+            Text("Font:")
             // Быстрый выбор разумного для кода — список моноширинных.
             Picker("", selection: Binding(
                 get: { model.settings.font.family ?? "" },
                 set: { v in model.update { $0.font.family = v.isEmpty ? nil : v } })) {
-                Text("По умолчанию").tag("")
+                Text("Default").tag("")
                 // Если активный шрифт не среди установленных моноширинных — добавляем
                 // его пунктом (например выбранный через системную панель), иначе Picker
                 // не покажет текущий выбор.
@@ -95,7 +95,7 @@ struct ThemesTab: View {
             .frame(width: 200)
 
             // Системная панель «Шрифты» — для всего за пределами списка моноширинных.
-            Button("Другие…") {
+            Button("Others…") {
                 let size = model.settings.font.size ?? 12
                 let current = model.settings.font.family.flatMap { NSFont(name: $0, size: size) }
                     ?? NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
@@ -108,11 +108,13 @@ struct ThemesTab: View {
             }
 
             Spacer()
-            Text("Размер:")
+            Text("Size:")
             Stepper(value: Binding(
                 get: { model.settings.font.size ?? 12 },
                 set: { v in model.update { $0.font.size = v } }), in: FontSettings.sizeRange) {
-                Text("\(Int(model.settings.font.size ?? 12))")
+                // verbatim: это число, а не локализуемая строка — иначе Xcode
+                // извлекает мусорный ключ "%@" в String Catalog.
+                Text(verbatim: "\(Int(model.settings.font.size ?? 12))")
             }
         }
     }
@@ -121,17 +123,17 @@ struct ThemesTab: View {
 
     private var importRow: some View {
         HStack {
-            Button("Импортировать .vsix…") {
+            Button("Import .vsix…") {
                 if let outcome = importModel.runImport() {
                     if outcome.didChange { model.reloadCatalog(); errorText = nil }
                     else { errorText = outcome.errorText }
                 }
             }
             // Грант на /Applications запрашивается лениво — только по нажатию.
-            Button("Из редактора…") {
+            Button("From editor…") {
                 let found = importModel.scanEditors(bookmarks)
                 if found.isEmpty {
-                    errorText = "Редакторы не найдены или нет доступа к папке «Программы»."
+                    errorText = String(localized: "Editors not found or no access to the Applications folder.")
                     editorChoices = nil
                 } else {
                     errorText = nil

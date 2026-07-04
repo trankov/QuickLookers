@@ -26,12 +26,12 @@ enum PreviewSnippets {
         <html lang="ru">
           <head>
             <meta charset="utf-8">
-            <title>Превью</title>
+            <title>\#(String(localized: "Preview"))</title>
           </head>
           <body>
-            <h1 class="title">Привет, мир</h1>
-            <!-- кнопка действия -->
-            <button data-id="42" onclick="run()">Запустить</button>
+            <h1 class="title">\#(String(localized: "Hello, world"))</h1>
+            <!-- \#(String(localized: "action button")) -->
+            <button data-id="42" onclick="run()">\#(String(localized: "Run"))</button>
           </body>
         </html>
         """#),
@@ -64,7 +64,7 @@ enum PreviewSnippets {
         """#),
 
         ("javascript", "JS", #"""
-        // подсчёт слов в строке
+        // \#(String(localized: "word count in a string"))
         function wordCount(text) {
           const words = text.trim().split(/\s+/);
           return words.filter(Boolean).length;
@@ -76,7 +76,7 @@ enum PreviewSnippets {
         """#),
 
         ("sql", "SQL", #"""
-        -- активные пользователи с числом заказов
+        -- \#(String(localized: "active users with order counts"))
         SELECT u.id, u.name, COUNT(o.id) AS orders
         FROM users AS u
         LEFT JOIN orders AS o ON o.user_id = u.id
@@ -90,10 +90,10 @@ enum PreviewSnippets {
 
         ("php", "PHP", #"""
         <?php
-        // приветствие пользователя
+        // \#(String(localized: "user greeting"))
         function greet(string $name, int $count = 1): string {
             $marks = str_repeat('!', $count);
-            return "Привет, {$name}{$marks}";
+            return "\#(String(localized: "Hello, {$name}{$marks}"))";
         }
 
         $users = ['Ada', 'Linus', 'Grace'];

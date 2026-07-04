@@ -63,7 +63,7 @@ final class SettingsModel: ObservableObject {
         } else {
             self.store = nil
             self.settings = .default
-            self.warning = "Контейнер App Group недоступен — изменения не сохраняются. Проверь подпись и entitlement."
+            self.warning = String(localized: "App Group container is unavailable — changes aren't saved. Check the signature and entitlement.")
         }
     }
 
@@ -155,7 +155,7 @@ final class SettingsModel: ObservableObject {
     func ruleLanguageName(_ rule: PreviewRule) -> String {
         switch rule.action {
         case .assign(let id): return languageDisplayName(id)
-        case .neutral:        return "не подсвечивать"
+        case .neutral:        return String(localized: "don't highlight")
         }
     }
 

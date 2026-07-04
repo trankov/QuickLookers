@@ -43,12 +43,12 @@ struct AddRuleSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Правило подсветки").font(.headline)
+            Text("Highlighting rule").font(.headline)
 
             VStack(alignment: .leading, spacing: 4) {
-                TextField("Шаблон имя/расширение, который будем подсвечивать", text: $draft.pattern)
+                TextField("Name/extension pattern to highlight", text: $draft.pattern)
                     .textFieldStyle(.roundedBorder)
-                Text("* = любые символы · ? = 1 символ · ~ = 1 необязательный · / = экранирование (/~, /*, /?)")
+                Text("* = any characters · ? = 1 character · ~ = 1 optional · / = escape (/~, /*, /?)")
                     .font(.caption2).foregroundStyle(.tertiary)
                 Text(defaultHint).font(.caption).foregroundStyle(.secondary)
                 if let status = statusHint {
@@ -58,14 +58,14 @@ struct AddRuleSheet: View {
             }
 
             Picker("", selection: $highlight) {
-                Text("Подсвечивать").tag(true)
-                Text("Отключить подсветку").tag(false)
+                Text("Highlight").tag(true)
+                Text("Disable highlighting").tag(false)
             }
             .pickerStyle(.segmented).labelsHidden()
 
             if highlight {
                 VStack(spacing: 4) {
-                    TextField("Найти формат подсветки…", text: $languageQuery)
+                    TextField("Find a highlighting format…", text: $languageQuery)
                         .textFieldStyle(.roundedBorder)
                     List(languages, id: \.id, selection: Binding(
                         get: { languageId },
@@ -78,8 +78,8 @@ struct AddRuleSheet: View {
 
             HStack {
                 Spacer()
-                Button("Отмена", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Сохранить") {
+                Button("Cancel", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Save") {
                     draft.action = highlight ? .assign(languageId: languageId) : .neutral
                     onSave(draft)
                     dismiss()
@@ -94,8 +94,8 @@ struct AddRuleSheet: View {
 
     private var defaultHint: String {
         switch model.currentDefault(forPattern: draft.pattern) {
-        case .language(let id): return "Сейчас: \(model.languageDisplayName(id))"
-        case .neutral:          return "Сейчас: нейтрально (нет правила)"
+        case .language(let id): return String(localized: "Now: \(model.languageDisplayName(id))")
+        case .neutral:          return String(localized: "Now: neutral (no rule)")
         case .indeterminate:    return " "
         }
     }
@@ -104,12 +104,12 @@ struct AddRuleSheet: View {
         guard let status = model.interceptionStatus(forPattern: draft.pattern) else { return nil }
         switch status {
         case .intercepted:
-            return ("Возможно показать по пробелу в Finder.", "checkmark.circle", .secondary)
+            return (String(localized: "Can be previewed with Space in Finder."), "checkmark.circle", .secondary)
         case .systemNonCode(let name):
-            return ("Невозможно показать по пробелу: определено в системе как «\(name)».",
+            return (String(localized: "Can't preview with Space: the system defines it as '\(name)'."),
                     "exclamationmark.triangle", .orange)
         case .unknownNotDeclared:
-            return ("Этот шаблон не поддерживается: просмотр по пробелу не сработает.",
+            return (String(localized: "This pattern isn't supported: Space preview won't work."),
                     "exclamationmark.triangle", .orange)
         }
     }

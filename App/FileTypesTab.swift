@@ -18,7 +18,7 @@ struct FileTypesTab: View {
         return VStack(spacing: 0) {
             HStack {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("Найти шаблон (расширение или имя файла), или формат подсветки…", text: $query)
+                TextField("Find a pattern (extension or file name), or a highlighting format…", text: $query)
                     .textFieldStyle(.plain)
                 if !query.isEmpty {
                     Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }
@@ -42,7 +42,7 @@ struct FileTypesTab: View {
                 Button {
                     editing = PreviewRule(pattern: "", action: .assign(languageId: ""))
                     addingNew = true
-                } label: { Label("Добавить правило", systemImage: "plus") }
+                } label: { Label("Add rule", systemImage: "plus") }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -60,16 +60,15 @@ struct FileTypesTab: View {
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Своих правил пока нет.").font(.headline)
-            Text("Сотни форматов подсвечиваются по умолчанию. Используйте поиск, "
-               + "чтобы переназначить формат, или добавьте своё правило подсветки.")
+            Text("No custom rules yet.").font(.headline)
+            Text("Hundreds of formats are highlighted by default. Use search to reassign a format, or add your own highlighting rule.")
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 8)
     }
 
     private func mineSection(_ results: SettingsModel.RuleSearchResults) -> some View {
-        Section("Мои правила") {
+        Section("My rules") {
             ForEach(results.mine) { rule in
                 HStack(spacing: 12) {
                     Text(rule.pattern).frame(width: 160, alignment: .leading)
@@ -80,30 +79,30 @@ struct FileTypesTab: View {
                         get: { rule.isEnabled },
                         set: { model.toggleRule(rule, on: $0) }))
                         .labelsHidden().toggleStyle(.switch).controlSize(.mini)
-                        .help(rule.isEnabled ? "Выключить правило" : "Включить правило")
+                        .help(rule.isEnabled ? String(localized: "Disable rule") : String(localized: "Enable rule"))
                     Button(role: .destructive) { model.deleteRule(rule) } label: {
                         Image(systemName: "trash")
                     }
                     .buttonStyle(.borderless).foregroundStyle(.secondary)
-                    .help("Удалить правило")
+                    .help("Delete rule")
                 }
                 .contextMenu {
-                    Button("Изменить") { editing = rule; addingNew = false }
-                    Button("Удалить", role: .destructive) { model.deleteRule(rule) }
+                    Button("Edit") { editing = rule; addingNew = false }
+                    Button("Delete", role: .destructive) { model.deleteRule(rule) }
                 }
             }
         }
     }
 
     private func defaultsSection(_ results: SettingsModel.RuleSearchResults) -> some View {
-        Section("По умолчанию (показаны первые \(datasetLimit))") {
+        Section("Defaults (first \(datasetLimit) shown)") {
             ForEach(results.defaults) { match in
                 HStack {
                     Text(matchLabel(match)).frame(width: 160, alignment: .leading)
                     Image(systemName: "arrow.right").foregroundStyle(.tertiary)
                     Text(model.languageDisplayName(match.languageId)).foregroundStyle(.secondary)
                     Spacer()
-                    Button("Изменить") { editing = model.draftOverride(for: match); addingNew = true }
+                    Button("Edit") { editing = model.draftOverride(for: match); addingNew = true }
                         .buttonStyle(.borderless)
                 }
             }

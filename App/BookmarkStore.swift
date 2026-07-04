@@ -14,8 +14,8 @@ enum AccessScope {
     }
     var prompt: String {
         switch self {
-        case .home: return "Разрешите доступ к домашней папке — чтобы прочитать тему и шрифт редактора."
-        case .applications: return "Разрешите доступ к папке «Программы» — чтобы найти установленные редакторы."
+        case .home: return String(localized: "Allow access to your home folder — to read the editor's theme and font.")
+        case .applications: return String(localized: "Allow access to the Applications folder — to find installed editors.")
         }
     }
 }
@@ -53,7 +53,7 @@ final class BookmarkStore {
         panel.allowsMultipleSelection = false
         panel.directoryURL = scope.url
         panel.message = scope.prompt
-        panel.prompt = "Разрешить"
+        panel.prompt = String(localized: "Allow")
         guard panel.runModal() == .OK, let url = panel.url else { return nil }
         if let data = try? url.bookmarkData(options: [.withSecurityScope],
                                             includingResourceValuesForKeys: nil, relativeTo: nil) {
