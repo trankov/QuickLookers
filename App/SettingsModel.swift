@@ -8,15 +8,6 @@ import QuickLookersEditorKit
 /// Любое изменение сразу пишется в settings.json (с ростом settingsVersion).
 @MainActor
 final class SettingsModel: ObservableObject {
-    /// Строка таблицы правил Слоя 2.
-    struct PreviewRuleRow: Identifiable {
-        let id: String          // "ext:py" / "file:Dockerfile"
-        let key: String         // "py" / "Dockerfile"
-        let isFilename: Bool
-        let languageId: String
-        let languageName: String
-    }
-
     @Published var settings: ManagerSettings
     @Published private(set) var warning: String?
     @Published private(set) var catalog: Catalog
@@ -26,29 +17,17 @@ final class SettingsModel: ObservableObject {
     /// Датасет соответствий «расширение/имя файла → язык» (из движка).
     let associations: FileTypeAssociations
 
+    /// Имя языка по id за O(1). Иначе линейный скан каталога в цикле поиска датасета
+    /// давал бы O(датасет × языки) на каждый символ ввода. Пересобирается при смене
+    /// каталога (init/reloadCatalog).
+    private var languageNamesById: [String: String]
+
+    private static func namesById(_ catalog: Catalog) -> [String: String] {
+        Dictionary(catalog.languages.map { ($0.id, $0.displayName) }) { first, _ in first }
+    }
+
     var lightThemes:  [ThemeInfo]   { catalog.themes.filter { !$0.isDark } }
     var darkThemes:   [ThemeInfo]   { catalog.themes.filter { $0.isDark } }
-
-    var previewRules: [PreviewRuleRow] {
-        let names = Dictionary(uniqueKeysWithValues: catalog.languages.map { ($0.id, $0.displayName) })
-        func name(_ id: String) -> String { names[id] ?? id }
-
-        // База: датасет + пользовательские override/добавления.
-        var exts = associations.byExtension
-        for (k, v) in settings.extensionOverrides { exts[k] = v }
-        var files = associations.byFilename
-        for (k, v) in settings.filenameOverrides { files[k] = v }
-
-        let extRows = exts.map { (ext, lang) in
-            PreviewRuleRow(id: "ext:\(ext)", key: ext, isFilename: false,
-                           languageId: lang, languageName: name(lang))
-        }
-        let fileRows = files.map { (fn, lang) in
-            PreviewRuleRow(id: "file:\(fn)", key: fn, isFilename: true,
-                           languageId: lang, languageName: name(lang))
-        }
-        return (extRows + fileRows).sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
-    }
 
     private let store: SettingsStore?
     /// Контейнер App Group, с которым работает эта модель — нужен, чтобы reloadCatalog()
@@ -71,6 +50,7 @@ final class SettingsModel: ObservableObject {
         let (loadedCatalog, loadedImportedIds) = Self.loadCatalog(containerURL: containerURL)
         self.catalog = loadedCatalog
         self.importedIds = loadedImportedIds
+        self.languageNamesById = Self.namesById(loadedCatalog)
         self.associations = FileTypeAssociations.loaded(from: QuickLookersEngineResources.associationsURL())
 
         // Хранилище — в общем контейнере. Нет контейнера → окно работает,
@@ -93,6 +73,7 @@ final class SettingsModel: ObservableObject {
         let (newCatalog, newImportedIds) = Self.loadCatalog(containerURL: containerURL)
         catalog = newCatalog
         importedIds = newImportedIds
+        languageNamesById = Self.namesById(newCatalog)
         fragmentCache.invalidate()   // после импорта тема под тем же id могла смениться
     }
 
@@ -143,37 +124,103 @@ final class SettingsModel: ObservableObject {
         }
     }
 
-    func isRuleOn(_ row: PreviewRuleRow) -> Bool {
-        guard isLanguageEnabled(row.languageId, settings: settings) else { return false }
-        return row.isFilename
-            ? !settings.disabledFilenames.contains(row.key)
-            : !settings.disabledExtensions.contains(row.key)
+    // MARK: - Правила просмотра (Слой 2)
+
+    var userRules: [PreviewRule] { settings.previewRules }
+
+    /// Во что шаблон разрешается сейчас в датасете (без учёта самого правила).
+    enum PatternDefault: Equatable { case language(String); case neutral; case indeterminate }
+
+    struct RuleSearchResults { let mine: [PreviewRule]; let defaults: [DatasetMatch] }
+
+    func languageDisplayName(_ id: String) -> String {
+        languageNamesById[id] ?? id
     }
 
-    func setRuleOn(_ row: PreviewRuleRow, _ on: Bool) {
+    /// Поиск: свои правила (по шаблону/языку) + совпадения датасета (капнутые).
+    /// Пустой запрос → только свои правила, датасет пуст.
+    func searchRules(query: String, limit: Int) -> RuleSearchResults {
+        let q = query.lowercased()
+        let mine = q.isEmpty ? userRules : userRules.filter { rule in
+            rule.pattern.lowercased().contains(q)
+                || ruleLanguageName(rule).lowercased().contains(q)
+        }
+        let defaults = searchDataset(query: query, limit: limit, associations: associations,
+                                     languageName: { [weak self] in self?.languageDisplayName($0) })
+        return RuleSearchResults(mine: mine, defaults: defaults)
+    }
+
+    /// Отображение действия правила (язык или «не подсвечивать») — используют и поиск,
+    /// и вкладка правил (не дублировать в вью).
+    func ruleLanguageName(_ rule: PreviewRule) -> String {
+        switch rule.action {
+        case .assign(let id): return languageDisplayName(id)
+        case .neutral:        return "не подсвечивать"
+        }
+    }
+
+    /// Добавить правило; шаблон-дубль обновляет существующее, а не плодит второе.
+    func addRule(pattern: String, action: RuleAction) {
+        let p = pattern.trimmingCharacters(in: .whitespaces)
+        guard !p.isEmpty else { return }
         update { s in
-            if row.isFilename {
-                if on { s.disabledFilenames.remove(row.key) } else { s.disabledFilenames.insert(row.key) }
+            // Сравнение шаблонов регистронезависимо — как и само glob-сопоставление
+            // (иначе *.SWIFT и *.swift дали бы два правила на одни файлы).
+            if let i = s.previewRules.firstIndex(where: { $0.pattern.caseInsensitiveCompare(p) == .orderedSame }) {
+                s.previewRules[i].action = action
+                s.previewRules[i].isEnabled = true
             } else {
-                if on { s.disabledExtensions.remove(row.key) } else { s.disabledExtensions.insert(row.key) }
+                s.previewRules.append(PreviewRule(pattern: p, action: action))
             }
         }
     }
 
-    func setRuleLanguage(_ row: PreviewRuleRow, _ languageId: String) {
+    func updateRule(_ rule: PreviewRule) {
         update { s in
-            if row.isFilename { s.filenameOverrides[row.key] = languageId }
-            else { s.extensionOverrides[row.key] = languageId }
+            if let i = s.previewRules.firstIndex(where: { $0.id == rule.id }) { s.previewRules[i] = rule }
         }
     }
 
-    /// Добавить/переопределить правило по расширению (ведущая точка допускается).
-    func addExtensionRule(ext: String, languageId: String) {
-        let key = ext.hasPrefix(".") ? String(ext.dropFirst()) : ext
-        let norm = key.lowercased()
-        guard !norm.isEmpty else { return }
-        update { s in s.extensionOverrides[norm] = languageId }
+    func deleteRule(_ rule: PreviewRule) {
+        update { s in s.previewRules.removeAll { $0.id == rule.id } }
     }
+
+    func toggleRule(_ rule: PreviewRule, on: Bool) {
+        update { s in
+            if let i = s.previewRules.firstIndex(where: { $0.id == rule.id }) { s.previewRules[i].isEnabled = on }
+        }
+    }
+
+    /// Черновик правила-перекрытия для дефолтного совпадения (для листа правки).
+    func draftOverride(for match: DatasetMatch) -> PreviewRule {
+        let pattern: String
+        switch match.key {
+        case .ext(let e):      pattern = "*.\(e)"
+        case .filename(let f): pattern = f
+        }
+        return PreviewRule(pattern: pattern, action: .assign(languageId: match.languageId))
+    }
+
+    /// Что шаблон значит сейчас по датасету — для строки «Сейчас так».
+    func currentDefault(forPattern pattern: String) -> PatternDefault {
+        let m = GlobMatcher(pattern)
+        if let name = m.exactFilename, let lang = associations.byFilename[name] { return .language(lang) }
+        if let ext = m.fastExtension, let lang = associations.byExtension[ext] { return .language(lang) }
+        if m.exactFilename != nil || m.fastExtension != nil { return .neutral }
+        return .indeterminate
+    }
+
+    /// Статус перехвата для шаблона; nil если расширение неопределимо (строку прячем).
+    func interceptionStatus(forPattern pattern: String) -> InterceptionStatus? {
+        guard let ext = GlobMatcher(pattern).probeExtension else { return nil }
+        return QuickLookersSettingsKit.interceptionStatus(
+            forExtension: ext,
+            systemType: InterceptionDeclarations.systemType(forExtension: ext),
+            declared: Self.declaredInterceptSet)
+    }
+
+    /// Набор перехвата читаем один раз (не меняется в рантайме).
+    private static let declaredInterceptSet: DeclaredInterceptSet = InterceptionDeclarations.load()
 
     /// Поиск id темы по отображаемому имени — для EditorThemeResolver.
     struct CatalogLookup: ThemeCatalogLookup {

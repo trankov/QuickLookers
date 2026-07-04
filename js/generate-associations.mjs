@@ -103,7 +103,14 @@ const languages = [...byLang.values()]
   .map((l) => ({ id: l.id, extensions: l.extensions.sort(), filenames: l.filenames.sort() }))
   .sort((a, b) => a.id.localeCompare(b.id))
 
+// interceptExtensions: расширения без грамматики Shiki, которые всё равно перехватываем
+// (чтобы пользовательская пара «расширение → грамматика» работала). Дефолтного языка нет —
+// показ нейтральный, пока пользователь не назначит правило. Исключаем уже owned языком.
+const interceptExtensions = [...new Set(overrides.interceptExtensions ?? [])]
+  .filter((e) => !extOwner.has(e))
+  .sort()
+
 writeFileSync('../Sources/QuickLookersEngine/Resources/associations.json',
-  JSON.stringify({ version: 1, languages }))
-console.log(`associations: languages=${languages.length} ext=${extOwner.size} file=${fileOwner.size} conflicts=${conflicts.length}`)
+  JSON.stringify({ version: 1, languages, interceptExtensions }))
+console.log(`associations: languages=${languages.length} ext=${extOwner.size} file=${fileOwner.size} intercept=${interceptExtensions.length} conflicts=${conflicts.length}`)
 for (const c of conflicts) console.log('  conflict', c)

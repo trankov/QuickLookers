@@ -11,26 +11,35 @@ public func isLanguageEnabled(_ id: String, settings: ManagerSettings) -> Bool {
     !settings.disabledLanguageIds.contains(id)
 }
 
-/// Как показывать файл по пробелу. Порядок: правило по имени файла (приоритетнее),
-/// затем по расширению; пользовательские правки перекрывают датасет.
-/// Всё, что дошло до расширения, но выключено/неизвестно → нейтральный текст
-/// (не бросок): бросок оставлен только для нечитаемого файла на стороне расширения.
+/// Как показывать файл по пробелу.
+/// Порядок: (1) правила пользователя — по убыванию специфичности, первое включённое
+/// совпадение решает; (2) датасет — сначала точное имя файла, затем расширение;
+/// (3) иначе нейтраль. Язык, выключенный в Слое 1, форсит нейтраль на любом уровне.
 public func resolvePreview(fileName: String, pathExtension: String,
                            associations: FileTypeAssociations,
                            settings: ManagerSettings) -> PreviewResolution {
-    func resolution(languageId: String, isDisabledForPreview: Bool) -> PreviewResolution {
-        guard !isDisabledForPreview, isLanguageEnabled(languageId, settings: settings) else { return .neutral }
-        return .highlight(languageId: languageId)
+    func resolved(_ languageId: String) -> PreviewResolution {
+        isLanguageEnabled(languageId, settings: settings) ? .highlight(languageId: languageId) : .neutral
     }
-    // 1) правило по имени файла (Dockerfile, CMakeLists.txt …)
-    if let lang = settings.filenameOverrides[fileName] ?? associations.byFilename[fileName] {
-        return resolution(languageId: lang, isDisabledForPreview: settings.disabledFilenames.contains(fileName))
+
+    // 1) Правила пользователя. Компилируем включённые, берём самое специфичное совпадение.
+    let matches: [(rule: PreviewRule, spec: Int)] = settings.previewRules.compactMap { rule in
+        guard rule.isEnabled else { return nil }
+        let m = GlobMatcher(rule.pattern)
+        return m.matches(fileName: fileName) ? (rule, m.specificity) : nil
     }
-    // 2) правило по расширению
+    if let winner = matches.max(by: { $0.spec < $1.spec })?.rule {
+        switch winner.action {
+        case .neutral: return .neutral
+        case .assign(let lang): return resolved(lang)
+        }
+    }
+
+    // 2) Датасет: имя файла приоритетнее расширения.
+    if let lang = associations.byFilename[fileName] { return resolved(lang) }
     let ext = pathExtension.lowercased()
-    if !ext.isEmpty, let lang = settings.extensionOverrides[ext] ?? associations.byExtension[ext] {
-        return resolution(languageId: lang, isDisabledForPreview: settings.disabledExtensions.contains(ext))
-    }
-    // 3) дошло (напр. по public.plain-text), но неизвестно → нейтральный текст
+    if !ext.isEmpty, let lang = associations.byExtension[ext] { return resolved(lang) }
+
+    // 3) Дошло, но неизвестно → нейтраль.
     return .neutral
 }

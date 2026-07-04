@@ -34,4 +34,17 @@ assert.equal(extOwner.get('m'), 'objective-c')
 assert.equal(extOwner.get('c'), 'c')
 assert.equal(extOwner.get('cpp'), 'cpp')
 assert.equal(extOwner.get('cs'), 'csharp')
+
+// interceptExtensions: перехват без грамматики (пользователь назначит язык сам).
+assert.ok(Array.isArray(data.interceptExtensions) && data.interceptExtensions.length > 100,
+  'interceptExtensions присутствует и непуст')
+const intercept = new Set(data.interceptExtensions)
+assert.ok(intercept.has('agda'), 'agda в перехвате (грамматики нет)')
+assert.ok(intercept.has('zig') === false, 'zig не в перехвате — у него уже есть язык')
+// intercept и owned не пересекаются
+for (const e of intercept) assert.ok(!extOwner.has(e), `intercept .${e} не должен быть owned языком`)
+// дефолты Pygments с грамматикой закреплены за языком
+assert.equal(extOwner.get('gradle'), 'groovy')
+assert.equal(extOwner.get('ndjson'), 'json')
+assert.equal(extOwner.get('pom'), 'xml')
 console.log('associations smoke OK')

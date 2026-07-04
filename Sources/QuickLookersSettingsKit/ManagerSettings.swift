@@ -27,28 +27,20 @@ public struct ManagerSettings: Codable, Equatable {
     public var disabledLanguageIds: Set<String>          // Слой 1: язык выключен в библиотеке
     public var activeThemeId: String
     public var font: FontSettings
-    // Слой 2: правила просмотра поверх датасета.
-    public var extensionOverrides: [String: String]      // ext(lower) → languageId
-    public var filenameOverrides: [String: String]       // filename → languageId
-    public var disabledExtensions: Set<String>           // ext(lower), убран из просмотра
-    public var disabledFilenames: Set<String>            // filename, убран из просмотра
+    // Слой 2: упорядоченный список правил просмотра поверх датасета.
+    public var previewRules: [PreviewRule]
 
     public init(schemaVersion: Int, settingsVersion: Int, disabledLanguageIds: Set<String>,
-                activeThemeId: String, font: FontSettings,
-                extensionOverrides: [String: String], filenameOverrides: [String: String],
-                disabledExtensions: Set<String>, disabledFilenames: Set<String>) {
+                activeThemeId: String, font: FontSettings, previewRules: [PreviewRule]) {
         self.schemaVersion = schemaVersion
         self.settingsVersion = settingsVersion
         self.disabledLanguageIds = disabledLanguageIds
         self.activeThemeId = activeThemeId
         self.font = font
-        self.extensionOverrides = extensionOverrides
-        self.filenameOverrides = filenameOverrides
-        self.disabledExtensions = disabledExtensions
-        self.disabledFilenames = disabledFilenames
+        self.previewRules = previewRules
     }
 
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
 
     public static let `default` = ManagerSettings(
         schemaVersion: currentSchemaVersion,
@@ -56,9 +48,6 @@ public struct ManagerSettings: Codable, Equatable {
         disabledLanguageIds: [],
         activeThemeId: DefaultThemeIds.dark,
         font: FontSettings(family: nil, size: nil),
-        extensionOverrides: [:],
-        filenameOverrides: [:],
-        disabledExtensions: [],
-        disabledFilenames: []
+        previewRules: []
     )
 }

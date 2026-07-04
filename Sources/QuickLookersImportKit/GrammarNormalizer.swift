@@ -24,6 +24,11 @@ public struct GrammarNormalizer {
                           embeddedLanguageIds: [String], siblingGrammars: [String: Data]) throws -> Data {
         guard var main = try? JSONSerialization.jsonObject(with: grammarJSON) as? [String: Any]
         else { throw GrammarError.badGrammar }
+        // Контракт движка: грамматика ищется по id, а Shiki регистрирует её по полю
+        // `name`. Импортированные из .vsix держат витринное имя VS Code («Django HTML»)
+        // → приводим `name` главной грамматики к id (как ThemeNormalizer для тем).
+        // `scopeName` не трогаем — это TextMate-scope, не идентификатор языка.
+        main["name"] = languageId
         if !embeddedLanguageIds.isEmpty { main["embeddedLangs"] = embeddedLanguageIds }
 
         var result: [[String: Any]] = [main]
