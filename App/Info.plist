@@ -34,6 +34,8 @@
 			<dict>
 				<key>public.filename-extension</key>
 				<array>
+					<string>1p</string>
+					<string>3pm</string>
 					<string>4dform</string>
 					<string>4dproject</string>
 					<string>6pl</string>
@@ -44,14 +46,28 @@
 					<string>a51</string>
 					<string>abap</string>
 					<string>abbrev_defs</string>
+					<string>abnf</string>
 					<string>acl</string>
 					<string>ad</string>
+					<string>adl</string>
+					<string>adlf</string>
+					<string>adls</string>
+					<string>adlx</string>
 					<string>adml</string>
 					<string>admx</string>
 					<string>ado</string>
 					<string>adoc</string>
 					<string>adp</string>
+					<string>aes</string>
+					<string>agda</string>
+					<string>aheui</string>
+					<string>ahk</string>
+					<string>ahkl</string>
+					<string>aj</string>
 					<string>al</string>
+					<string>alg</string>
+					<string>als</string>
+					<string>ans</string>
 					<string>ant</string>
 					<string>apacheconf</string>
 					<string>apex</string>
@@ -63,39 +79,75 @@
 					<string>apln</string>
 					<string>aplo</string>
 					<string>ara</string>
+					<string>arexx</string>
+					<string>art</string>
+					<string>asax</string>
 					<string>asc</string>
 					<string>asciidoc</string>
+					<string>ascx</string>
 					<string>asd</string>
 					<string>asdf</string>
+					<string>ashx</string>
 					<string>asm</string>
+					<string>asmx</string>
+					<string>asn1</string>
+					<string>aspx</string>
 					<string>astro</string>
+					<string>asy</string>
+					<string>at</string>
+					<string>au3</string>
+					<string>aug</string>
 					<string>auk</string>
+					<string>automount</string>
 					<string>aux</string>
 					<string>avsc</string>
 					<string>aw</string>
 					<string>awk</string>
 					<string>axaml</string>
+					<string>axd</string>
 					<string>axml</string>
+					<string>b</string>
 					<string>bal</string>
+					<string>bare</string>
+					<string>bas</string>
 					<string>bat</string>
 					<string>bats</string>
 					<string>bb</string>
+					<string>bbc</string>
 					<string>bbx</string>
+					<string>bc</string>
 					<string>bdy</string>
 					<string>be</string>
 					<string>beancount</string>
+					<string>befunge</string>
+					<string>bf</string>
 					<string>bib</string>
 					<string>bibtex</string>
 					<string>bicep</string>
 					<string>bicepparam</string>
 					<string>blade</string>
+					<string>blp</string>
+					<string>bmx</string>
+					<string>bnf</string>
+					<string>boa</string>
 					<string>bones</string>
+					<string>boo</string>
 					<string>boot</string>
+					<string>bpl</string>
+					<string>bqn</string>
+					<string>bro</string>
 					<string>bsl</string>
+					<string>bst</string>
+					<string>bug</string>
 					<string>builder</string>
 					<string>builds</string>
+					<string>bzl</string>
+					<string>cadl</string>
 					<string>cairo</string>
 					<string>cake</string>
+					<string>camkes</string>
+					<string>capnp</string>
+					<string>carbon</string>
 					<string>cask</string>
 					<string>cats</string>
 					<string>cbl</string>
@@ -107,14 +159,26 @@
 					<string>ccproj</string>
 					<string>ccxml</string>
 					<string>cdc</string>
+					<string>cddl</string>
 					<string>cdf</string>
+					<string>cdl</string>
+					<string>ceylon</string>
+					<string>cf</string>
+					<string>cfc</string>
+					<string>cfm</string>
+					<string>cfml</string>
 					<string>cgi</string>
 					<string>cginc</string>
+					<string>chai</string>
+					<string>chpl</string>
+					<string>ci</string>
+					<string>cirru</string>
 					<string>cjs</string>
 					<string>cjsx</string>
 					<string>cl2</string>
 					<string>clang-format</string>
 					<string>clar</string>
+					<string>clay</string>
 					<string>clixml</string>
 					<string>clj</string>
 					<string>cljc</string>
@@ -124,6 +188,7 @@
 					<string>cls</string>
 					<string>cmake</string>
 					<string>cmd</string>
+					<string>cml</string>
 					<string>cnf</string>
 					<string>cob</string>
 					<string>cobcopy</string>
@@ -131,34 +196,54 @@
 					<string>code-snippets</string>
 					<string>code-workspace</string>
 					<string>coffee</string>
+					<string>comal</string>
 					<string>conf</string>
 					<string>copybook</string>
 					<string>coq</string>
+					<string>cpl</string>
 					<string>cppm</string>
 					<string>cproject</string>
+					<string>cps</string>
+					<string>cpsa</string>
 					<string>cpy</string>
 					<string>cql</string>
 					<string>cr</string>
+					<string>crmsh</string>
+					<string>croc</string>
+					<string>cry</string>
 					<string>cs</string>
 					<string>cscfg</string>
+					<string>csd</string>
 					<string>csdef</string>
 					<string>cshtml</string>
 					<string>csl</string>
 					<string>csproj</string>
+					<string>cssul4</string>
 					<string>csx</string>
 					<string>ct</string>
 					<string>ctp</string>
 					<string>cts</string>
+					<string>cu</string>
 					<string>cue</string>
+					<string>cuh</string>
+					<string>cw</string>
 					<string>cyp</string>
 					<string>cypher</string>
 					<string>d</string>
+					<string>darcspatch</string>
 					<string>dart</string>
+					<string>dasm</string>
+					<string>dasm16</string>
+					<string>dax</string>
+					<string>dcl</string>
 					<string>ddl</string>
+					<string>decls</string>
 					<string>def</string>
 					<string>depproj</string>
 					<string>desktop</string>
+					<string>device</string>
 					<string>dfm</string>
+					<string>dg</string>
 					<string>di</string>
 					<string>dita</string>
 					<string>ditamap</string>
@@ -167,26 +252,46 @@
 					<string>djhtml</string>
 					<string>dm</string>
 					<string>dme</string>
+					<string>dmesg</string>
 					<string>dml</string>
 					<string>do</string>
+					<string>docker</string>
 					<string>dockerfile</string>
 					<string>dof</string>
 					<string>doh</string>
 					<string>dotsettings</string>
+					<string>dpatch</string>
 					<string>dpk</string>
 					<string>dpp</string>
 					<string>dpr</string>
+					<string>dtd</string>
+					<string>dtsi</string>
 					<string>dtx</string>
+					<string>duby</string>
+					<string>duel</string>
 					<string>dump</string>
 					<string>dyalog</string>
 					<string>dyapp</string>
+					<string>dyl</string>
+					<string>dylan</string>
+					<string>e</string>
+					<string>ebnf</string>
+					<string>ebuild</string>
+					<string>ec</string>
+					<string>ecl</string>
+					<string>eclass</string>
 					<string>edge</string>
+					<string>edp</string>
+					<string>eex</string>
+					<string>eg</string>
+					<string>eh</string>
 					<string>el</string>
 					<string>elc</string>
 					<string>eld</string>
 					<string>eliom</string>
 					<string>eliomi</string>
 					<string>elm</string>
+					<string>elpi</string>
 					<string>emacs</string>
 					<string>env</string>
 					<string>envvars</string>
@@ -195,23 +300,40 @@
 					<string>es</string>
 					<string>es6</string>
 					<string>escript</string>
+					<string>evoque</string>
 					<string>ex</string>
+					<string>exec</string>
+					<string>exlib</string>
+					<string>explain</string>
+					<string>exw</string>
 					<string>eye</string>
+					<string>ezt</string>
 					<string>f03</string>
 					<string>f08</string>
 					<string>f18</string>
+					<string>factor</string>
+					<string>fan</string>
+					<string>fancypack</string>
 					<string>fastcgi_params</string>
+					<string>fc</string>
 					<string>fcgi</string>
 					<string>fd</string>
 					<string>feature</string>
+					<string>fhtml</string>
+					<string>fif</string>
 					<string>filters</string>
 					<string>fish</string>
+					<string>flo</string>
+					<string>flx</string>
+					<string>flxh</string>
 					<string>fmx</string>
 					<string>fnc</string>
 					<string>fnl</string>
+					<string>fnlm</string>
 					<string>fp</string>
 					<string>fpp</string>
 					<string>frg</string>
+					<string>frt</string>
 					<string>fshader</string>
 					<string>fsi</string>
 					<string>fsproj</string>
@@ -219,14 +341,23 @@
 					<string>fsti</string>
 					<string>fsx</string>
 					<string>ftl</string>
+					<string>fun</string>
+					<string>func</string>
+					<string>fut</string>
 					<string>fx</string>
 					<string>fxh</string>
 					<string>fxml</string>
+					<string>fy</string>
+					<string>g</string>
+					<string>gap</string>
 					<string>gawk</string>
+					<string>gcode</string>
 					<string>gd</string>
+					<string>gdc</string>
 					<string>gdshader</string>
 					<string>gemspec</string>
 					<string>geo</string>
+					<string>gi</string>
 					<string>gjs</string>
 					<string>glade</string>
 					<string>gleam</string>
@@ -239,7 +370,11 @@
 					<string>gnus</string>
 					<string>go</string>
 					<string>god</string>
+					<string>golo</string>
+					<string>googlesql</string>
 					<string>gql</string>
+					<string>gradle</string>
+					<string>graph</string>
 					<string>graphcool</string>
 					<string>graphql</string>
 					<string>graphqls</string>
@@ -247,9 +382,13 @@
 					<string>grt</string>
 					<string>grxml</string>
 					<string>gshader</string>
+					<string>gsp</string>
+					<string>gsql</string>
 					<string>gst</string>
+					<string>gsx</string>
 					<string>gtpl</string>
 					<string>gts</string>
+					<string>gv</string>
 					<string>gvy</string>
 					<string>gyp</string>
 					<string>gypi</string>
@@ -259,6 +398,7 @@
 					<string>har</string>
 					<string>hbs</string>
 					<string>hcl</string>
+					<string>hdp</string>
 					<string>hhi</string>
 					<string>hic</string>
 					<string>hjson</string>
@@ -267,88 +407,153 @@
 					<string>hrl</string>
 					<string>hs</string>
 					<string>hs-boot</string>
+					<string>hsail</string>
 					<string>hsc</string>
 					<string>hsig</string>
 					<string>hta</string>
 					<string>htaccess</string>
 					<string>htgroups</string>
+					<string>htmlul4</string>
 					<string>htpasswd</string>
 					<string>http</string>
 					<string>hx</string>
 					<string>hxml</string>
 					<string>hxsl</string>
 					<string>hy</string>
+					<string>hyb</string>
 					<string>hzp</string>
+					<string>i6t</string>
+					<string>i7x</string>
 					<string>ice</string>
 					<string>iced</string>
+					<string>icl</string>
+					<string>icn</string>
+					<string>icon</string>
 					<string>idc</string>
+					<string>idl</string>
+					<string>idl4</string>
+					<string>idr</string>
 					<string>ihlp</string>
+					<string>ijs</string>
+					<string>ik</string>
 					<string>imba</string>
 					<string>imba2</string>
 					<string>iml</string>
 					<string>inc</string>
+					<string>inf</string>
 					<string>ino</string>
 					<string>ins</string>
+					<string>instances</string>
+					<string>intr</string>
+					<string>io</string>
+					<string>ipf</string>
+					<string>isa</string>
 					<string>ivy</string>
 					<string>ixx</string>
+					<string>j</string>
 					<string>j2</string>
 					<string>jade</string>
+					<string>jag</string>
 					<string>jake</string>
+					<string>janet</string>
+					<string>jbst</string>
 					<string>jbuilder</string>
+					<string>jcl</string>
+					<string>jdn</string>
 					<string>jelly</string>
 					<string>jinja</string>
 					<string>jinja2</string>
 					<string>jison</string>
 					<string>jl</string>
+					<string>jp</string>
 					<string>jsb</string>
 					<string>jscad</string>
 					<string>jsfl</string>
+					<string>jsgf</string>
 					<string>jsh</string>
 					<string>jslib</string>
+					<string>jslt</string>
 					<string>jsm</string>
 					<string>json5</string>
 					<string>jsonc</string>
 					<string>jsonl</string>
+					<string>jsonld</string>
 					<string>jsonnet</string>
+					<string>jsp</string>
 					<string>jspre</string>
 					<string>jsproj</string>
 					<string>jss</string>
 					<string>jssm</string>
 					<string>jssm_state</string>
+					<string>jsul4</string>
 					<string>jsx</string>
+					<string>juttle</string>
+					<string>jy</string>
+					<string>k</string>
+					<string>kal</string>
+					<string>kid</string>
+					<string>kif</string>
+					<string>kk</string>
+					<string>kki</string>
 					<string>kml</string>
+					<string>kmsg</string>
+					<string>kn</string>
 					<string>kojo</string>
 					<string>kql</string>
 					<string>kt</string>
 					<string>ktm</string>
 					<string>kts</string>
 					<string>kusto</string>
+					<string>lagda</string>
+					<string>lasso</string>
 					<string>launch</string>
 					<string>lbx</string>
+					<string>lcry</string>
+					<string>ldif</string>
 					<string>lean</string>
+					<string>leex</string>
 					<string>lektorproject</string>
 					<string>less</string>
 					<string>lfm</string>
+					<string>lgt</string>
+					<string>lhs</string>
 					<string>libsonnet</string>
+					<string>lidr</string>
 					<string>linq</string>
 					<string>liquid</string>
 					<string>lisp</string>
 					<string>lks</string>
 					<string>lmi</string>
+					<string>load</string>
+					<string>logtalk</string>
+					<string>lpad</string>
 					<string>lpr</string>
+					<string>ls</string>
+					<string>lsl</string>
 					<string>lsp</string>
 					<string>ltx</string>
 					<string>lua</string>
 					<string>luau</string>
+					<string>ly</string>
+					<string>m2</string>
 					<string>ma</string>
+					<string>mac</string>
 					<string>makefile</string>
+					<string>man</string>
+					<string>mao</string>
+					<string>maql</string>
 					<string>marko</string>
+					<string>mask</string>
 					<string>mata</string>
 					<string>matah</string>
 					<string>mathematica</string>
 					<string>matlab</string>
 					<string>mawk</string>
+					<string>max</string>
+					<string>mc</string>
+					<string>mcfunction</string>
 					<string>mcmeta</string>
+					<string>mcschema</string>
 					<string>mdpolicy</string>
 					<string>mediawiki</string>
 					<string>mermaid</string>
@@ -365,37 +570,69 @@
 					<string>mli</string>
 					<string>mll</string>
 					<string>mly</string>
+					<string>mo</string>
+					<string>module</string>
 					<string>mojo</string>
+					<string>monkey</string>
+					<string>moo</string>
+					<string>moon</string>
+					<string>mount</string>
 					<string>move</string>
+					<string>mpl</string>
+					<string>mq4</string>
+					<string>mq5</string>
+					<string>mqh</string>
+					<string>ms</string>
+					<string>msc</string>
 					<string>mspec</string>
 					<string>mt</string>
+					<string>mu</string>
 					<string>mxml</string>
+					<string>mxx</string>
 					<string>mysql</string>
+					<string>myt</string>
+					<string>n</string>
 					<string>nas</string>
 					<string>natvis</string>
 					<string>nawk</string>
 					<string>nb</string>
 					<string>nbp</string>
+					<string>nc</string>
 					<string>ncl</string>
 					<string>ndproj</string>
 					<string>nf</string>
+					<string>ng2</string>
 					<string>nginx</string>
 					<string>nginxconf</string>
 					<string>ngx</string>
+					<string>ni</string>
 					<string>nim</string>
 					<string>nimble</string>
 					<string>nimrod</string>
 					<string>nims</string>
+					<string>nit</string>
 					<string>nix</string>
 					<string>njs</string>
+					<string>nl</string>
 					<string>nomad</string>
 					<string>nproj</string>
 					<string>nqp</string>
+					<string>ns2</string>
 					<string>nse</string>
+					<string>nsh</string>
+					<string>nsi</string>
+					<string>nt</string>
 					<string>nu</string>
+					<string>numba_ir</string>
 					<string>nuspec</string>
 					<string>ny</string>
+					<string>objdump</string>
 					<string>odd</string>
+					<string>odin</string>
+					<string>ooc</string>
+					<string>opa</string>
+					<string>orc</string>
+					<string>org</string>
 					<string>os</string>
 					<string>osm</string>
 					<string>p</string>
@@ -404,17 +641,27 @@
 					<string>p6m</string>
 					<string>p8</string>
 					<string>pac</string>
+					<string>pack</string>
+					<string>pan</string>
 					<string>pascal</string>
+					<string>path</string>
+					<string>pc</string>
 					<string>pck</string>
+					<string>pcmk</string>
 					<string>pco</string>
 					<string>pcss</string>
 					<string>pd_lua</string>
+					<string>pddl</string>
 					<string>pdv</string>
+					<string>peg</string>
 					<string>perl</string>
 					<string>ph</string>
 					<string>php5</string>
 					<string>phps</string>
 					<string>phpt</string>
+					<string>pidl</string>
+					<string>pig</string>
+					<string>pike</string>
 					<string>pkb</string>
 					<string>pkgproj</string>
 					<string>pkh</string>
@@ -427,47 +674,83 @@
 					<string>pluginspec</string>
 					<string>plx</string>
 					<string>pm6</string>
+					<string>pml</string>
+					<string>pmod</string>
 					<string>po</string>
 					<string>podsl</string>
 					<string>podspec</string>
 					<string>polar</string>
+					<string>pom</string>
+					<string>pony</string>
+					<string>portugol</string>
 					<string>postcss</string>
+					<string>pov</string>
 					<string>pq</string>
 					<string>pqm</string>
+					<string>pr</string>
+					<string>praat</string>
 					<string>prawn</string>
 					<string>prc</string>
 					<string>prefs</string>
+					<string>prg</string>
 					<string>prisma</string>
+					<string>prm</string>
 					<string>pro</string>
+					<string>proc</string>
 					<string>proj</string>
 					<string>prolog</string>
+					<string>prom</string>
+					<string>promela</string>
+					<string>promql</string>
 					<string>properties</string>
 					<string>props</string>
+					<string>prql</string>
 					<string>ps1</string>
 					<string>ps1xml</string>
+					<string>psc</string>
 					<string>psc1</string>
 					<string>psd1</string>
 					<string>psgi</string>
+					<string>psi</string>
+					<string>psl</string>
 					<string>psm1</string>
 					<string>pt</string>
+					<string>ptls</string>
+					<string>ptx</string>
 					<string>pug</string>
 					<string>purs</string>
+					<string>pwn</string>
+					<string>pxi</string>
+					<string>py2tb</string>
 					<string>py3</string>
+					<string>py3tb</string>
 					<string>pyde</string>
+					<string>pye</string>
 					<string>pyi</string>
 					<string>pyp</string>
+					<string>pypylog</string>
 					<string>pyt</string>
+					<string>pytb</string>
+					<string>pyul4</string>
 					<string>pyw</string>
+					<string>pyx</string>
+					<string>q</string>
 					<string>qbs</string>
 					<string>qhelp</string>
 					<string>ql</string>
 					<string>qll</string>
 					<string>qml</string>
 					<string>query</string>
+					<string>qvs</string>
+					<string>qvto</string>
+					<string>qvw</string>
+					<string>r3</string>
 					<string>rabl</string>
 					<string>rake</string>
 					<string>raku</string>
+					<string>rakudoc</string>
 					<string>rakumod</string>
+					<string>rakutest</string>
 					<string>razor</string>
 					<string>rbi</string>
 					<string>rbuild</string>
@@ -477,65 +760,122 @@
 					<string>rd</string>
 					<string>rdf</string>
 					<string>re</string>
+					<string>react</string>
+					<string>reb</string>
+					<string>red</string>
+					<string>reds</string>
 					<string>reek</string>
 					<string>reg</string>
 					<string>regex</string>
 					<string>regexp</string>
+					<string>rego</string>
+					<string>rei</string>
+					<string>rell</string>
 					<string>res</string>
+					<string>resource</string>
 					<string>rest</string>
 					<string>resx</string>
+					<string>rex</string>
+					<string>rexx</string>
 					<string>rhtml</string>
+					<string>ride</string>
 					<string>riscv</string>
+					<string>rita</string>
 					<string>rkt</string>
 					<string>rktd</string>
 					<string>rktl</string>
+					<string>rl</string>
 					<string>rmiss</string>
+					<string>rnc</string>
+					<string>robot</string>
 					<string>rockspec</string>
 					<string>ronn</string>
+					<string>rout</string>
+					<string>rpf</string>
 					<string>rpy</string>
 					<string>rq</string>
+					<string>rql</string>
 					<string>rs</string>
+					<string>rsl</string>
 					<string>rst</string>
 					<string>rsx</string>
+					<string>rts</string>
 					<string>ru</string>
 					<string>ruby</string>
+					<string>run</string>
 					<string>rviz</string>
+					<string>rvt</string>
+					<string>rx</string>
+					<string>sage</string>
 					<string>sarif</string>
+					<string>sarl</string>
 					<string>sas</string>
 					<string>sass</string>
+					<string>savi</string>
+					<string>sbl</string>
 					<string>sbt</string>
 					<string>sc</string>
+					<string>scad</string>
 					<string>scala</string>
+					<string>scaml</string>
 					<string>scb</string>
 					<string>scbl</string>
 					<string>scd</string>
+					<string>scdoc</string>
+					<string>sce</string>
 					<string>scgi_params</string>
 					<string>sch</string>
+					<string>sci</string>
 					<string>scm</string>
+					<string>sco</string>
+					<string>scope</string>
 					<string>scrbl</string>
 					<string>scss</string>
 					<string>scxml</string>
 					<string>sdbl</string>
+					<string>sed</string>
 					<string>sel</string>
 					<string>service</string>
 					<string>sexp</string>
 					<string>sfproj</string>
+					<string>sgf</string>
 					<string>sh-session</string>
 					<string>shader</string>
+					<string>shen</string>
+					<string>shex</string>
 					<string>shproj</string>
+					<string>sieve</string>
+					<string>sig</string>
+					<string>sil</string>
+					<string>siv</string>
 					<string>sjs</string>
+					<string>sl</string>
+					<string>sla</string>
 					<string>sld</string>
+					<string>slice</string>
+					<string>slim</string>
 					<string>sls</string>
+					<string>smali</string>
+					<string>smithy</string>
+					<string>sml</string>
+					<string>smv</string>
+					<string>snbt</string>
+					<string>snobol</string>
+					<string>socket</string>
 					<string>sol</string>
+					<string>sources</string>
 					<string>soy</string>
+					<string>sp</string>
 					<string>spacemacs</string>
 					<string>sparql</string>
 					<string>spc</string>
 					<string>spec</string>
+					<string>spice</string>
 					<string>spim</string>
 					<string>spl</string>
 					<string>splunk</string>
 					<string>sps</string>
+					<string>spt</string>
 					<string>sq</string>
 					<string>sqlcblle</string>
 					<string>src</string>
@@ -544,7 +884,9 @@
 					<string>ssh_config</string>
 					<string>sshd_config</string>
 					<string>ssjs</string>
+					<string>ssp</string>
 					<string>st</string>
+					<string>stan</string>
 					<string>sthlp</string>
 					<string>story</string>
 					<string>sty</string>
@@ -570,15 +912,25 @@
 					<string>svelte</string>
 					<string>svh</string>
 					<string>sw</string>
+					<string>swap</string>
+					<string>swg</string>
 					<string>syntax</string>
 					<string>t</string>
 					<string>tab</string>
 					<string>tac</string>
+					<string>tact</string>
+					<string>tal</string>
 					<string>talon</string>
+					<string>tap</string>
+					<string>target</string>
 					<string>targets</string>
 					<string>tasl</string>
+					<string>tasm</string>
 					<string>tcc</string>
 					<string>tcl</string>
+					<string>td</string>
+					<string>tea</string>
+					<string>teal</string>
 					<string>templ</string>
 					<string>tesc</string>
 					<string>tese</string>
@@ -587,34 +939,56 @@
 					<string>tfstate</string>
 					<string>tfvars</string>
 					<string>thor</string>
+					<string>thrift</string>
+					<string>thy</string>
+					<string>ti</string>
+					<string>tid</string>
+					<string>timer</string>
+					<string>tlb</string>
 					<string>tm</string>
 					<string>tml</string>
+					<string>tmpl</string>
 					<string>tmux</string>
+					<string>tnt</string>
 					<string>toc</string>
+					<string>todotxt</string>
 					<string>topojson</string>
 					<string>tpb</string>
+					<string>tpl</string>
 					<string>tpp</string>
 					<string>tps</string>
+					<string>treetop</string>
 					<string>trg</string>
 					<string>trigger</string>
 					<string>tsp</string>
+					<string>tst</string>
+					<string>tt</string>
 					<string>ttl</string>
 					<string>turtle</string>
 					<string>twig</string>
 					<string>txx</string>
 					<string>typ</string>
+					<string>typoscript</string>
+					<string>u</string>
+					<string>u1</string>
+					<string>u2</string>
 					<string>udf</string>
+					<string>udo</string>
 					<string>ui</string>
+					<string>ul4</string>
 					<string>urdf</string>
 					<string>uwsgi_params</string>
 					<string>ux</string>
 					<string>v</string>
 					<string>vala</string>
 					<string>vapi</string>
+					<string>vark</string>
 					<string>vb</string>
 					<string>vba</string>
 					<string>vbhtml</string>
 					<string>vbproj</string>
+					<string>vbs</string>
+					<string>vcl</string>
 					<string>vcxproj</string>
 					<string>veo</string>
 					<string>vh</string>
@@ -630,8 +1004,12 @@
 					<string>vim</string>
 					<string>vimrc</string>
 					<string>viper</string>
+					<string>vipgrm</string>
 					<string>viw</string>
+					<string>vm</string>
 					<string>vmb</string>
+					<string>vp</string>
+					<string>vpr</string>
 					<string>vrx</string>
 					<string>vshader</string>
 					<string>vsixmanifest</string>
@@ -645,9 +1023,13 @@
 					<string>wast</string>
 					<string>wat</string>
 					<string>watchr</string>
+					<string>wdiff</string>
 					<string>webapp</string>
+					<string>webidl</string>
 					<string>webmanifest</string>
+					<string>weechatlog</string>
 					<string>wgsl</string>
+					<string>whiley</string>
 					<string>wiki</string>
 					<string>wikitext</string>
 					<string>wixproj</string>
@@ -658,19 +1040,33 @@
 					<string>wlua</string>
 					<string>workbook</string>
 					<string>workflow</string>
+					<string>wren</string>
 					<string>wsdl</string>
 					<string>wsf</string>
 					<string>wsgi</string>
 					<string>wxi</string>
 					<string>wxl</string>
 					<string>wxs</string>
+					<string>x</string>
+					<string>x10</string>
 					<string>x3d</string>
 					<string>xacro</string>
 					<string>xaml</string>
+					<string>xbrl</string>
+					<string>xc</string>
 					<string>xdc</string>
+					<string>xi</string>
 					<string>xmi</string>
+					<string>xmlul4</string>
+					<string>xpl</string>
+					<string>xpp</string>
 					<string>xproj</string>
 					<string>xpy</string>
+					<string>xq</string>
+					<string>xql</string>
+					<string>xqm</string>
+					<string>xquery</string>
+					<string>xqy</string>
 					<string>xrl</string>
 					<string>xsd</string>
 					<string>xsjs</string>
@@ -678,14 +1074,21 @@
 					<string>xsl</string>
 					<string>xslt</string>
 					<string>xspec</string>
+					<string>xtend</string>
+					<string>xtm</string>
 					<string>xul</string>
+					<string>yang</string>
 					<string>yap</string>
+					<string>yar</string>
 					<string>yasm</string>
 					<string>yrl</string>
 					<string>yyp</string>
 					<string>zcml</string>
+					<string>zeek</string>
+					<string>zep</string>
 					<string>zig</string>
 					<string>zon</string>
+					<string>zone</string>
 					<string>zs</string>
 					<string>zsh-theme</string>
 				</array>

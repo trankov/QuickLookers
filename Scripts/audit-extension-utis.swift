@@ -7,13 +7,16 @@ let path = CommandLine.arguments.count > 1
     ? CommandLine.arguments[1]
     : "Sources/QuickLookersEngine/Resources/associations.json"
 struct Assoc: Decodable { struct Lang: Decodable { let id: String; let extensions: [String]?; let filenames: [String]? }
-                          let languages: [Lang] }
+                          let languages: [Lang]; let interceptExtensions: [String]? }
 let data = try Data(contentsOf: URL(fileURLWithPath: path))
 let assoc = try JSONDecoder().decode(Assoc.self, from: data)
 
 // Уникальные расширения → к какому языку ведут (для отчёта).
+// interceptExtensions — расширения без грамматики, перехватываемые ради пользовательских
+// правил (дефолтного языка нет → помечаем как «(intercept)»).
 var extToLang: [String: String] = [:]
 for l in assoc.languages { for e in (l.extensions ?? []) { extToLang[e.lowercased()] = extToLang[e.lowercased()] ?? l.id } }
+for e in (assoc.interceptExtensions ?? []) { let k = e.lowercased(); extToLang[k] = extToLang[k] ?? "(intercept)" }
 
 func category(_ ext: String) -> (uti: String, cat: String) {
     guard let t = UTType(filenameExtension: ext) else { return ("nil", "нет типа") }

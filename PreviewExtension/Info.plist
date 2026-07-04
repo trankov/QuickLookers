@@ -57,6 +57,9 @@
 				<string>public.zsh-script</string>
 				<string>public.shell-script</string>
 				<string>com.apple.terminal.shell-script</string>
+				<string>public.csh-script</string>
+				<string>public.tcsh-script</string>
+				<string>public.ndjson</string>
 				<string>public.css</string>
 				<string>public.html</string>
 				<string>public.xhtml</string>
