@@ -18,7 +18,7 @@ struct FileTypesTab: View {
         return VStack(spacing: 0) {
             HStack {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("Найти расширение/имя файла, или язык подсветки…", text: $query)
+                TextField("Найти шаблон (расширение или имя файла), или формат подсветки…", text: $query)
                     .textFieldStyle(.plain)
                 if !query.isEmpty {
                     Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }
@@ -61,8 +61,8 @@ struct FileTypesTab: View {
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Своих правил пока нет.").font(.headline)
-            Text("Сотни форматов подсвечиваются по умолчанию. Начните вводить в поиск, "
-               + "чтобы найти формат и изменить его, — или добавьте своё правило.")
+            Text("Сотни форматов подсвечиваются по умолчанию. Используйте поиск, "
+               + "чтобы переназначить формат, или добавьте своё правило подсветки.")
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 8)

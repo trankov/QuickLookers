@@ -22,7 +22,7 @@ struct FormatsTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TextField("Поиск языка", text: $query)
+            TextField("Поиск формата подсветки", text: $query)
                 .textFieldStyle(.roundedBorder)
                 .padding([.horizontal, .top])
                 .padding(.bottom, 8)

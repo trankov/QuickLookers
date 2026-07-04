@@ -11,11 +11,11 @@ struct ContentView: View {
         // TabView в VStack (иначе панель схлопывается в overflow-шеврон «>>»).
         TabView {
             ThemesTab(model: model, importModel: importModel)
-                .tabItem { Label("Темы", systemImage: "circle.lefthalf.filled") }
+                .tabItem { Label("Тема", systemImage: "circle.lefthalf.filled") }
             FormatsTab(model: model, importModel: importModel)
-                .tabItem { Label("Форматы подсветки", systemImage: "paintbrush") }
+                .tabItem { Label("Форматы", systemImage: "paintbrush") }
             FileTypesTab(model: model)
-                .tabItem { Label("Просмотр", systemImage: "eye") }
+                .tabItem { Label("Шаблоны", systemImage: "eye") }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             if let warning = model.warning {
@@ -28,7 +28,7 @@ struct ContentView: View {
             }
         }
         // Резиновое окно под вертикальную витрину «превью + список». Минимум
-        // держит UI пригодным; превью растёт с окном (HIG 2.1).
+        // держит UI пригодным; превью растёт с окном (Human Interface Guidlines 2.1).
         .frame(minWidth: 480, idealWidth: 580, maxWidth: .infinity,
                minHeight: 560, idealHeight: 680, maxHeight: .infinity)
     }

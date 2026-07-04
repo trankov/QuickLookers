@@ -43,12 +43,12 @@ struct AddRuleSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Правило просмотра").font(.headline)
+            Text("Правило подсветки").font(.headline)
 
             VStack(alignment: .leading, spacing: 4) {
-                TextField("Шаблон, например *.djhtml или Dockerfile.*", text: $draft.pattern)
+                TextField("Шаблон имя/расширение, который будем подсвечивать", text: $draft.pattern)
                     .textFieldStyle(.roundedBorder)
-                Text("* — любые символы · ? — один · ~ — необязательный · /~ — обычная тильда")
+                Text("* = любые символы · ? = 1 символ · ~ = 1 необязательный · / = экранирование (/~, /*, /?)")
                     .font(.caption2).foregroundStyle(.tertiary)
                 Text(defaultHint).font(.caption).foregroundStyle(.secondary)
                 if let status = statusHint {
@@ -58,14 +58,14 @@ struct AddRuleSheet: View {
             }
 
             Picker("", selection: $highlight) {
-                Text("Красить языком").tag(true)
-                Text("Не подсвечивать").tag(false)
+                Text("Подсвечивать").tag(true)
+                Text("Отключить подсветку").tag(false)
             }
             .pickerStyle(.segmented).labelsHidden()
 
             if highlight {
                 VStack(spacing: 4) {
-                    TextField("Найти язык…", text: $languageQuery)
+                    TextField("Найти формат подсветки…", text: $languageQuery)
                         .textFieldStyle(.roundedBorder)
                     List(languages, id: \.id, selection: Binding(
                         get: { languageId },
@@ -94,8 +94,8 @@ struct AddRuleSheet: View {
 
     private var defaultHint: String {
         switch model.currentDefault(forPattern: draft.pattern) {
-        case .language(let id): return "Сейчас так: \(model.languageDisplayName(id))"
-        case .neutral:          return "Сейчас так: нейтрально (правила нет)"
+        case .language(let id): return "Сейчас: \(model.languageDisplayName(id))"
+        case .neutral:          return "Сейчас: нейтрально (нет правила)"
         case .indeterminate:    return " "
         }
     }
@@ -104,12 +104,12 @@ struct AddRuleSheet: View {
         guard let status = model.interceptionStatus(forPattern: draft.pattern) else { return nil }
         switch status {
         case .intercepted:
-            return ("Такие файлы покажем по пробелу в Finder.", "checkmark.circle", .secondary)
+            return ("Возможно показать по пробелу в Finder.", "checkmark.circle", .secondary)
         case .systemNonCode(let name):
-            return ("Система открывает это как «\(name)» — по пробелу не покажем, правило не сработает.",
+            return ("Невозможно показать по пробелу: определено в системе как «\(name)».",
                     "exclamationmark.triangle", .orange)
         case .unknownNotDeclared:
-            return ("Это расширение приложение пока не показывает по пробелу — правило не сработает.",
+            return ("Этот шаблон не поддерживается: просмотр по пробелу не сработает.",
                     "exclamationmark.triangle", .orange)
         }
     }
