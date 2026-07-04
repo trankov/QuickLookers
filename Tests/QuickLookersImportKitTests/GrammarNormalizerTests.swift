@@ -62,6 +62,20 @@ final class GrammarNormalizerTests: XCTestCase {
         XCTAssertEqual(arr.compactMap { $0["name"] as? String }, ["vue"])  // только главная, без падения
     }
 
+    func test_mainGrammarNameForcedToLanguageId() throws {
+        // Импортированная грамматика держит витринное имя VS Code («Django HTML»);
+        // приводим `name` к id, иначе движок (регистрация по name, поиск по id) не
+        // найдёт её при показе. `scopeName` не трогаем — это TextMate-scope.
+        let n = GrammarNormalizer(bundledGrammarsDir: try bundledDir(css: "[]"))
+        let raw = Data(#"{"name":"Django HTML","scopeName":"text.html.django"}"#.utf8)
+        let out = try n.normalize(languageId: "django-html", grammarJSON: raw,
+                                  embeddedLanguageIds: [], siblingGrammars: [:])
+        let arr = try XCTUnwrap(JSONSerialization.jsonObject(with: out) as? [[String: Any]])
+        let main = try XCTUnwrap(arr.first)
+        XCTAssertEqual(main["name"] as? String, "django-html")
+        XCTAssertEqual(main["scopeName"] as? String, "text.html.django")
+    }
+
     func test_malformedPlistThrowsBadGrammar() throws {
         let n = GrammarNormalizer(bundledGrammarsDir: try bundledDir(css: "[]"))
         XCTAssertThrowsError(try n.toJSON(Data("not a plist at all".utf8), path: "a.tmLanguage")) { e in

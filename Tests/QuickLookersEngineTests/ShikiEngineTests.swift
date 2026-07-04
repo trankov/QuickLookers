@@ -67,6 +67,24 @@ final class ShikiEngineTests: XCTestCase {
         XCTAssertTrue(html.contains("<pre"))
     }
 
+    func test_importedGrammarWithDisplayName_highlightsById() throws {
+        // Грамматика из .vsix держит витринное имя (name != id). Движок ищет по id,
+        // поэтому обязан регистрировать её под id, а не под внутренним `name` —
+        // иначе Shiki бросает 'lang not registered' (реальный баг django-html).
+        // Свой рантайм, чтобы регистрация под фейк-id не пачкала общий.
+        let runtime = try JSCoreRuntime(bundleScript: JSCoreRuntime.loadBundledScript())
+        let grammarsDir = Bundle.module.url(forResource: "grammars", withExtension: nil)!
+        let themesDir = Bundle.module.url(forResource: "themes", withExtension: nil)!
+        let misnamed = MisnamedGrammarProvider(bundledId: "json", displayName: "Fancy JSON",
+                                               directory: grammarsDir)
+        let engine = ShikiEngine(runtime: runtime, grammars: misnamed,
+                                 themes: BundledThemeProvider(directory: themesDir))
+        let html = try engine.highlightToHTML(
+            HighlightRequest(code: "{\"a\":1}", languageId: "fancyjson", themeId: "dark-plus"))
+        XCTAssertTrue(html.contains("<pre"))
+        XCTAssertTrue(html.contains("style="))
+    }
+
     func test_highlightsEmptyCode() throws {
         let (engine, _) = try makeEngine()
         let html = try engine.highlightToHTML(
