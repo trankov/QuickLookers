@@ -57,6 +57,8 @@ macOS-приложение, возвращающее превью кода по 
 
 **Пересбор вкладки «Просмотр в Finder» (ветка `feat/file-mapping-tab-redesign`)** — **реализовано**. Слой 2 переведён на схему v3: вместо четырёх структур overrides/disabled — единый список `previewRules: [PreviewRule]` с glob-масками (`*`/`?`/`~`, `/`-экранирование, `GlobMatcher`). Починена память вкладки: по умолчанию видны только правила пользователя, весь датасет — под поиск с потолком и ранжированием по релевантности (`searchDataset`). Лист добавления правила (`AddRuleSheet`) показывает «Сейчас так» (текущий дефолт до правила) и статус показа по пробелу для введённого шаблона (`InterceptionStatus` + `InterceptionDeclarations` — чистый классификатор плюс мост к реальному бандлу/UTType).
 
+**Расширение охвата через Pygments (та же ветка)** — **реализовано** (замер — `docs/superpowers/notes/2026-07-04-pygments-coverage-measurement.md`). Цель — не «что красим по умолчанию», а **перехват**: чтобы пара «расширение→грамматика», добавленная пользователем, реально долетала до расширения по пробелу; грамматику приносит пользователь, наличие движка Shiki по умолчанию к перехвату отношения не имеет. Замер (Pygments 2.20.0 против текущего охвата linguist): из 710 расширений Pygments недоставало 436; по `UTType` — **414 dyn** (система не занимает → берём своим экспортным UTI без коллизий), 9 системный текст, 13 «ложных друзей» (RAW-фото/аудио/PostScript/Word-шаблон/Revit-бинарь — не трогаем: объявить = сломать чужие настоящие файлы); санитайзер убрал 11 артефактов лексеров (objdump-дампы, консоли) → **403 чистых dyn**. **Развязка перехвата от маппинга на язык** (это разные заботы; прежде склейка отсекала расширения без грамматики): в `associations-overrides.json` заведён ключ `interceptExtensions` (389 расширений без грамматики — **нейтральный показ**, пока пользователь не назначит правило) + 16 уверенных дефолтов Pygments с существующей грамматикой (`gradle`→groovy, `ndjson`→json, `pom`→xml, `bzl`/`sage`→python, `csh`/`tcsh`→shellscript, …). `generate-associations.mjs` пробрасывает `interceptExtensions` в датасет (исключая owned языком), `audit-extension-utis.swift` учитывает их в `--emit-tags`, потребители (`FileTypeAssociations`/js-смоук) неизвестный ключ игнорируют. Экспортный список `UTExportedTypeDeclarations` хоста вырос **654→1057**. **Грабля (важно):** список влит **объединением** с текущим, а НЕ пересобран аудитом — после сборки уже зарегистрированные расширения резолвятся в наш UTI (самоконтаминация) и `--emit-tags` их бы потерял; новые 403 ещё чистые dyn, потому добавляются к существующему списку. На **чистой** машине регенерация `--emit-tags` воспроизводит полный 1057 (потому и правки в генератор/аудит). 13 «ложных друзей» намеренно не объявлены, их можно брать только поимённо, как `.ts`/`.r`/`.as`. **Ждёт живой проверки:** ⌘R и пробел на файле нового расширения (`.agda`/`.zig`/`.gradle`).
+
 **Замеры производительности:**
 - Голый движок на 200 строках Swift: холодный ≈440 мс, тёплый ≈190 мс (release ≈ debug — стоимость в JS-слое JSC). Детали — `docs/superpowers/notes/2026-06-28-engine-benchmark.md`.
 - Полный конвейер показа в расширении (движок + WKWebView), тёплый: **~85–175 мс** на коротких файлах, около ориентира ~100 мс. Тёплый процесс между показами **подтверждён**. Выбросы 1–2,6 с — холодный старт WebContent (рычаг: держать вебвью тёплым). Детали — `docs/superpowers/notes/2026-06-28-preview-thin-slice-spikes.md`.
@@ -77,7 +79,7 @@ Sources/QuickLookersEngine/
   Resources/
     shiki-bundle.js                    # СОБИРАЕТСЯ из js/, не править вручную
     catalog.json                       # СОБИРАЕТСЯ extract-resources.mjs: индекс {languages,themes}, не править вручную
-    associations.json                  # СОБИРАЕТСЯ js/generate-associations.mjs: датасет {язык → extensions/filenames} из linguist, не править вручную
+    associations.json                  # СОБИРАЕТСЯ js/generate-associations.mjs: датасет {язык → extensions/filenames} из linguist + interceptExtensions[] (расширения без грамматики, только перехват), не править вручную
     grammars/*.json                    # грамматики Shiki: МАССИВ [главная + встроенные] (имя файла = id языка), 218 шт.
     themes/*.json                      # темы Shiki
 Sources/QuickLookersPreviewKit/        # тестируемая presentation-логика расширения
@@ -111,7 +113,7 @@ js/                                    # шаг сборки JS-бандла и 
   build.mjs                            # esbuild → Resources/shiki-bundle.js
   generate-associations.mjs            # linguist-languages.yml (+associations-overrides.json) → Resources/associations.json
   vendor/linguist-languages.yml        # вендоренный датасет github-linguist (расширения/имена файлов по языкам)
-  associations-overrides.json          # точечные правки/добавления поверх linguist перед генерацией
+  associations-overrides.json          # точечные правки поверх linguist: extensions/filenames/languageAlias + interceptExtensions[] (перехват без грамматики, охват Pygments)
   test/smoke.mjs                       # node-смоук готового бандла
   test/associations.smoke.mjs          # node-смоук сгенерированного associations.json
 Tests/QuickLookersEngineTests/         # XCTest, TDD (движок)
@@ -143,7 +145,7 @@ PreviewExtension/
   Info.plist                           # NSExtension + QLSupportedContentTypes (генерит XcodeGen)
   QuickLookersPreview.entitlements     # App Sandbox + network.client
 
-Scripts/audit-extension-utis.swift     # dev-утилита (Задача 5b): по associations.json резолвит листовой UTI каждого расширения, категоризирует под три механизма хвоста Слоя A; `--emit-tags` печатает список для UTExportedTypeDeclarations
+Scripts/audit-extension-utis.swift     # dev-утилита (Задача 5b): по associations.json (включая interceptExtensions) резолвит листовой UTI каждого расширения, категоризирует под три механизма хвоста Слоя A; `--emit-tags` печатает список для UTExportedTypeDeclarations. ГОНЯТЬ НА ЧИСТОЙ МАШИНЕ / ДО СБОРКИ (самоконтаминация)
 
 docs/superpowers/                      # specs/ (дизайн), plans/ (планы), notes/ (замеры)
 ```
