@@ -91,7 +91,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     }
 
     private static func truncatedNotice(_ truncated: Bool) -> String? {
-        truncated ? "Показаны первые \(maxLines) строк" : nil
+        truncated ? String(localized: "Showing first \(maxLines) lines") : nil
     }
 
     func preparePreviewOfFile(at url: URL) async throws {

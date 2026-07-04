@@ -1,0 +1,18 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Showing first %lld lines": {
+      "comment": "Truncation notice on very long files (line count is a fixed constant, no plural forms needed)",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показаны первые %lld строк"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -1,0 +1,708 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "* = any characters · ? = 1 character · ~ = 1 optional · / = escape (/~, /*, /?)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* = любые символы · ? = 1 символ · ~ = 1 необязательный · / = экранирование (/~, /*, /?)"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "action button": {
+      "comment": "PreviewSnippets: HTML comment in the sample",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "кнопка действия"
+          }
+        }
+      }
+    },
+    "active users with order counts": {
+      "comment": "PreviewSnippets: SQL comment in the sample",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "активные пользователи с числом заказов"
+          }
+        }
+      }
+    },
+    "Add rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить правило"
+          }
+        }
+      }
+    },
+    "Allow": {
+      "comment": "NSOpenPanel confirm button",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешить"
+          }
+        }
+      }
+    },
+    "Allow access to the Applications folder — to find installed editors.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешите доступ к папке «Программы» — чтобы найти установленные редакторы."
+          }
+        }
+      }
+    },
+    "Allow access to your home folder — to read the editor's theme and font.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешите доступ к домашней папке — чтобы прочитать тему и шрифт редактора."
+          }
+        }
+      }
+    },
+    "App Group container is unavailable — changes aren't saved. Check the signature and entitlement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Контейнер App Group недоступен — изменения не сохраняются. Проверь подпись и entitlement."
+          }
+        }
+      }
+    },
+    "Can be previewed with Space in Finder.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Возможно показать по пробелу в Finder."
+          }
+        }
+      }
+    },
+    "Can't preview with Space: the system defines it as '%@'.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Невозможно показать по пробелу: определено в системе как «%@»."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмена"
+          }
+        }
+      }
+    },
+    "Couldn't read the file.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось прочитать файл."
+          }
+        }
+      }
+    },
+    "Default": {
+      "comment": "Font picker: default font option",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "По умолчанию"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Defaults (first %lld shown)": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "По умолчанию (показаны первые %lld)"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить"
+          }
+        }
+      }
+    },
+    "Delete rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить правило"
+          }
+        }
+      }
+    },
+    "Disable highlighting": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключить подсветку"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Disable rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключить правило"
+          }
+        }
+      }
+    },
+    "don't highlight": {
+      "comment": "Rule action: neutral (no highlighting)",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "не подсвечивать"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить"
+          }
+        }
+      }
+    },
+    "Editors not found or no access to the Applications folder.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Редакторы не найдены или нет доступа к папке «Программы»."
+          }
+        }
+      }
+    },
+    "Enable rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить правило"
+          }
+        }
+      }
+    },
+    "Find a highlighting format…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти формат подсветки…"
+          }
+        }
+      }
+    },
+    "Find a pattern (extension or file name), or a highlighting format…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найти шаблон (расширение или имя файла), или формат подсветки…"
+          }
+        }
+      }
+    },
+    "Font:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шрифт:"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Formats": {
+      "comment": "Tab title",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Форматы"
+          }
+        }
+      }
+    },
+    "From editor…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Из редактора…"
+          }
+        }
+      }
+    },
+    "Hello, world": {
+      "comment": "PreviewSnippets: HTML sample heading",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привет, мир"
+          }
+        }
+      }
+    },
+    "Hello, {$name}{$marks}": {
+      "comment": "PreviewSnippets: PHP sample string (keeps PHP interpolation tokens verbatim)",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привет, {$name}{$marks}"
+          }
+        }
+      }
+    },
+    "Highlight": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подсвечивать"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Highlighting rule": {
+      "comment": "AddRuleSheet title",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Правило подсветки"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Home folder access wasn't granted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ к домашней папке не разрешён."
+          }
+        }
+      }
+    },
+    "Hundreds of formats are highlighted by default. Use search to reassign a format, or add your own highlighting rule.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сотни форматов подсвечиваются по умолчанию. Используйте поиск, чтобы переназначить формат, или добавьте своё правило подсветки."
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Import .vsix…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импортировать .vsix…"
+          }
+        }
+      }
+    },
+    "imported": {
+      "comment": "Badge next to an imported theme",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "импортирована"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "My rules": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мои правила"
+          }
+        }
+      }
+    },
+    "Name/extension pattern to highlight": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шаблон имя/расширение, который будем подсвечивать"
+          }
+        }
+      }
+    },
+    "No custom rules yet.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Своих правил пока нет."
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "No shared container — import unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет общего контейнера — импорт недоступен."
+          }
+        }
+      }
+    },
+    "No themes or grammars to import were found in the file.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В файле не нашлось тем или грамматик для импорта."
+          }
+        }
+      }
+    },
+    "Now: %@": {
+      "comment": "AddRuleSheet: current default for the pattern",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сейчас: %@"
+          }
+        }
+      }
+    },
+    "Now: neutral (no rule)": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сейчас: нейтрально (нет правила)"
+          }
+        }
+      }
+    },
+    "Others…": {
+      "comment": "Open the system font panel",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другие…"
+          }
+        }
+      }
+    },
+    "package.json wasn't found in the extension.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В расширении не найден package.json."
+          }
+        }
+      }
+    },
+    "Patterns": {
+      "comment": "Tab title",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шаблоны"
+          }
+        }
+      }
+    },
+    "Preview": {
+      "comment": "PreviewSnippets: HTML <title> in the sample",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Превью"
+          }
+        }
+      }
+    },
+    "Remove imported '%@'": {
+      "comment": "Accessibility label for removing an imported language",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить импортированный «%@»"
+          }
+        }
+      }
+    },
+    "Run": {
+      "comment": "PreviewSnippets: HTML button label in the sample",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запустить"
+          }
+        }
+      }
+    },
+    "Sample language": {
+      "comment": "Picker label (hidden) for the preview sample language",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Язык образца"
+          }
+        }
+      }
+    },
+    "Save": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить"
+          }
+        }
+      }
+    },
+    "Search highlighting formats": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск формата подсветки"
+          }
+        }
+      }
+    },
+    "Size:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Размер:"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "The editor has no theme set — applied font only.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У редактора не задана тема — применён только шрифт."
+          }
+        }
+      }
+    },
+    "The extension has no themes or grammars to import.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В расширении нет тем и грамматик для импорта."
+          }
+        }
+      }
+    },
+    "The file is too large or corrupted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл слишком большой или повреждён."
+          }
+        }
+      }
+    },
+    "Theme": {
+      "comment": "Tab title",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тема"
+          }
+        }
+      }
+    },
+    "Theme '%@' couldn't be read — applied font only.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тема «%@» не прочиталась — применён только шрифт."
+          }
+        }
+      }
+    },
+    "Theme '%@' wasn't found — applied font only.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тема «%@» не найдена — применён только шрифт."
+          }
+        }
+      }
+    },
+    "This doesn't look like a .vsix extension file.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это не похоже на файл расширения .vsix."
+          }
+        }
+      }
+    },
+    "This pattern isn't supported: Space preview won't work.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот шаблон не поддерживается: просмотр по пробелу не сработает."
+          }
+        }
+      }
+    },
+    "user greeting": {
+      "comment": "PreviewSnippets: PHP comment in the sample",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "приветствие пользователя"
+          }
+        }
+      }
+    },
+    "word count in a string": {
+      "comment": "PreviewSnippets: JS comment in the sample",
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "подсчёт слов в строке"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.1"
+}

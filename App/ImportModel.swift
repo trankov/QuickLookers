@@ -29,7 +29,7 @@ final class ImportModel: ObservableObject {
 
     func importFile(_ url: URL) -> ImportOutcome {
         guard let container = quickLookersContainerURL() else {
-            return ImportOutcome(didChange: false, errorText: "Нет общего контейнера — импорт недоступен.")
+            return ImportOutcome(didChange: false, errorText: String(localized: "No shared container — import unavailable."))
         }
         do {
             let data = try Data(contentsOf: url)
@@ -39,14 +39,14 @@ final class ImportModel: ObservableObject {
             if result.artifacts.isEmpty {
                 // contributes были, но всё отсеяно (только инъекции/негодные id) — успехом не считаем.
                 return ImportOutcome(didChange: false,
-                                     errorText: "В файле не нашлось тем или грамматик для импорта.")
+                                     errorText: String(localized: "No themes or grammars to import were found in the file."))
             }
             // Успех виден по списку; число пропусков (служебные инъекции) не показываем.
             return ImportOutcome(didChange: true, errorText: nil)
         } catch let e as ImportError {
             return ImportOutcome(didChange: false, errorText: Self.message(for: e))
         } catch {
-            return ImportOutcome(didChange: false, errorText: "Не удалось прочитать файл.")
+            return ImportOutcome(didChange: false, errorText: String(localized: "Couldn't read the file."))
         }
     }
 
@@ -54,10 +54,10 @@ final class ImportModel: ObservableObject {
     /// без необходимости гонять весь importFile() через реальный контейнер App Group.
     static func message(for error: ImportError) -> String {
         switch error {
-        case .notArchive:      return "Это не похоже на файл расширения .vsix."
-        case .tooLarge:        return "Файл слишком большой или повреждён."
-        case .noManifest:      return "В расширении не найден package.json."
-        case .noContributions: return "В расширении нет тем и грамматик для импорта."
+        case .notArchive:      return String(localized: "This doesn't look like a .vsix extension file.")
+        case .tooLarge:        return String(localized: "The file is too large or corrupted.")
+        case .noManifest:      return String(localized: "package.json wasn't found in the extension.")
+        case .noContributions: return String(localized: "The extension has no themes or grammars to import.")
         }
     }
 
@@ -85,7 +85,7 @@ final class ImportModel: ObservableObject {
         let emptyFont = FontSettings(family: nil, size: nil)
         guard let container = quickLookersContainerURL() else {
             return EditorImportOutcome(themeId: nil, font: emptyFont,
-                                       message: "Нет общего контейнера — импорт недоступен.")
+                                       message: String(localized: "No shared container — import unavailable."))
         }
         return store.withAccess(.home) { home in
             let appSupport = home.appendingPathComponent("Library/Application Support")
@@ -94,7 +94,7 @@ final class ImportModel: ObservableObject {
             let font = FontSettings(family: prefs.fontFamily, size: FontSettings.clampSize(prefs.fontSize))
             guard let label = prefs.colorThemeLabel else {
                 return EditorImportOutcome(themeId: nil, font: font,
-                                           message: "У редактора не задана тема — применён только шрифт.")
+                                           message: String(localized: "The editor has no theme set — applied font only."))
             }
             let extDir = home.appendingPathComponent("\(editor.dataFolderName)/extensions")
             switch EditorThemeResolver.resolve(label: label, catalog: catalog, extensionsDir: extDir) {
@@ -105,7 +105,7 @@ final class ImportModel: ObservableObject {
                       let strict = try? ThemeFileLoader.loadStrictThemeJSON(
                           data: raw, fileExtension: fileURL.pathExtension, uiTheme: uiTheme) else {
                     return EditorImportOutcome(themeId: nil, font: font,
-                                               message: "Тема «\(lbl)» не прочиталась — применён только шрифт.")
+                                               message: String(localized: "Theme '\(lbl)' couldn't be read — applied font only."))
                 }
                 let lib = ImportedLibrary(containerURL: container)
                 let existing = Set(lib.importedIds())
@@ -117,9 +117,9 @@ final class ImportModel: ObservableObject {
                 return EditorImportOutcome(themeId: n.id, font: font, message: nil)
             case .notFound:
                 return EditorImportOutcome(themeId: nil, font: font,
-                                           message: "Тема «\(label)» не найдена — применён только шрифт.")
+                                           message: String(localized: "Theme '\(label)' wasn't found — applied font only."))
             }
         } ?? EditorImportOutcome(themeId: nil, font: emptyFont,
-                                 message: "Доступ к домашней папке не разрешён.")
+                                 message: String(localized: "Home folder access wasn't granted."))
     }
 }
