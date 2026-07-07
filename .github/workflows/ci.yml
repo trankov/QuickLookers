@@ -4,6 +4,11 @@ name: CI
 #   1) тесты SwiftPM-пакета (чистая логика, без Xcode) — один раз;
 #   2) генерация проекта XcodeGen и сборка приложения + расширения
 #      без подписи, ОТДЕЛЬНО под каждую архитектуру (arm64 и x86_64).
+#
+# Раннер — macos-26 (Tahoe): это родная ОС для иконок Icon Composer
+# (App/qlcode.icon). На macos-15 (Sequoia) их растеризация в сборке
+# крашила actool — там нет системных сервисов иконок Tahoe. На Tahoe
+# иконка собирается штатно, без обхода.
 
 on:
   push:
@@ -16,18 +21,21 @@ concurrency:
 
 jobs:
   test:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
+      - name: Выбрать Xcode 26 и показать версию
+        run: |
+          set -euo pipefail
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+          swift --version
       - name: Swift package tests
         run: swift test
 
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
@@ -37,13 +45,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Проект рассчитан на Xcode 26; если он есть на образе runner-а —
-      # можно закрепить `xcode-version: '26.0'`. latest-stable берёт самый
-      # свежий стабильный из доступных.
-      - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
+      - name: Выбрать Xcode 26 и показать версию
+        run: |
+          set -euo pipefail
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -53,17 +60,14 @@ jobs:
         run: xcodegen generate
 
       # Отдельная сборка под одну архитектуру, без подписи (проверка компиляции).
-      # Иконку Icon Composer (App/qlcode.icon) исключаем: actool крашится на ней
-      # в безголовом runner-е (AssetCatalogAgent недоступен). На проверку кода
-      # это не влияет; иконка компилируется локально в Xcode.
+      # Иконку Icon Composer НЕ исключаем — на macos-26 она собирается штатно.
       - name: Build app + extension (unsigned, ${{ matrix.arch }})
         run: |
+          set -euo pipefail
           xcodebuild build \
             -project QuickLookers.xcodeproj \
             -scheme QuickLookers \
             -destination 'generic/platform=macOS' \
             ARCHS="$ARCH" \
             ONLY_ACTIVE_ARCH=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            EXCLUDED_SOURCE_FILE_NAMES='*.icon' \
-            ASSETCATALOG_COMPILER_APPICON_NAME=''
+            CODE_SIGNING_ALLOWED=NO

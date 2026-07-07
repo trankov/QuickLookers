@@ -5,6 +5,10 @@ name: Release
 # ad-hoc (без платного аккаунта другой подписи нет), пакует каждую в свой
 # .zip и выкладывает обе как один GitHub Release.
 #
+# Раннер — macos-26 (Tahoe): родная ОС для иконок Icon Composer
+# (App/qlcode.icon), собираются штатно. Xcode 26 выбираем родным
+# xcode-select, без сторонних экшенов.
+#
 # ВАЖНО — честное ограничение: сборки НЕ нотаризованы и подписаны ad-hoc.
 # Gatekeeper на чужом Маке их заблокирует, а расширение QuickLook надёжно
 # регистрируется только запуском хоста из Xcode (⌘R). Поэтому релизные
@@ -21,7 +25,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
@@ -31,10 +35,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
+      - name: Выбрать Xcode 26 и показать версию
+        run: |
+          set -euo pipefail
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -44,9 +50,7 @@ jobs:
 
       # Отдельная сборка под одну архитектуру, ad-hoc подпись (CODE_SIGN_IDENTITY="-").
       # Без ad-hoc подписи arm64-приложение macOS запускать откажется.
-      # Иконку Icon Composer (App/qlcode.icon) исключаем: actool крашится на ней
-      # в безголовом runner-е. Релизный .app выйдет без иконки — это осознанно
-      # (сборка и так демонстрационная, ненотаризованная).
+      # Иконку Icon Composer собираем штатно (раннер macos-26).
       - name: Build app (ad-hoc signed, ${{ matrix.arch }})
         run: |
           set -euo pipefail
@@ -60,9 +64,7 @@ jobs:
             ONLY_ACTIVE_ARCH=NO \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=YES \
-            EXCLUDED_SOURCE_FILE_NAMES='*.icon' \
-            ASSETCATALOG_COMPILER_APPICON_NAME=''
+            CODE_SIGNING_ALLOWED=YES
 
       - name: Zip the .app
         run: |
