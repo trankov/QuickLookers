@@ -18,7 +18,7 @@ struct CodePreviewView: NSViewRepresentable {
     }
 
     func updateNSView(_ web: WKWebView, context: Context) {
-        // Не перегружаем вебвью, если HTML не изменился (SwiftUI зовёт update часто).
+        // Не перезагружаем вебвью, если HTML не изменился (SwiftUI часто вызывает update).
         guard context.coordinator.lastHTML != html else { return }
         context.coordinator.lastHTML = html
         web.loadHTMLString(html, baseURL: nil)

@@ -15,7 +15,7 @@ struct ImportOutcome {
 }
 
 /// Логика импорта в приложении: пикер .vsix → ImportKit → запись в контейнер.
-/// Состояния не держит — обратная связь живёт в @State вкладки.
+/// Состояние не держит — обратная связь живёт в @State вкладки.
 @MainActor
 final class ImportModel: ObservableObject {
     /// Открывает пикер .vsix и импортирует. nil — пользователь отменил выбор.
@@ -37,7 +37,7 @@ final class ImportModel: ObservableObject {
             let result = try importer(vsixData: data)
             try ImportedLibrary(containerURL: container).write(result)
             if result.artifacts.isEmpty {
-                // contributes были, но всё отсеяно (только инъекции/негодные id) — успехом не считаем.
+                // contributes были, но всё отсеяно (только инъекции/неподходящие id) — неуспех.
                 return ImportOutcome(didChange: false,
                                      errorText: String(localized: "No themes or grammars to import were found in the file."))
             }

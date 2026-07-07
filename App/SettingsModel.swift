@@ -137,7 +137,7 @@ final class SettingsModel: ObservableObject {
         languageNamesById[id] ?? id
     }
 
-    /// Поиск: свои правила (по шаблону/языку) + совпадения датасета (капнутые).
+    /// Поиск: свои правила (по шаблону/языку) + совпадения датасета (подсвеченные языки).
     /// Пустой запрос → только свои правила, датасет пуст.
     func searchRules(query: String, limit: Int) -> RuleSearchResults {
         let q = query.lowercased()
@@ -201,7 +201,7 @@ final class SettingsModel: ObservableObject {
         return PreviewRule(pattern: pattern, action: .assign(languageId: match.languageId))
     }
 
-    /// Что шаблон значит сейчас по датасету — для строки «Сейчас так».
+    /// Что шаблон значит сейчас по датасету — для строки «Сейчас: ...».
     func currentDefault(forPattern pattern: String) -> PatternDefault {
         let m = GlobMatcher(pattern)
         if let name = m.exactFilename, let lang = associations.byFilename[name] { return .language(lang) }

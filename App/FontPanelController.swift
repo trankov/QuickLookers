@@ -7,7 +7,7 @@ final class FontPanelController: NSObject, ObservableObject {
     private var current = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
     private var onChange: ((NSFont) -> Void)?
 
-    /// Показать панель с текущим шрифтом; `onChange` зовётся на каждый выбор пользователя.
+    /// Показать панель с текущим шрифтом; `onChange` вызывается на каждый выбор пользователя.
     func present(current: NSFont, onChange: @escaping (NSFont) -> Void) {
         self.current = current
         self.onChange = onChange

@@ -19,7 +19,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     // Пул тёплых вебвью. Один общий вебвью держать нельзя: Finder показывает
     // превью ПАРАЛЛЕЛЬНО (панель «Просмотр» + QuickLook-пробел, галерея) — один
     // вебвью не обслужит два показа сразу: второй перехватит делегата и навигацию,
-    // и континуация первого не разрешится (бесконечный спиннер). Пул выдаёт
+    // и и первый повиснет в ожидании (бесконечный спиннер). Пул выдаёт
     // каждому показу свой вебвью и переиспользует освободившиеся (тепло сохраняется).
     // Доступ только с главного потока (QLPreviewingController @MainActor).
     private static var idleWebViews: [WKWebView] = []
@@ -50,7 +50,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         idleWebViews.append(webView)
     }
 
-    // Константы фазы оптимизации (см. спеку 2026-06-29).
+    // Константы оптимизации.
     private static let maxLines = 2000
     private static let largeFileThreshold = 2 * 1024 * 1024   // 2 МБ
     private static let cacheMaxBytes = 5 * 1024 * 1024         // 5 МБ

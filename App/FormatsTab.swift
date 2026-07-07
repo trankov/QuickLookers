@@ -35,9 +35,8 @@ struct FormatsTab: View {
                         Toggle(lang.displayName, isOn: Binding(
                             get: { model.isLanguageOn(lang.id) },
                             set: { model.setLanguageOn(lang.id, $0) }))
-                        // В List тогл по умолчанию — чекбокс; принудительно швыряем
-                        // на переключатель и задаём минимальный размер (иначе
-                        // переключатель выходит крупной «нашлёпкой»).
+                        // В List тогл по умолчанию — чекбокс; принудительно прописываем
+                        // переключатель и устанавливаем ему минимальный размер.
                         .toggleStyle(.switch)
                         .controlSize(.mini)
                         if model.importedIds.contains(lang.id) {
