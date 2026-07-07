@@ -1,6 +1,6 @@
 # QuickLookers
 
-**[Русский](#русский)** · **[English](#english)**
+**[Русский](#русский)** · **[English](#english)** · **[简体中文](#简体中文)**
 
 ## QuickLook программного кода в вашем рабочем стиле.
 
@@ -10,13 +10,16 @@
 - Можно настроить сопоставление «расширение файла → язык» с помощью glob-масок.
 - Оптимизирован для производительности и энергопотребления (см. далее).
 
-<!-- Скриншоты / Screenshots
-     TODO: положить картинки в docs/screenshots/ и раскомментировать:
-     ![Превью по пробелу в Finder](docs/screenshots/preview.png)
-     ![Окно настроек — Темы](docs/screenshots/settings-themes.png)
--->
+### Скриншоты
 
-> 🖼️ **Скриншоты будут здесь.** _Screenshots go here._
+![Окно настроек — Темы](docs/screenshots/settings-themes.png)
+
+![Окно настроек — Форматы](docs/screenshots/settings-formats.png)
+
+![Окно настроек — Шаблоны](docs/screenshots/settings-templates.png)
+
+![Окно настроек — Добавить шаблон](docs/screenshots/settings-add-template.png)
+
 
 ---
 
@@ -48,11 +51,22 @@ macOS-приложение, возвращающее полноразмерно�
 
 ### Оптимизация производительности и энергопотребления
 
+Показ по пробелу должен быть мгновенным и не сажать батарею. Приложение разделено на две части и общий контейнер:
+
 - **Главное приложение** — настройки, импорт тем/грамматик из VS Code / Cursor и `.vsix`, управление кэшем. Менеджер библиотеки.
 - **Расширение QuickLook Preview** — в песочнице, только рисует готовое.
-- **Общий контейнер (App Group)** — темы, грамматики, кэш HTML, настройки.
+- **Общий контейнер (App Group)** — темы, грамматики, настройки.
 
-Подсветка: `код + язык + тема → HTML` через Shiki в JavaScriptCore, затем статичный показ в `WKWebView` с выключенным JavaScript.
+Подсветка идёт по цепочке `код + язык + тема → HTML` через Shiki в JavaScriptCore, а затем статично показывается в `WKWebView` с выключенным JavaScript. Вокруг этой цепочки сделано несколько оптимизаций, чтобы показ был быстрым и дешёвым по энергии:
+
+- **Тёплый процесс.** Движок подсветки, список тем и таблица «файл → язык» строятся один раз на весь процесс расширения, а не на каждый показ. Между нажатиями пробела всё уже готово к работе.
+- **Кэш готового HTML.** Отрисованная страница складывается в кэш и переиспользуется. Ключ кэша считается из атрибутов файла (путь, дата изменения, размер) плюс язык, тема и шрифт — **без чтения самого содержимого файла**. Попадание в кэш пропускает и чтение файла, и работу движка → показ за считанные миллисекунды (~1,4–10 мс). Кэш ограничен 5 МБ, лишнее вытесняется по принципу «дольше всех не использовалось» (LRU), причём вытеснение делается уже после показа, вне горячего пути.
+- **Пул тёплых WebView — не больше 3 копий в памяти.** Finder нередко показывает несколько превью сразу (панель «Просмотр» + пробел + ячейки галереи), поэтому один общий `WKWebView` не годится — показы подрались бы за него. Держим маленький пул: каждому показу достаётся свой прогретый вебвью, освободившиеся переиспользуются, а всё сверх трёх штук отпускается из памяти.
+- **Вебвью не засыпает.** Между показами WebView держится активным, даже когда он вне окна (`inactiveSchedulingPolicy = .none`, macOS 14+). Иначе система усыпляла бы его, и первый показ после паузы ждал бы пробуждения ~1,4 секунды с пустым экраном. JavaScript в нём выключен, поэтому такой «тёплый простой» почти ничего не стоит.
+- **Меньше рендерить.** Длинные строки переносятся (минифицированный JSON больше не уезжает за край), а файл обрезается до 2000 строк с честной плашкой «показаны первые N строк». Большие файлы (>2 МБ) читаются не целиком — берётся только начало.
+- **Никакого JavaScript при показе.** Готовый HTML рисуется в `WKWebView` с полностью выключенным JS: вебвью только отображает разметку и ничего не исполняет. Это и безопаснее, и экономнее по энергии.
+
+В итоге тёплый показ короткого файла укладывается примерно в 100 мс (обычно 85–175 мс), а попадание в кэш — это единицы миллисекунд.
 
 ### Требования для самостоятельной сборки
 
@@ -164,12 +178,22 @@ I can't afford a paid Developer Account, so builds are **not notarized**. If you
 
 ### Performance and energy optimization
 
-- **Main app** — settings, theme/grammar import from VS Code / Cursor and `.vsix`, cache
-  management. The library manager.
-- **QuickLook Preview extension** — sandboxed, only renders the prepared output.
-- **Shared container (App Group)** — themes, grammars, HTML cache, settings.
+The Space preview has to feel instant and stay easy on the battery. The app is split into two parts plus a shared container:
 
-Highlighting: `code + language + theme → HTML` via Shiki in JavaScriptCore, then a static render in `WKWebView` with JavaScript disabled.
+- **Main app** — settings, theme/grammar import from VS Code / Cursor and `.vsix`, cache management. The library manager.
+- **QuickLook Preview extension** — sandboxed, only renders the prepared output.
+- **Shared container (App Group)** — themes, grammars, settings.
+
+Highlighting runs as `code + language + theme → HTML` via Shiki in JavaScriptCore, then a static render in `WKWebView` with JavaScript disabled. Around that pipeline sit several optimizations that keep previews fast and cheap:
+
+- **Warm process.** The highlighting engine, the theme list, and the "file → language" table are built once per extension process, not per preview. Between Space presses everything is already primed.
+- **Rendered-HTML cache.** The rendered page is cached and reused. The cache key is computed from the file's attributes (path, modification date, size) plus language, theme, and font — **without reading the file's contents**. A cache hit skips both the file read and the engine, so a preview shows in a few milliseconds (~1.4–10 ms). The cache is capped at 5 MB; least-recently-used entries are evicted, and eviction happens after the preview, off the hot path.
+- **Warm WebView pool — at most 3 copies in memory.** Finder often shows several previews at once (the Preview pane + Space + gallery cells), so a single shared `WKWebView` won't do — the presentations would fight over it. A small pool gives each presentation its own warm web view, reuses freed ones, and releases anything beyond three.
+- **The web view never sleeps.** Between previews the WebView is kept active even while it's off-window (`inactiveSchedulingPolicy = .none`, macOS 14+). Otherwise the system would suspend it and the first preview after a pause would wait ~1.4 s for wake-up on a blank screen. JavaScript is off, so keeping it warm costs almost nothing.
+- **Render less.** Long lines wrap (minified JSON no longer runs off the edge), and files are trimmed to 2000 lines with an honest "showing first N lines" banner. Large files (>2 MB) aren't read whole — only the beginning is loaded.
+- **No JavaScript at display time.** The prepared HTML is drawn in `WKWebView` with JS fully disabled: the view only displays markup, it never executes anything. That's both safer and more energy-efficient.
+
+The upshot: a warm preview of a short file lands around 100 ms (typically 85–175 ms), and a cache hit is a matter of a few milliseconds.
 
 ### Requirements for building yourself
 
@@ -253,7 +277,7 @@ Bundled third-party components (Shiki, grammars, themes, the linguist dataset) a
 
 ---
 
-## 简体中文（概要）
+## 简体中文
 
 QuickLookers 是一款 macOS 应用：在 Finder 中按空格键即可预览源代码，**外观与 VS Code / Cursor 完全一致**——使用与 VS Code 相同的高亮引擎（[Shiki](https://shiki.style)）、相同的语法与主题。
 
