@@ -1,5 +1,7 @@
 # QuickLookers
 
+[DOWNLOAD PRE-RELEASE](https://github.com/trankov/QuickLookers/releases/tag/v0.1.0-alpha)
+
 **[Русский](#русский)** · **[English](#english)** · **[简体中文](#简体中文)**
 
 ## QuickLook программного кода в вашем рабочем стиле.
