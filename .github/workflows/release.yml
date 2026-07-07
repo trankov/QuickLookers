@@ -97,7 +97,13 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh release create "${GITHUB_REF_NAME}" \
+          # Тег с дефисом по semver (v0.1.0-alpha, -beta, -rc) — это пред-релиз.
+          # Плоский тег (v0.1.0) выйдет обычным стабильным релизом.
+          PRERELEASE=""
+          case "$GITHUB_REF_NAME" in
+            *-*) PRERELEASE="--prerelease" ;;
+          esac
+          gh release create "${GITHUB_REF_NAME}" ${PRERELEASE} \
             dist/*.zip \
             --repo "$REPO" \
             --title "QuickLookers ${GITHUB_REF_NAME}" \
