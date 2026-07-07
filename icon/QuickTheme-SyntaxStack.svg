@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg data-dc-tpl="18" id="iconA" viewBox="0 0 1024 1024" width="1024" height="1024" xmlns="http://www.w3.org/2000/svg" data-om-id="bcc54f3e:23" style="display: block; animation: 7s ease-in-out 0s infinite normal none running qtFloat; filter: drop-shadow(rgba(10, 12, 22, 0.34) 0px 26px 46px);">
+            <defs data-dc-tpl="19" data-om-id="bcc54f3e:24">
+              <linearGradient data-dc-tpl="20" id="a-bg" x1="0" y1="0" x2="0" y2="1" data-om-id="bcc54f3e:25">
+                <stop data-dc-tpl="21" offset="0" stop-color="#2b3245" data-om-id="bcc54f3e:26"/>
+                <stop data-dc-tpl="22" offset="0.52" stop-color="#161a26" data-om-id="bcc54f3e:27"/>
+                <stop data-dc-tpl="23" offset="1" stop-color="#090b11" data-om-id="bcc54f3e:28"/>
+              </linearGradient>
+              <radialGradient data-dc-tpl="24" id="a-glow" cx="0.5" cy="0.4" r="0.62" data-om-id="bcc54f3e:29">
+                <stop data-dc-tpl="25" offset="0" stop-color="#5ac8ff" stop-opacity="0.16" data-om-id="bcc54f3e:30"/>
+                <stop data-dc-tpl="26" offset="1" stop-color="#5ac8ff" stop-opacity="0" data-om-id="bcc54f3e:31"/>
+              </radialGradient>
+              <linearGradient data-dc-tpl="27" id="a-spectrum" x1="0" y1="0" x2="0" y2="1" data-om-id="bcc54f3e:32">
+                <stop data-dc-tpl="28" offset="0" stop-color="#ff6b9d" data-om-id="bcc54f3e:33"/>
+                <stop data-dc-tpl="29" offset="0.26" stop-color="#c79bff" data-om-id="bcc54f3e:34"/>
+                <stop data-dc-tpl="30" offset="0.52" stop-color="#56c7ff" data-om-id="bcc54f3e:35"/>
+                <stop data-dc-tpl="31" offset="0.74" stop-color="#74e08c" data-om-id="bcc54f3e:36"/>
+                <stop data-dc-tpl="32" offset="1" stop-color="#ffb26b" data-om-id="bcc54f3e:37"/>
+              </linearGradient>
+              <linearGradient data-dc-tpl="33" id="a-sheen" x1="0" y1="0" x2="0" y2="1" data-om-id="bcc54f3e:38">
+                <stop data-dc-tpl="34" offset="0" stop-color="#ffffff" stop-opacity="0.34" data-om-id="bcc54f3e:39"/>
+                <stop data-dc-tpl="35" offset="0.55" stop-color="#ffffff" stop-opacity="0.05" data-om-id="bcc54f3e:40"/>
+                <stop data-dc-tpl="36" offset="1" stop-color="#ffffff" stop-opacity="0" data-om-id="bcc54f3e:41"/>
+              </linearGradient>
+              <clipPath data-dc-tpl="37" id="a-clip" data-om-id="bcc54f3e:42"><rect data-dc-tpl="38" width="1024" height="1024" rx="236" data-om-id="bcc54f3e:43"/></clipPath>
+            </defs>
+            <rect data-dc-tpl="39" width="1024" height="1024" rx="236" fill="url(#a-bg)" data-om-id="bcc54f3e:44"/>
+            <rect data-dc-tpl="40" width="1024" height="1024" rx="236" fill="url(#a-glow)" data-om-id="bcc54f3e:45"/>
+            <rect data-dc-tpl="41" x="150" y="289" width="20" height="446" rx="10" fill="url(#a-spectrum)" data-om-id="bcc54f3e:46"/>
+            <g data-dc-tpl="42" data-om-id="bcc54f3e:47">
+              <rect data-dc-tpl="43" x="210" y="289" width="120" height="46" rx="16" fill="#ff6b9d" data-om-id="bcc54f3e:48"/>
+              <rect data-dc-tpl="44" x="350" y="289" width="210" height="46" rx="16" fill="#56c7ff" data-om-id="bcc54f3e:49"/>
+              <rect data-dc-tpl="45" x="270" y="369" width="90" height="46" rx="16" fill="#c79bff" data-om-id="bcc54f3e:50"/>
+              <rect data-dc-tpl="46" x="380" y="369" width="260" height="46" rx="16" fill="#74e08c" data-om-id="bcc54f3e:51"/>
+              <rect data-dc-tpl="47" x="270" y="449" width="140" height="46" rx="16" fill="#56c7ff" data-om-id="bcc54f3e:52"/>
+              <rect data-dc-tpl="48" x="430" y="449" width="90" height="46" rx="16" fill="#ffb26b" data-om-id="bcc54f3e:53"/>
+              <rect data-dc-tpl="49" x="210" y="529" width="100" height="46" rx="16" fill="#ff6b9d" data-om-id="bcc54f3e:54"/>
+              <rect data-dc-tpl="50" x="330" y="529" width="300" height="46" rx="16" fill="#74e08c" data-om-id="bcc54f3e:55"/>
+              <rect data-dc-tpl="51" x="270" y="609" width="80" height="46" rx="16" fill="#ffb26b" data-om-id="bcc54f3e:56"/>
+              <rect data-dc-tpl="52" x="370" y="609" width="170" height="46" rx="16" fill="#c79bff" data-om-id="bcc54f3e:57"/>
+              <rect data-dc-tpl="53" x="560" y="609" width="120" height="46" rx="16" fill="#56c7ff" data-om-id="bcc54f3e:58"/>
+              <rect data-dc-tpl="54" x="210" y="689" width="240" height="46" rx="16" fill="#5b6472" data-om-id="bcc54f3e:59"/>
+            </g>
+            <g data-dc-tpl="55" clip-path="url(#a-clip)" data-om-id="bcc54f3e:60">
+              <ellipse data-dc-tpl="56" cx="512" cy="-140" rx="720" ry="540" fill="url(#a-sheen)" data-om-id="bcc54f3e:61"/>
+            </g>
+            <rect data-dc-tpl="57" x="3.5" y="3.5" width="1017" height="1017" rx="233" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2.5" data-om-id="bcc54f3e:62"/>
+          </svg>

@@ -6,6 +6,9 @@ Package.resolved
 # Node (JS bundle build step)
 js/node_modules/
 
+# code-index MCP (локальный индекс)
+.code-index/
+
 # macOS
 .DS_Store
 
