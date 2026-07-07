@@ -20,3 +20,11 @@ DerivedData/
 test-samples/
 scratchpad/
 test-vsix/
+
+# Артефакты ИИ-разработки: остаются на диске для разработки,
+# но не попадают в публичный репозиторий.
+CLAUDE.md
+docs/superpowers/
+
+# Локальные архивы скриншотов (напр. docs/screenshots/Архив.zip)
+docs/screenshots/*.zip

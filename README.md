@@ -12,6 +12,8 @@
 
 ### Скриншоты
 
+![Окно просмотра кода в Finder](docs/screenshots/preview-code.png)
+
 ![Окно настроек — Темы](docs/screenshots/settings-themes.png)
 
 ![Окно настроек — Форматы](docs/screenshots/settings-formats.png)
@@ -41,7 +43,7 @@ macOS-приложение, возвращающее полноразмерно�
 
 Проект в стадии пользовательского тестирования.
 
-У меня нет возможности оплачивать Developers's Account, поэтому сборки **не нотаризованы**. Если хотите поддержать проект — вы можете оплатить мне акаунт разработчика.
+У меня нет возможности оплачивать Developers's Account, поэтому сборки **не нотаризованы**. Если хотите поддержать проект — можете оплатить мне акаунт разработчика.
 
 | Подсистема | Статус |
 |---|---|
@@ -60,15 +62,43 @@ macOS-приложение, возвращающее полноразмерно�
 Подсветка идёт по цепочке `код + язык + тема → HTML` через Shiki в JavaScriptCore, а затем статично показывается в `WKWebView` с выключенным JavaScript. Вокруг этой цепочки сделано несколько оптимизаций, чтобы показ был быстрым и дешёвым по энергии:
 
 - **Тёплый процесс.** Движок подсветки, список тем и таблица «файл → язык» строятся один раз на весь процесс расширения, а не на каждый показ. Между нажатиями пробела всё уже готово к работе.
-- **Кэш готового HTML.** Отрисованная страница складывается в кэш и переиспользуется. Ключ кэша считается из атрибутов файла (путь, дата изменения, размер) плюс язык, тема и шрифт — **без чтения самого содержимого файла**. Попадание в кэш пропускает и чтение файла, и работу движка → показ за считанные миллисекунды (~1,4–10 мс). Кэш ограничен 5 МБ, лишнее вытесняется по принципу «дольше всех не использовалось» (LRU), причём вытеснение делается уже после показа, вне горячего пути.
+- **Кэш готового HTML.** Отрисованная страница складывается в кэш и переиспользуется. Ключ кэша считается из атрибутов файла — **без чтения самого содержимого файла**. Попадание в кэш пропускает и чтение файла, и работу движка → показ за считанные миллисекунды (~1,4–10 мс). Кэш ограничен 5 МБ, лишнее вытесняется по принципу «дольше всех не использовалось» (LRU), причём вытеснение делается уже после показа, вне горячего пути.
 - **Пул тёплых WebView — не больше 3 копий в памяти.** Finder нередко показывает несколько превью сразу (панель «Просмотр» + пробел + ячейки галереи), поэтому один общий `WKWebView` не годится — показы подрались бы за него. Держим маленький пул: каждому показу достаётся свой прогретый вебвью, освободившиеся переиспользуются, а всё сверх трёх штук отпускается из памяти.
 - **Вебвью не засыпает.** Между показами WebView держится активным, даже когда он вне окна (`inactiveSchedulingPolicy = .none`, macOS 14+). Иначе система усыпляла бы его, и первый показ после паузы ждал бы пробуждения ~1,4 секунды с пустым экраном. JavaScript в нём выключен, поэтому такой «тёплый простой» почти ничего не стоит.
-- **Меньше рендерить.** Длинные строки переносятся (минифицированный JSON больше не уезжает за край), а файл обрезается до 2000 строк с честной плашкой «показаны первые N строк». Большие файлы (>2 МБ) читаются не целиком — берётся только начало.
-- **Никакого JavaScript при показе.** Готовый HTML рисуется в `WKWebView` с полностью выключенным JS: вебвью только отображает разметку и ничего не исполняет. Это и безопаснее, и экономнее по энергии.
+- **Меньше рендерить.** Файл обрезается до 2000 строк с плашкой «показаны первые N строк». Большие файлы (>2 МБ) читаются не целиком — берётся только начало.
+- **Никакого JavaScript при показе.** Готовый HTML рисуется в `WKWebView` с полностью выключенным JS: вебвью только отображает разметку и ничего не исполняет. Это ускоряет показ и экономит энергию (и безопаснее).
 
-В итоге тёплый показ короткого файла укладывается примерно в 100 мс (обычно 85–175 мс), а попадание в кэш — это единицы миллисекунд.
+В итоге тёплый показ короткого файла укладывается примерно в 100 мс (обычно 85–175 мс), а если он уже в кэше — это единицы миллисекунд.
 
-### Требования для самостоятельной сборки
+### Запуск ненотаризованного приложения
+
+Так как сборки **не нотаризованы**, при первом запуске macOS покажет «Приложение повреждено» («App is damaged») или «Не удаётся проверить разработчика» («Unidentified developer»). Это ожидаемо. Разблокировать можно одним из двух способов.
+
+**Способ 1 — командная строка (проще и надёжнее).** Снимите с бандла атрибуты карантина:
+
+```bash
+xattr -cr "/Applications/QuickLookers.app"
+```
+
+(поправьте путь, если приложение лежит не в `/Applications/`). После этого приложение запускается как обычно. Более точечный вариант — снять только карантин: `xattr -dr com.apple.quarantine "/Applications/QuickLookers.app"`.
+
+**Способ 2 — через интерфейс (GUI).** Попробуйте открыть приложение двойным кликом → появится предупреждение → откройте **Системные настройки → Конфиденциальность и безопасность**, пролистайте вниз и нажмите **«Всё равно открыть»**, затем подтвердите. Разрешение нужно дать один раз.
+
+> На macOS Sequoia и новее прежний обход «правый клик → Открыть» больше не работает — только через «Всё равно открыть» в настройках.
+
+### Возможные проблемы и их решения
+
+- **«App is damaged» / «Unidentified developer».** Снимите карантин: `xattr -cr "/Applications/QuickLookers.app"`.
+- **QuickLook не показывает обновления.** Сбросьте кэш QuickLook: `qlmanage -r`.
+- **Превью не работает вообще:**
+  - убедитесь, что приложение лежит в `/Applications/`;
+  - перезапустите Finder: `killall Finder`;
+  - проверьте активные расширения QuickLook: `pluginkit -m -v`;
+  - если превью так и не появилось — самый надёжный путь его запустить: собрать и один раз запустить приложение из Xcode (**⌘R**, см. выше). macOS не грузит ненотаризованный плагин из карантина, пока его явно не разрешат.
+
+### Сборка и запуск из исходников
+
+**Требования для самостоятельной сборки**
 
 - **macOS 13** или новее.
 - **Swift 6 / Xcode 26**.
@@ -77,7 +107,6 @@ macOS-приложение, возвращающее полноразмерно�
 
 > Node.js нужен **только** для пересборки JS-бандла Shiki. Готовый бандл уже в ресурсах и коммитится, поэтому для обычной сборки Node не требуется.
 
-### Сборка и запуск из исходников
 
 **Шаг 1. Сгенерировать проект Xcode (обязательно, на старте).**
 
@@ -116,31 +145,6 @@ swift test
 
 Готовый скачанный бинарник Gatekeeper по умолчанию заблокирует («не удаётся проверить разработчика»). Поэтому либо соберите приложение сами по инструкции выше, либо разблокируйте скачанный бинарник — как это сделать, смотрите ниже «Запуск ненотаризованного приложения».
 
-### Запуск ненотаризованного приложения
-
-Так как сборки **не нотаризованы**, при первом запуске macOS покажет «Приложение повреждено» («App is damaged») или «Не удаётся проверить разработчика» («Unidentified developer»). Это ожидаемо. Разблокировать можно одним из двух способов.
-
-**Способ 1 — командная строка (проще и надёжнее).** Снимите с бандла атрибуты карантина:
-
-```bash
-xattr -cr "/Applications/QuickLookers.app"
-```
-
-(поправьте путь, если приложение лежит не в `/Applications/`). После этого приложение запускается как обычно. Более точечный вариант — снять только карантин: `xattr -dr com.apple.quarantine "/Applications/QuickLookers.app"`.
-
-**Способ 2 — через интерфейс (GUI).** Попробуйте открыть приложение двойным кликом → появится предупреждение → откройте **Системные настройки → Конфиденциальность и безопасность**, пролистайте вниз и нажмите **«Всё равно открыть»**, затем подтвердите. Разрешение нужно дать один раз.
-
-> На macOS Sequoia и новее прежний обход «правый клик → Открыть» больше не работает — только через «Всё равно открыть» в настройках.
-
-### Возможные проблемы и их решения
-
-- **«App is damaged» / «Unidentified developer».** Снимите карантин: `xattr -cr "/Applications/QuickLookers.app"`.
-- **QuickLook не показывает обновления.** Сбросьте кэш QuickLook: `qlmanage -r`.
-- **Превью не работает вообще:**
-  - убедитесь, что приложение лежит в `/Applications/`;
-  - перезапустите Finder: `killall Finder`;
-  - проверьте активные расширения QuickLook: `pluginkit -m -v`;
-  - если превью так и не появилось — самый надёжный путь его запустить: собрать и один раз запустить приложение из Xcode (**⌘R**, см. выше). macOS не грузит ненотаризованный плагин из карантина, пока его явно не разрешат.
 
 ### Лицензия
 
@@ -187,7 +191,7 @@ The Space preview has to feel instant and stay easy on the battery. The app is s
 Highlighting runs as `code + language + theme → HTML` via Shiki in JavaScriptCore, then a static render in `WKWebView` with JavaScript disabled. Around that pipeline sit several optimizations that keep previews fast and cheap:
 
 - **Warm process.** The highlighting engine, the theme list, and the "file → language" table are built once per extension process, not per preview. Between Space presses everything is already primed.
-- **Rendered-HTML cache.** The rendered page is cached and reused. The cache key is computed from the file's attributes (path, modification date, size) plus language, theme, and font — **without reading the file's contents**. A cache hit skips both the file read and the engine, so a preview shows in a few milliseconds (~1.4–10 ms). The cache is capped at 5 MB; least-recently-used entries are evicted, and eviction happens after the preview, off the hot path.
+- **Rendered-HTML cache.** The rendered page is cached and reused. The cache key is computed from the file's attributes — **without reading the file's contents**. A cache hit skips both the file read and the engine, so a preview shows in a few milliseconds (~1.4–10 ms). The cache is capped at 5 MB; least-recently-used entries are evicted, and eviction happens after the preview, off the hot path.
 - **Warm WebView pool — at most 3 copies in memory.** Finder often shows several previews at once (the Preview pane + Space + gallery cells), so a single shared `WKWebView` won't do — the presentations would fight over it. A small pool gives each presentation its own warm web view, reuses freed ones, and releases anything beyond three.
 - **The web view never sleeps.** Between previews the WebView is kept active even while it's off-window (`inactiveSchedulingPolicy = .none`, macOS 14+). Otherwise the system would suspend it and the first preview after a pause would wait ~1.4 s for wake-up on a blank screen. JavaScript is off, so keeping it warm costs almost nothing.
 - **Render less.** Long lines wrap (minified JSON no longer runs off the edge), and files are trimmed to 2000 lines with an honest "showing first N lines" banner. Large files (>2 MB) aren't read whole — only the beginning is loaded.
@@ -195,47 +199,6 @@ Highlighting runs as `code + language + theme → HTML` via Shiki in JavaScriptC
 
 The upshot: a warm preview of a short file lands around 100 ms (typically 85–175 ms), and a cache hit is a matter of a few milliseconds.
 
-### Requirements for building yourself
-
-- **macOS 13** or newer.
-- **Swift 6 / Xcode 26**.
-- **[XcodeGen](https://github.com/yonaskolb/XcodeGen)**: `brew install xcodegen`.
-- An **Apple ID** for signing (a free one is enough — see the distribution limits below).
-
-> Node.js is needed **only** to rebuild the Shiki JS bundle. The prebuilt bundle is already in the resources and committed, so a normal build does not require Node.
-
-### Build & run from source
-
-**Step 1. Generate the Xcode project (mandatory, first thing).**
-
-```bash
-xcodegen generate
-```
-
-`QuickLookers.xcodeproj` is **deliberately not stored in the repo** (it is `.gitignore`d as an XcodeGen artifact). Until you run this command, there is nothing to open in Xcode.
-
-**Step 2. Set your own Team ID.**
-
-The author's Team ID (`5FVC5YT2B5`) is baked into the project. Replace it with **yours** (Xcode → Settings → Accounts → your account → Team ID) in four places:
-
-- `project.yml` — `DEVELOPMENT_TEAM`;
-- `project.yml` — `com.apple.security.application-groups` for the **host**;
-- `project.yml` — `com.apple.security.application-groups` for the **extension**;
-- `Sources/QuickLookersSettingsKit/SettingsStore.swift` — `quickLookersAppGroupId`.
-
-The App Group prefix **must** match your Team ID, otherwise the build won't sign. After editing `project.yml`, regenerate the project (`xcodegen generate`) so the new values land in it.
-
-**Step 3. Build & run from Xcode.**
-
-Open `QuickLookers.xcodeproj`, select the **QuickLookers** scheme and press **⌘R**.
-
-> ⚠️ **Important:** the Finder preview reliably registers with the system **only when the host is run from Xcode (⌘R)**. A double-click on the built `.app`, `lsregister`, or `pluginkit` are **not enough** to register the QuickLook extension. This is a macOS limitation, not the project's.
-
-**Package tests** (pure logic, no Xcode):
-
-```bash
-swift test
-```
 
 ### Distribution limits (important)
 
@@ -268,6 +231,48 @@ xattr -cr "/Applications/QuickLookers.app"
   - restart Finder: `killall Finder`;
   - check active QuickLook extensions: `pluginkit -m -v`;
   - if the preview still doesn't show up — the most reliable way to get it running is to build and launch the app once from Xcode (**⌘R**, see above). macOS won't load a non-notarized, quarantined plug-in until it's explicitly allowed.
+
+### Build & run from source
+
+**Requirements for building yourself**
+
+- **macOS 13** or newer.
+- **Swift 6 / Xcode 26**.
+- **[XcodeGen](https://github.com/yonaskolb/XcodeGen)**: `brew install xcodegen`.
+- An **Apple ID** for signing (a free one is enough — see the distribution limits below).
+
+> Node.js is needed **only** to rebuild the Shiki JS bundle. The prebuilt bundle is already in the resources and committed, so a normal build does not require Node.
+
+**Step 1. Generate the Xcode project (mandatory, first thing).**
+
+```bash
+xcodegen generate
+```
+
+`QuickLookers.xcodeproj` is **deliberately not stored in the repo** (it is `.gitignore`d as an XcodeGen artifact). Until you run this command, there is nothing to open in Xcode.
+
+**Step 2. Set your own Team ID.**
+
+The author's Team ID (`5FVC5YT2B5`) is baked into the project. Replace it with **yours** (Xcode → Settings → Accounts → your account → Team ID) in four places:
+
+- `project.yml` — `DEVELOPMENT_TEAM`;
+- `project.yml` — `com.apple.security.application-groups` for the **host**;
+- `project.yml` — `com.apple.security.application-groups` for the **extension**;
+- `Sources/QuickLookersSettingsKit/SettingsStore.swift` — `quickLookersAppGroupId`.
+
+The App Group prefix **must** match your Team ID, otherwise the build won't sign. After editing `project.yml`, regenerate the project (`xcodegen generate`) so the new values land in it.
+
+**Step 3. Build & run from Xcode.**
+
+Open `QuickLookers.xcodeproj`, select the **QuickLookers** scheme and press **⌘R**.
+
+> ⚠️ **Important:** the Finder preview reliably registers with the system **only when the host is run from Xcode (⌘R)**. A double-click on the built `.app`, `lsregister`, or `pluginkit` are **not enough** to register the QuickLook extension. This is a macOS limitation, not the project's.
+
+**Package tests** (pure logic, no Xcode):
+
+```bash
+swift test
+```
 
 ### License
 
