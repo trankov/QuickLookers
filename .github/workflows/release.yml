@@ -1,0 +1,123 @@
+name: Release
+
+# Срабатывает на пуш тега вида v1.2.3 (или вручную через «Run workflow»).
+# Собирает ДВЕ ОТДЕЛЬНЫЕ сборки — под arm64 и под x86_64 — подписывает их
+# ad-hoc (без платного аккаунта другой подписи нет), пакует каждую в свой
+# .zip и выкладывает обе как один GitHub Release.
+#
+# ВАЖНО — честное ограничение: сборки НЕ нотаризованы и подписаны ad-hoc.
+# Gatekeeper на чужом Маке их заблокирует, а расширение QuickLook надёжно
+# регистрируется только запуском хоста из Xcode (⌘R). Поэтому релизные
+# бинарники — «посмотреть/пощупать», а не готовый к установке инструмент.
+# Основной способ пользоваться — сборка из исходников (см. README).
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write   # нужно, чтобы создать Release
+
+jobs:
+  build:
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64]
+    env:
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      # Отдельная сборка под одну архитектуру, ad-hoc подпись (CODE_SIGN_IDENTITY="-").
+      # Без ad-hoc подписи arm64-приложение macOS запускать откажется.
+      - name: Build app (ad-hoc signed, ${{ matrix.arch }})
+        run: |
+          set -euo pipefail
+          xcodebuild build \
+            -project QuickLookers.xcodeproj \
+            -scheme QuickLookers \
+            -configuration Release \
+            -derivedDataPath build \
+            -destination 'generic/platform=macOS' \
+            ARCHS="$ARCH" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES
+
+      - name: Zip the .app
+        run: |
+          set -euo pipefail
+          APP=$(find build/Build/Products/Release -maxdepth 1 -name '*.app' | head -1)
+          echo "Собрано приложение ($ARCH): $APP"
+          lipo -info "$APP/Contents/MacOS/"* || true
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "QuickLookers-${GITHUB_REF_NAME}-${ARCH}.zip"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuickLookers-${{ matrix.arch }}
+          path: QuickLookers-*-${{ matrix.arch }}.zip
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download both architectures
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/*.zip \
+            --repo "$REPO" \
+            --title "QuickLookers ${GITHUB_REF_NAME}" \
+            --notes "$(cat <<'NOTES'
+          ## ⚠️ Прежде чем скачивать / Before you download
+
+          Приложены **две отдельные сборки** — `arm64` (Apple Silicon) и `x86_64` (Intel).
+          Скачивай ту, что под твой процессор.
+
+          Обе **не нотаризованы** и подписаны **ad-hoc** (у автора нет платного аккаунта
+          Apple Developer). Кроме того, расширение QuickLook надёжно регистрируется только
+          запуском хоста из Xcode (⌘R). Поэтому эти бинарники — **демонстрация**, а не
+          готовый к установке инструмент.
+
+          **Чтобы реально пользоваться превью по пробелу — собери из исходников**
+          (см. [README](../../blob/main/README.md), раздел «Сборка и запуск»).
+
+          Если всё же хочешь запустить .app: сними карантин —
+          `xattr -dr com.apple.quarantine QuickLookers.app` — и открой через
+          правый клик → «Открыть». Превью в Finder при этом может не появиться.
+
+          ---
+
+          Two **separate builds** are attached — `arm64` (Apple Silicon) and `x86_64` (Intel).
+          Both are **not notarized** and **ad-hoc signed** (no paid Apple Developer account).
+          The QuickLook extension also registers reliably only when the host is launched from
+          Xcode (⌘R). So these binaries are a **demo**, not a ready-to-install tool. **To
+          actually use the Space preview, build from source** (see the README).
+          NOTES
+          )"
